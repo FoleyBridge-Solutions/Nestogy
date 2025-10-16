@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Log;
 /**
  * Recurring Invoice Model
  *
+ * Sophisticated recurring billing system with VoIP-specific features including
  * usage-based billing, tiered pricing, proration calculations, and tax integration.
  * Supports contract escalations, multi-service billing, and automated processing.
  *
@@ -39,6 +40,7 @@ use Illuminate\Support\Facades\Log;
  * @property string $currency_code
  * @property string|null $note
  * @property string|null $internal_notes
+ * @property array|null $voip_config
  * @property array|null $pricing_model
  * @property array|null $service_tiers
  * @property array|null $usage_allowances
@@ -117,6 +119,7 @@ class Recurring extends Model
         'status' => 'boolean',
         'discount_amount' => 'decimal:2',
         'amount' => 'decimal:2',
+        'voip_config' => 'array',
         'pricing_model' => 'array',
         'service_tiers' => 'array',
         'usage_allowances' => 'array',
@@ -183,6 +186,7 @@ class Recurring extends Model
     const PRORATION_NONE = 'none';
 
     /**
+     * VoIP service types for recurring billing
      */
     const SERVICE_HOSTED_PBX = 'hosted_pbx';
 
@@ -290,12 +294,9 @@ class Recurring extends Model
     // }
 
     /**
+     * Get VoIP service items for this recurring billing.
      */
-    {
-        return $this->items()->whereNotNull('service_type');
-    }
-
-    /**
+        /**
      * Get the recurring billing's full number.
      */
     public function getFullNumber(): string
@@ -364,11 +365,9 @@ class Recurring extends Model
     }
 
     /**
+     * Check if this recurring billing uses VoIP services.
      */
-    {
-    }
-
-    /**
+        /**
      * Calculate next billing date based on frequency.
      */
     public function calculateNextDate(?Carbon $fromDate = null): Carbon
@@ -457,6 +456,7 @@ class Recurring extends Model
     }
 
     /**
+     * Calculate usage-based charges for VoIP services.
      */
     public function calculateUsageCharges(?Carbon $billingPeriodStart = null, ?Carbon $billingPeriodEnd = null): array
     {
@@ -586,6 +586,9 @@ class Recurring extends Model
             }
         }
 
+        // Apply VoIP taxes if enabled
+        if ($this->hasVoIPServices() && ($this->tax_settings['enable_voip_tax'] ?? true)) {
+            $invoice->recalculateVoIPTaxes();
         }
 
         // Calculate invoice totals
@@ -794,8 +797,11 @@ class Recurring extends Model
     }
 
     /**
+     * Scope for VoIP recurring billing.
      */
+    public function scopeVoipServices($query)
     {
+        return $query->whereNotNull('voip_config');
     }
 
     /**
@@ -829,6 +835,7 @@ class Recurring extends Model
             'currency_code' => 'required|string|size:3',
             'note' => 'nullable|string',
             'internal_notes' => 'nullable|string',
+            'voip_config' => 'nullable|array',
             'pricing_model' => 'nullable|array',
             'service_tiers' => 'nullable|array',
             'usage_allowances' => 'nullable|array',
@@ -878,7 +885,9 @@ class Recurring extends Model
     }
 
     /**
+     * Get available VoIP service types.
      */
+    public static function getAvailableVoipServices(): array
     {
         return [
             self::SERVICE_HOSTED_PBX => 'Hosted PBX',

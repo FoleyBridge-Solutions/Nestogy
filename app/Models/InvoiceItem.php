@@ -148,13 +148,7 @@ class InvoiceItem extends Model
         return $this->belongsTo(Product::class);
     }
 
-    /**
-     */
-    {
-        return $this->belongsTo(TaxCategory::class, 'tax_category_id');
-    }
-
-    /**
+        /**
      * Get tax exemption usage records for this item.
      */
     public function taxExemptionUsage(): HasMany
@@ -167,6 +161,7 @@ class InvoiceItem extends Model
         $companyId = $this->invoice?->company_id ?? $this->quote?->company_id ?? 1;
         $clientId = $this->invoice?->client_id ?? $this->quote?->client_id;
 
+        $taxService = new VoIPTaxService;
         $taxService->setCompanyId($companyId);
 
         $params = [
@@ -182,6 +177,7 @@ class InvoiceItem extends Model
         $taxCalculation = $taxService->calculateTaxes($params);
 
         // Store detailed tax data
+        // Note: voip_tax_data column doesn't exist in database yet
 
         return $taxCalculation;
     }
@@ -270,7 +266,9 @@ class InvoiceItem extends Model
         // Calculate tax
         $taxAmount = 0;
 
+        // Use VoIP tax calculation if service type is specified
         if ($this->service_type) {
+            $taxCalculation = $this->calculateVoIPTaxes();
             $taxAmount = $taxCalculation['total_tax_amount'] ?? 0;
         } elseif ($this->taxRate) {
             // Fallback to legacy tax calculation
@@ -290,23 +288,12 @@ class InvoiceItem extends Model
         ]);
     }
 
-    /**
-     */
-    {
-        return ! empty($this->service_type);
-    }
-
-    /**
-     */
-    {
-        return [];
-    }
-
-    /**
+            /**
      * Get exemptions applied to this item.
      */
     public function getAppliedExemptions(): array
     {
+        // voip_tax_data column doesn't exist in database yet
         return [];
     }
 
@@ -412,7 +399,9 @@ class InvoiceItem extends Model
     }
 
     /**
+     * Create VoIP service item.
      */
+    public static function createVoIPServiceItem(array $data): array
     {
         return array_merge([
             'name' => $data['name'],
@@ -427,13 +416,7 @@ class InvoiceItem extends Model
         ], $data);
     }
 
-    /**
-     */
-    {
-        return $query->whereNotNull('service_type');
-    }
-
-    /**
+        /**
      * Scope to get items by service type.
      */
     public function scopeByServiceType($query, string $serviceType)

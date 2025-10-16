@@ -292,24 +292,20 @@ class Invoice extends Model
         return [];
     }
 
-    /**
+            /**
+     * Get tax breakdown for all VoIP services.
      */
-    {
-    }
-
-    /**
-     */
-    {
-    }
-
-    /**
-     */
+    public function getVoIPTaxBreakdown(): array
     {
         $breakdown = [];
 
+        foreach ($this->voipItems as $item) {
+            if ($item->voip_tax_data) {
                 $breakdown[$item->id] = [
                     'item_name' => $item->name,
                     'service_type' => $item->service_type,
+                    'tax_breakdown' => $item->voip_tax_data['tax_breakdown'] ?? [],
+                    'total_tax' => $item->voip_tax_data['total_tax_amount'] ?? 0,
                 ];
             }
         }
@@ -327,15 +323,6 @@ class Invoice extends Model
             'client_name' => $this->client->name ?? 'Unknown',
             'invoice_date' => $this->date->toDateString(),
             'service_address' => $this->getServiceAddress(),
-                return [
-                    'name' => $item->name,
-                    'service_type' => $item->service_type,
-                    'amount' => $item->subtotal - $item->discount,
-                    'tax_amount' => $item->tax,
-                    'line_count' => $item->line_count,
-                    'minutes' => $item->minutes,
-                ];
-            })->toArray(),
             'exemptions_used' => $this->taxExemptionUsage->map(function ($usage) {
                 return [
                     'exemption_name' => $usage->taxExemption->exemption_name ?? 'Unknown',
@@ -456,12 +443,7 @@ class Invoice extends Model
         $this->update(['amount' => $total]);
     }
 
-    /**
-     */
-    {
-            return;
-        }
-
+            $taxCalculations = $this->calculateVoIPTaxes($serviceAddress);
 
         // Update individual items with new tax calculations
         foreach ($taxCalculations['calculations'] as $calculation) {
@@ -469,6 +451,7 @@ class Invoice extends Model
             if ($item) {
                 $item->update([
                     'tax' => $calculation['total_tax_amount'],
+                    'voip_tax_data' => $calculation,
                 ]);
             }
         }
@@ -476,6 +459,7 @@ class Invoice extends Model
         // Recalculate invoice totals
         $this->calculateTotals();
 
+        \Log::info('Invoice VoIP taxes recalculated', [
             'invoice_id' => $this->id,
             'total_tax' => $taxCalculations['total_tax_amount'],
             'items_processed' => count($taxCalculations['calculations']),

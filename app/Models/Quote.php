@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * Quote Model
  *
  * Enterprise-grade quote management with multi-tier approval workflows,
+ * versioning, expiration handling, and VoIP-specific features.
  *
  * @property int $id
  * @property int $company_id
@@ -173,6 +174,7 @@ class Quote extends Model
     const DISCOUNT_FIXED = 'fixed';
 
     /**
+     * VoIP pricing model types
      */
     const PRICING_FLAT_RATE = 'flat_rate';
 
@@ -388,18 +390,28 @@ class Quote extends Model
         return [];
     }
 
-
-
-
-
     /**
+     * Get VoIP service items on this quote.
      */
+    public function voipItems()
+    {
+        return $this->items()->voipServices();
+    }
+
+        /**
+     * Get tax breakdown for all VoIP services.
+     */
+    public function getVoIPTaxBreakdown(): array
     {
         $breakdown = [];
 
+        foreach ($this->voipItems as $item) {
+            if ($item->voip_tax_data) {
                 $breakdown[$item->id] = [
                     'item_name' => $item->name,
                     'service_type' => $item->service_type,
+                    'tax_breakdown' => $item->voip_tax_data['tax_breakdown'] ?? [],
+                    'total_tax' => $item->voip_tax_data['total_tax_amount'] ?? 0,
                 ];
             }
         }
@@ -565,7 +577,28 @@ class Quote extends Model
         $this->update(['amount' => $total]);
     }
 
+            $taxCalculations = $this->calculateVoIPTaxes($serviceAddress);
 
+        // Update individual items with new tax calculations
+        foreach ($taxCalculations['calculations'] as $calculation) {
+            $item = $this->items()->find($calculation['item_id']);
+            if ($item) {
+                $item->update([
+                    'tax' => $calculation['total_tax_amount'],
+                    'voip_tax_data' => $calculation,
+                ]);
+            }
+        }
+
+        // Recalculate quote totals
+        $this->calculateTotals();
+
+        \Log::info('Quote VoIP taxes recalculated', [
+            'quote_id' => $this->id,
+            'total_tax' => $taxCalculations['total_tax_amount'],
+            'items_processed' => count($taxCalculations['calculations']),
+        ]);
+    }
 
     /**
      * Get public URL for client access.
@@ -666,9 +699,7 @@ class Quote extends Model
 
         $invoice->calculateTotals();
 
-
-
-        // Update quote status
+// Update quote status
         $this->update([
             'status' => self::STATUS_CONVERTED,
             'converted_invoice_id' => $invoice->id,
