@@ -4,7 +4,7 @@ namespace App\Livewire\Financial;
 
 use App\Domains\Core\Services\NavigationService;
 use App\Livewire\BaseIndexComponent;
-use App\Models\Quote;
+use App\Domains\Financial\Models\Quote;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 

@@ -2,9 +2,9 @@
 
 namespace App\Domains\Asset\Services;
 
-use App\Models\Asset;
+use App\Domains\Asset\Models\Asset;
 use App\Domains\Client\Models\Client;
-use App\Models\Location;
+use App\Domains\Client\Models\Location;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;

@@ -2,7 +2,7 @@
 
 namespace App\Domains\Email\Services;
 
-use App\Models\Company;
+use App\Domains\Company\Models\Company;
 
 class EmailProviderValidationService
 {

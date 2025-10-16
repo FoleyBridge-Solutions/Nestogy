@@ -3,7 +3,7 @@
 namespace App\Policies;
 
 use App\Domains\Email\Models\EmailAccount;
-use App\Models\User;
+use App\Domains\Core\Models\User;
 
 class EmailAccountPolicy
 {

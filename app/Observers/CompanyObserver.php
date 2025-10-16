@@ -2,7 +2,7 @@
 
 namespace App\Observers;
 
-use App\Models\Company;
+use App\Domains\Company\Models\Company;
 
 class CompanyObserver
 {

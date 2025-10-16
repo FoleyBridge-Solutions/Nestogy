@@ -2,7 +2,7 @@
 
 namespace App\Livewire;
 
-use App\Models\InAppNotification;
+use App\Domains\Core\Models\InAppNotification;
 use App\Traits\HasFluxToasts;
 use Livewire\Attributes\On;
 use Livewire\Component;

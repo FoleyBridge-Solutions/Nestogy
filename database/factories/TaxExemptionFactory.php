@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\TaxExemption;
+use App\Domains\Tax\Models\TaxExemption;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class TaxExemptionFactory extends Factory

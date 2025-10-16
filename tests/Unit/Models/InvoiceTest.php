@@ -3,8 +3,8 @@
 namespace Tests\Unit\Models;
 
 use App\Domains\Client\Models\Client;
-use App\Models\Company;
-use App\Models\Invoice;
+use App\Domains\Company\Models\Company;
+use App\Domains\Financial\Models\Invoice;
 
 class InvoiceTest extends ModelTestCase
 {

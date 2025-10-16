@@ -5,7 +5,7 @@ namespace App\Jobs;
 use App\Domains\Ticket\Models\Ticket;
 use App\Mail\Tickets\SLABreached;
 use App\Mail\Tickets\SLABreachWarning;
-use App\Models\NotificationPreference;
+use App\Domains\Core\Models\NotificationPreference;
 use App\Services\NotificationService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;

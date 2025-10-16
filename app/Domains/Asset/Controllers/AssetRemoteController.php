@@ -4,7 +4,7 @@ namespace App\Domains\Asset\Controllers;
 
 use App\Domains\Integration\Services\AssetSyncService;
 use App\Http\Controllers\Controller;
-use App\Models\Asset;
+use App\Domains\Asset\Models\Asset;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;

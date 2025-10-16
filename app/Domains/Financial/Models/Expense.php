@@ -3,8 +3,8 @@
 namespace App\Domains\Financial\Models;
 
 use App\Domains\Client\Models\Client;
-use App\Models\Project;
-use App\Models\User;
+use App\Domains\Project\Models\Project;
+use App\Domains\Core\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;

@@ -3,9 +3,9 @@
 namespace App\Domains\Security\Services;
 
 use App\Domains\Client\Models\Client;
-use App\Models\ClientPortalAccess;
-use App\Models\ClientPortalSession;
-use App\Models\PortalNotification;
+use App\Domains\Client\Models\ClientPortalAccess;
+use App\Domains\Client\Models\ClientPortalSession;
+use App\Domains\Core\Models\PortalNotification;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;

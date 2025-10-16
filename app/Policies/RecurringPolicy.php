@@ -2,8 +2,8 @@
 
 namespace App\Policies;
 
-use App\Models\Recurring;
-use App\Models\User;
+use App\Domains\Financial\Models\Recurring;
+use App\Domains\Core\Models\User;
 
 class RecurringPolicy
 {

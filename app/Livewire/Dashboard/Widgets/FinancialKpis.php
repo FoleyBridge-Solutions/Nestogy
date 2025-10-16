@@ -3,9 +3,9 @@
 namespace App\Livewire\Dashboard\Widgets;
 
 use App\Domains\Client\Models\Client;
-use App\Models\Invoice;
-use App\Models\Payment;
-use App\Models\Recurring;
+use App\Domains\Financial\Models\Invoice;
+use App\Domains\Financial\Models\Payment;
+use App\Domains\Financial\Models\Recurring;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;

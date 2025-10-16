@@ -6,7 +6,7 @@ use App\Domains\Ticket\Models\RecurringTicket;
 use App\Domains\Ticket\Models\TicketTemplate;
 use App\Http\Controllers\Controller;
 use App\Domains\Client\Models\Client;
-use App\Models\User;
+use App\Domains\Core\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;

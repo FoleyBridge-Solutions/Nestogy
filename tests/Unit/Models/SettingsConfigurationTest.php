@@ -2,8 +2,8 @@
 
 namespace Tests\Unit\Models;
 
-use App\Models\SettingsConfiguration;
-use App\Models\Company;
+use App\Domains\Core\Models\SettingsConfiguration;
+use App\Domains\Company\Models\Company;
 use Tests\RefreshesDatabase;
 use Tests\TestCase;
 

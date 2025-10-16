@@ -3,8 +3,8 @@
 namespace Tests\Feature;
 
 use App\Domains\Client\Models\Client;
-use App\Models\Company;
-use App\Models\User;
+use App\Domains\Company\Models\Company;
+use App\Domains\Core\Models\User;
 use Tests\RefreshesDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;

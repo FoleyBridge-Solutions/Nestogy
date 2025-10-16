@@ -3,8 +3,8 @@
 namespace Database\Seeders;
 
 use App\Domains\Client\Models\Client;
-use App\Models\CommunicationLog;
-use App\Models\User;
+use App\Domains\Client\Models\CommunicationLog;
+use App\Domains\Core\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 

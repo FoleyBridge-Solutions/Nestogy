@@ -7,8 +7,8 @@ use App\Domains\Product\Requests\UpdatePricingRuleRequest;
 use App\Domains\Product\Services\PricingRuleService;
 use App\Http\Controllers\Controller;
 use App\Domains\Client\Models\Client;
-use App\Models\PricingRule;
-use App\Models\Product;
+use App\Domains\Product\Models\PricingRule;
+use App\Domains\Product\Models\Product;
 use Illuminate\Http\Request;
 
 class PricingRuleController extends Controller

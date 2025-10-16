@@ -6,7 +6,7 @@ use App\Domains\Core\Services\ConfigurationValidationService;
 use App\Domains\Core\Services\NavigationService;
 use App\Http\ViewComposers\ClientViewComposer;
 use App\Http\ViewComposers\NavigationComposer;
-use App\Models\Company;
+use App\Domains\Company\Models\Company;
 use App\Observers\CompanyObserver;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Blade;

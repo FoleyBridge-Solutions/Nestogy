@@ -3,8 +3,8 @@
 namespace App\Livewire\Products;
 
 use App\Livewire\BaseIndexComponent;
-use App\Models\Category;
-use App\Models\Product;
+use App\Domains\Financial\Models\Category;
+use App\Domains\Product\Models\Product;
 
 class ProductIndex extends BaseIndexComponent
 {

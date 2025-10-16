@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\CompanyMailSettings;
+use App\Domains\Company\Models\CompanyMailSettings;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class CompanyMailSettingsFactory extends Factory

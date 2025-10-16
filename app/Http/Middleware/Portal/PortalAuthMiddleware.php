@@ -3,7 +3,7 @@
 namespace App\Http\Middleware\Portal;
 
 use App\Domains\Client\Models\Client;
-use App\Models\ClientPortalSession;
+use App\Domains\Client\Models\ClientPortalSession;
 use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;

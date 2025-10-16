@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\FinancialReport;
+use App\Domains\Financial\Models\FinancialReport;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class FinancialReportFactory extends Factory

@@ -2,7 +2,7 @@
 
 namespace Database\Seeders\Dev;
 
-use App\Models\CreditApplication;
+use App\Domains\Company\Models\CreditApplication;
 use Illuminate\Database\Seeder;
 
 class CreditApplicationSeeder extends Seeder

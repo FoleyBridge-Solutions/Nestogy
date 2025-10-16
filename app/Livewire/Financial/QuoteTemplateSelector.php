@@ -2,7 +2,7 @@
 
 namespace App\Livewire\Financial;
 
-use App\Models\QuoteTemplate;
+use App\Domains\Financial\Models\QuoteTemplate;
 use Livewire\Component;
 
 class QuoteTemplateSelector extends Component

@@ -8,9 +8,9 @@ use App\Domains\Contract\Models\ContractSignature;
 use App\Domains\Security\Services\DigitalSignatureService;
 use App\Http\Controllers\Controller;
 use App\Domains\Client\Models\Client;
-use App\Models\Contact;
-use App\Models\Invoice;
-use App\Models\Payment;
+use App\Domains\Client\Models\Contact;
+use App\Domains\Financial\Models\Invoice;
+use App\Domains\Financial\Models\Payment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 

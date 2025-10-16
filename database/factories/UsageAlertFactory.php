@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\UsageAlert;
+use App\Domains\Product\Models\UsageAlert;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class UsageAlertFactory extends Factory

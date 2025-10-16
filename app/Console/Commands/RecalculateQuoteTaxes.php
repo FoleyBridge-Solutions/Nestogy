@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Domains\Financial\Services\QuoteService;
-use App\Models\Quote;
+use App\Domains\Financial\Models\Quote;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 

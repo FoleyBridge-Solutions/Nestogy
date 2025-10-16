@@ -2,7 +2,7 @@
 
 namespace Database\Seeders\Dev;
 
-use App\Models\Recurring;
+use App\Domains\Financial\Models\Recurring;
 use Illuminate\Database\Seeder;
 
 class RecurringSeeder extends Seeder

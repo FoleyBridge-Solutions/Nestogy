@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\ComplianceCheck;
+use App\Domains\Tax\Models\ComplianceCheck;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class ComplianceCheckFactory extends Factory

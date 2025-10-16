@@ -2,7 +2,7 @@
 
 namespace Database\Seeders\Dev;
 
-use App\Models\KpiCalculation;
+use App\Domains\Core\Models\KpiCalculation;
 use Illuminate\Database\Seeder;
 
 class KpiCalculationSeeder extends Seeder

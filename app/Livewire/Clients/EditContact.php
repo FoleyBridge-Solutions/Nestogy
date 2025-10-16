@@ -2,7 +2,7 @@
 
 namespace App\Livewire\Clients;
 
-use App\Models\Contact;
+use App\Domains\Client\Models\Contact;
 use Livewire\Component;
 
 class EditContact extends Component

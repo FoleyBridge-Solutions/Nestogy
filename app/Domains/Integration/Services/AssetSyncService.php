@@ -5,7 +5,7 @@ namespace App\Domains\Integration\Services;
 use App\Domains\Integration\Exceptions\DeviceInventoryException;
 use App\Domains\Integration\Models\DeviceMapping;
 use App\Domains\Integration\Models\RmmIntegration;
-use App\Models\Asset;
+use App\Domains\Asset\Models\Asset;
 use App\Domains\Client\Models\Client;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;

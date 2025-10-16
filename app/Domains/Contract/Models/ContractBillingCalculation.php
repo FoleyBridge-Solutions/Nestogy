@@ -2,9 +2,9 @@
 
 namespace App\Domains\Contract\Models;
 
-use App\Models\Company;
-use App\Models\Invoice;
-use App\Models\User;
+use App\Domains\Company\Models\Company;
+use App\Domains\Financial\Models\Invoice;
+use App\Domains\Core\Models\User;
 use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;

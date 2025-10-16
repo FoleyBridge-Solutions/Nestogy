@@ -3,8 +3,8 @@
 namespace App\Console\Commands;
 
 use App\Domains\Financial\Services\TaxEngine\TaxEngineRouter;
-use App\Models\ServiceTaxRate;
-use App\Models\TaxProfile;
+use App\Domains\Tax\Models\ServiceTaxRate;
+use App\Domains\Tax\Models\TaxProfile;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;

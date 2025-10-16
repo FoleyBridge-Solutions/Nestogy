@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\QuoteVersion;
+use App\Domains\Financial\Models\QuoteVersion;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class QuoteVersionFactory extends Factory

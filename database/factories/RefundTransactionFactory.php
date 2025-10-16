@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\RefundTransaction;
+use App\Domains\Financial\Models\RefundTransaction;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class RefundTransactionFactory extends Factory

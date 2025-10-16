@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\ServiceTaxRate;
-use App\Models\TaxJurisdiction;
+use App\Domains\Tax\Models\ServiceTaxRate;
+use App\Domains\Tax\Models\TaxJurisdiction;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 

@@ -4,7 +4,7 @@ namespace Database\Seeders\Dev;
 
 use App\Domains\Ticket\Models\SLA;
 use App\Domains\Client\Models\Client;
-use App\Models\Company;
+use App\Domains\Company\Models\Company;
 use Illuminate\Database\Seeder;
 
 class ClientSeeder extends Seeder

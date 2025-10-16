@@ -2,7 +2,7 @@
 
 namespace Database\Seeders\Dev;
 
-use App\Models\TaxCalculation;
+use App\Domains\Tax\Models\TaxCalculation;
 use Illuminate\Database\Seeder;
 
 class TaxCalculationSeeder extends Seeder

@@ -4,8 +4,8 @@ namespace App\Console\Commands;
 
 use App\Domains\Ticket\Models\Ticket;
 use App\Mail\Digests\ManagerDaily;
-use App\Models\TicketRating;
-use App\Models\User;
+use App\Domains\Ticket\Models\TicketRating;
+use App\Domains\Core\Models\User;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Mail;

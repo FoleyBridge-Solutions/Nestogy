@@ -3,7 +3,7 @@
 namespace App\Livewire\Dashboard\Widgets;
 
 use App\Domains\Ticket\Models\TicketTimeEntry;
-use App\Models\User;
+use App\Domains\Core\Models\User;
 use Livewire\Component;
 
 class TeamActivity extends Component

@@ -3,7 +3,7 @@
 namespace App\Domains\Ticket\Services;
 
 use App\Domains\Client\Models\Client;
-use App\Models\User;
+use App\Domains\Core\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 

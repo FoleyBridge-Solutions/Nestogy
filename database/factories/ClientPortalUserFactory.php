@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\ClientPortalUser;
+use App\Domains\Client\Models\ClientPortalUser;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class ClientPortalUserFactory extends Factory

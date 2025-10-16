@@ -4,10 +4,10 @@ namespace Tests\Unit\Services;
 
 use App\Domains\Ticket\Models\Ticket;
 use App\Domains\Client\Models\Client;
-use App\Models\Company;
-use App\Models\InAppNotification;
-use App\Models\NotificationPreference;
-use App\Models\User;
+use App\Domains\Company\Models\Company;
+use App\Domains\Core\Models\InAppNotification;
+use App\Domains\Core\Models\NotificationPreference;
+use App\Domains\Core\Models\User;
 use App\Services\NotificationService;
 use Tests\RefreshesDatabase;
 use Illuminate\Support\Facades\Route;

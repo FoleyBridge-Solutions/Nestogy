@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\CrossCompanyUser;
+use App\Domains\Company\Models\CrossCompanyUser;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class CrossCompanyUserFactory extends Factory

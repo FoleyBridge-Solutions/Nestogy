@@ -3,7 +3,7 @@
 namespace App\Livewire\Dashboard\Widgets;
 
 use App\Domains\Core\Services\QuickActionService;
-use App\Models\CustomQuickAction;
+use App\Domains\Core\Models\CustomQuickAction;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 

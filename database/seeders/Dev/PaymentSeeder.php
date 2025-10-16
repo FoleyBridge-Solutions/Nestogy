@@ -2,9 +2,9 @@
 
 namespace Database\Seeders\Dev;
 
-use App\Models\Invoice;
-use App\Models\Payment;
-use App\Models\User;
+use App\Domains\Financial\Models\Invoice;
+use App\Domains\Financial\Models\Payment;
+use App\Domains\Core\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 

@@ -3,9 +3,9 @@
 namespace Tests\Feature\Livewire\Settings;
 
 use App\Livewire\Settings\CategoryManager;
-use App\Models\Category;
-use App\Models\Company;
-use App\Models\User;
+use App\Domains\Financial\Models\Category;
+use App\Domains\Company\Models\Company;
+use App\Domains\Core\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;

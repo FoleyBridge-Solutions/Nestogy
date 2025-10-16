@@ -4,10 +4,10 @@ namespace App\Livewire\Setup;
 
 use App\Livewire\Setup\Traits\ManagesStepData;
 use App\Livewire\Setup\Traits\ValidatesSteps;
-use App\Models\Company;
-use App\Models\Setting;
-use App\Models\User;
-use App\Models\UserSetting;
+use App\Domains\Company\Models\Company;
+use App\Domains\Core\Models\Setting;
+use App\Domains\Core\Models\User;
+use App\Domains\Core\Models\UserSetting;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;

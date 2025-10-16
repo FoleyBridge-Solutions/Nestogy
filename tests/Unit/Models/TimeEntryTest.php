@@ -2,8 +2,8 @@
 
 namespace Tests\Unit\Models;
 
-use App\Models\TimeEntry;
-use App\Models\Company;
+use App\Domains\Ticket\Models\TimeEntry;
+use App\Domains\Company\Models\Company;
 use Tests\RefreshesDatabase;
 use Tests\TestCase;
 

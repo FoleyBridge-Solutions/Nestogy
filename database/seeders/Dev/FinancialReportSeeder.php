@@ -2,7 +2,7 @@
 
 namespace Database\Seeders\Dev;
 
-use App\Models\FinancialReport;
+use App\Domains\Financial\Models\FinancialReport;
 use Illuminate\Database\Seeder;
 
 class FinancialReportSeeder extends Seeder

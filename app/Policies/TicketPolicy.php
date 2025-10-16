@@ -3,7 +3,7 @@
 namespace App\Policies;
 
 use App\Domains\Ticket\Models\Ticket;
-use App\Models\User;
+use App\Domains\Core\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class TicketPolicy

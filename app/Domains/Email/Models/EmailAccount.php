@@ -2,7 +2,7 @@
 
 namespace App\Domains\Email\Models;
 
-use App\Models\User;
+use App\Domains\Core\Models\User;
 use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;

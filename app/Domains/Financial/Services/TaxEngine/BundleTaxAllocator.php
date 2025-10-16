@@ -2,7 +2,7 @@
 
 namespace App\Domains\Financial\Services\TaxEngine;
 
-use App\Models\TaxCalculation;
+use App\Domains\Tax\Models\TaxCalculation;
 use Exception;
 use Illuminate\Support\Facades\Log;
 

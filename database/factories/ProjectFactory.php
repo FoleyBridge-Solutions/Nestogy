@@ -3,8 +3,8 @@
 namespace Database\Factories;
 
 use App\Domains\Client\Models\Client;
-use App\Models\Project;
-use App\Models\User;
+use App\Domains\Project\Models\Project;
+use App\Domains\Core\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**

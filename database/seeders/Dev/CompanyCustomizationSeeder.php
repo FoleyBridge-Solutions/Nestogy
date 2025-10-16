@@ -2,8 +2,8 @@
 
 namespace Database\Seeders\Dev;
 
-use App\Models\Company;
-use App\Models\CompanyCustomization;
+use App\Domains\Company\Models\Company;
+use App\Domains\Company\Models\CompanyCustomization;
 use Illuminate\Database\Seeder;
 
 class CompanyCustomizationSeeder extends Seeder

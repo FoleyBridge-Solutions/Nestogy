@@ -3,8 +3,8 @@
 namespace Database\Seeders\Dev;
 
 use App\Domains\Asset\Models\AssetWarranty;
-use App\Models\Asset;
-use App\Models\Vendor;
+use App\Domains\Asset\Models\Asset;
+use App\Domains\Project\Models\Vendor;
 use Carbon\Carbon;
 use Faker\Factory as Faker;
 use Illuminate\Database\Seeder;

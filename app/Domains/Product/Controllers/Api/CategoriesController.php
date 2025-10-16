@@ -3,7 +3,7 @@
 namespace App\Domains\Product\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Category;
+use App\Domains\Financial\Models\Category;
 use Illuminate\Http\Request;
 
 class CategoriesController extends Controller

@@ -3,11 +3,11 @@
 namespace App\Domains\Client\Services;
 
 use App\Domains\Core\Services\BaseService;
-use App\Models\Company;
-use App\Models\CompanyHierarchy;
-use App\Models\SubsidiaryPermission;
-use App\Models\User;
-use App\Models\UserSetting;
+use App\Domains\Company\Models\Company;
+use App\Domains\Company\Models\CompanyHierarchy;
+use App\Domains\Company\Models\SubsidiaryPermission;
+use App\Domains\Core\Models\User;
+use App\Domains\Core\Models\UserSetting;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;

@@ -3,7 +3,7 @@
 namespace App\Domains\Ticket\Services;
 
 use App\Domains\Ticket\Models\Ticket;
-use App\Models\User;
+use App\Domains\Core\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 

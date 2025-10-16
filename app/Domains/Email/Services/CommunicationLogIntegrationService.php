@@ -4,7 +4,7 @@ namespace App\Domains\Email\Services;
 
 use App\Domains\Email\Models\EmailMessage;
 use App\Domains\Client\Models\Client;
-use App\Models\CommunicationLog;
+use App\Domains\Client\Models\CommunicationLog;
 use Illuminate\Support\Facades\Log;
 
 class CommunicationLogIntegrationService

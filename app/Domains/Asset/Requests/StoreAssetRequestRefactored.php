@@ -3,7 +3,7 @@
 namespace App\Domains\Asset\Requests;
 
 use App\Http\Requests\BaseFormRequest;
-use App\Models\Asset;
+use App\Domains\Asset\Models\Asset;
 use Illuminate\Validation\Rule;
 
 class StoreAssetRequestRefactored extends BaseFormRequest

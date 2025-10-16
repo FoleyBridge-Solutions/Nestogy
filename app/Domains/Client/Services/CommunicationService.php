@@ -3,8 +3,8 @@
 namespace App\Domains\Client\Services;
 
 use App\Domains\Client\Models\Client;
-use App\Models\CollectionNote;
-use App\Models\DunningAction;
+use App\Domains\Collections\Models\CollectionNote;
+use App\Domains\Collections\Models\DunningAction;
 use Carbon\Carbon;
 use Illuminate\Mail\Mailable;
 use Illuminate\Support\Collection;

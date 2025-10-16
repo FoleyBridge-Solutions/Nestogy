@@ -2,7 +2,7 @@
 
 namespace App\Livewire\Dashboard\Widgets;
 
-use App\Models\Invoice;
+use App\Domains\Financial\Models\Invoice;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\On;

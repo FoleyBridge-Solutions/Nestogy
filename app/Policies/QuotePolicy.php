@@ -2,8 +2,8 @@
 
 namespace App\Policies;
 
-use App\Models\Quote;
-use App\Models\User;
+use App\Domains\Financial\Models\Quote;
+use App\Domains\Core\Models\User;
 
 /**
  * QuotePolicy

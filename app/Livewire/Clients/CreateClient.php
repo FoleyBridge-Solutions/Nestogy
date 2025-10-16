@@ -3,7 +3,7 @@
 namespace App\Livewire\Clients;
 
 use App\Domains\Client\Models\Client;
-use App\Models\Tag;
+use App\Domains\Core\Models\Tag;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\WithFileUploads;

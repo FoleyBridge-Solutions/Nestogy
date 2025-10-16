@@ -2,7 +2,7 @@
 
 namespace App\Domains\Product\Services;
 
-use App\Models\PricingRule;
+use App\Domains\Product\Models\PricingRule;
 use Illuminate\Support\Facades\DB;
 
 class PricingRuleService

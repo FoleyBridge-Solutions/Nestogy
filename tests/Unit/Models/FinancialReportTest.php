@@ -2,8 +2,8 @@
 
 namespace Tests\Unit\Models;
 
-use App\Models\FinancialReport;
-use App\Models\Company;
+use App\Domains\Financial\Models\FinancialReport;
+use App\Domains\Company\Models\Company;
 use Tests\RefreshesDatabase;
 use Tests\TestCase;
 

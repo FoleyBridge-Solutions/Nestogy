@@ -4,9 +4,9 @@ namespace App\Livewire\Dashboard\Widgets;
 
 use App\Domains\Client\Models\Client;
 use App\Domains\Ticket\Models\Ticket;
-use App\Models\Invoice;
-use App\Models\Payment;
-use App\Models\User;
+use App\Domains\Financial\Models\Invoice;
+use App\Domains\Financial\Models\Payment;
+use App\Domains\Core\Models\User;
 use App\Traits\LazyLoadable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;

@@ -3,10 +3,10 @@
 namespace App\Domains\Financial\Services;
 
 use App\Domains\Contract\Models\Contract;
-use App\Models\CreditNote;
-use App\Models\Payment;
-use App\Models\RefundRequest;
-use App\Models\RefundTransaction;
+use App\Domains\Financial\Models\CreditNote;
+use App\Domains\Financial\Models\Payment;
+use App\Domains\Financial\Models\RefundRequest;
+use App\Domains\Financial\Models\RefundTransaction;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Collection;

@@ -2,7 +2,7 @@
 
 namespace App\Livewire\Financial;
 
-use App\Models\Product;
+use App\Domains\Product\Models\Product;
 use App\Traits\QuotePricingCalculations;
 use Livewire\Component;
 

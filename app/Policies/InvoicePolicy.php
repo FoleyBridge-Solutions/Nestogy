@@ -2,8 +2,8 @@
 
 namespace App\Policies;
 
-use App\Models\Invoice;
-use App\Models\User;
+use App\Domains\Financial\Models\Invoice;
+use App\Domains\Core\Models\User;
 
 class InvoicePolicy
 {

@@ -2,8 +2,8 @@
 
 namespace Database\Seeders\Dev;
 
-use App\Models\NotificationPreference;
-use App\Models\User;
+use App\Domains\Core\Models\NotificationPreference;
+use App\Domains\Core\Models\User;
 use Illuminate\Database\Seeder;
 
 class NotificationPreferenceSeeder extends Seeder

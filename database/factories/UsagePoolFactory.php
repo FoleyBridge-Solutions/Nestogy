@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\UsagePool;
+use App\Domains\Product\Models\UsagePool;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class UsagePoolFactory extends Factory

@@ -2,14 +2,14 @@
 
 namespace App\Domains\Financial\Services;
 
-use App\Models\AccountHold;
+use App\Domains\Company\Models\AccountHold;
 use App\Domains\Client\Models\Client;
-use App\Models\CollectionNote;
-use App\Models\DunningAction;
-use App\Models\DunningCampaign;
-use App\Models\DunningSequence;
-use App\Models\Invoice;
-use App\Models\PaymentPlan;
+use App\Domains\Collections\Models\CollectionNote;
+use App\Domains\Collections\Models\DunningAction;
+use App\Domains\Collections\Models\DunningCampaign;
+use App\Domains\Collections\Models\DunningSequence;
+use App\Domains\Financial\Models\Invoice;
+use App\Domains\Financial\Models\PaymentPlan;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;

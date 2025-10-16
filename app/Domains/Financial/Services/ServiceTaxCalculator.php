@@ -2,9 +2,9 @@
 
 namespace App\Domains\Financial\Services;
 
-use App\Models\ServiceTaxRate;
-use App\Models\TaxExemption;
-use App\Models\TaxJurisdiction;
+use App\Domains\Tax\Models\ServiceTaxRate;
+use App\Domains\Tax\Models\TaxExemption;
+use App\Domains\Tax\Models\TaxJurisdiction;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 

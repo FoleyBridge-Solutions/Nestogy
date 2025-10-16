@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests;
 
-use App\Models\Quote;
-use App\Models\QuoteApproval;
+use App\Domains\Financial\Models\Quote;
+use App\Domains\Financial\Models\QuoteApproval;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 

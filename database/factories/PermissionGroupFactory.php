@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\PermissionGroup;
+use App\Domains\Core\Models\PermissionGroup;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class PermissionGroupFactory extends Factory

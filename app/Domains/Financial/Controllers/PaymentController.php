@@ -5,8 +5,8 @@ namespace App\Domains\Financial\Controllers;
 use App\Domains\Core\Controllers\Traits\UsesSelectedClient;
 use App\Http\Controllers\Controller;
 use App\Domains\Client\Models\Client;
-use App\Models\Invoice;
-use App\Models\Payment;
+use App\Domains\Financial\Models\Invoice;
+use App\Domains\Financial\Models\Payment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 

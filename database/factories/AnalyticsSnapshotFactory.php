@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\AnalyticsSnapshot;
+use App\Domains\Core\Models\AnalyticsSnapshot;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class AnalyticsSnapshotFactory extends Factory

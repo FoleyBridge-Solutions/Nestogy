@@ -4,8 +4,8 @@ namespace App\Domains\Report\Services;
 
 use App\Domains\Ticket\Models\Ticket;
 use App\Domains\Client\Models\Client;
-use App\Models\Invoice;
-use App\Models\User;
+use App\Domains\Financial\Models\Invoice;
+use App\Domains\Core\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;

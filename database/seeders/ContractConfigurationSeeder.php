@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use App\Domains\Contract\Services\ContractConfigurationRegistry;
-use App\Models\Company;
+use App\Domains\Company\Models\Company;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 

@@ -2,8 +2,8 @@
 
 namespace App\Livewire\Dashboard\Widgets;
 
-use App\Models\Invoice;
-use App\Models\Payment;
+use App\Domains\Financial\Models\Invoice;
+use App\Domains\Financial\Models\Payment;
 use App\Traits\LazyLoadable;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;

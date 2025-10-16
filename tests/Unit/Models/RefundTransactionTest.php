@@ -2,8 +2,8 @@
 
 namespace Tests\Unit\Models;
 
-use App\Models\RefundTransaction;
-use App\Models\Company;
+use App\Domains\Financial\Models\RefundTransaction;
+use App\Domains\Company\Models\Company;
 use Tests\RefreshesDatabase;
 use Tests\TestCase;
 

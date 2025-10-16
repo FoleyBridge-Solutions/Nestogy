@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\File;
+use App\Domains\Core\Models\File;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class FileFactory extends Factory

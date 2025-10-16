@@ -4,7 +4,7 @@ namespace App\Livewire\Contracts;
 
 use App\Domains\Contract\Models\Contract;
 use App\Domains\Contract\Models\ContractAssetAssignment;
-use App\Models\Asset;
+use App\Domains\Asset\Models\Asset;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Livewire\Component;
 use Livewire\WithPagination;

@@ -3,7 +3,7 @@
 namespace App\Domains\Report\Models;
 
 use App\Models\BaseModel;
-use App\Models\Company;
+use App\Domains\Company\Models\Company;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**

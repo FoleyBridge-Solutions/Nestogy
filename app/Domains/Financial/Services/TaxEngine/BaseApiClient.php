@@ -2,7 +2,7 @@
 
 namespace App\Domains\Financial\Services\TaxEngine;
 
-use App\Models\TaxApiQueryCache;
+use App\Domains\Tax\Models\TaxApiQueryCache;
 use Exception;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;

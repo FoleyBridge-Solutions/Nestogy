@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use App\Domains\Lead\Models\LeadSource;
-use App\Models\Company;
+use App\Domains\Company\Models\Company;
 use Illuminate\Database\Seeder;
 
 class LeadSourceSeeder extends Seeder

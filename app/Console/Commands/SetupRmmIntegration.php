@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Domains\Integration\Models\RmmIntegration;
-use App\Models\Company;
+use App\Domains\Company\Models\Company;
 use Illuminate\Console\Command;
 
 class SetupRmmIntegration extends Command

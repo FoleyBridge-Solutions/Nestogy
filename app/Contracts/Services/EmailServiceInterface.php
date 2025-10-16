@@ -2,10 +2,10 @@
 
 namespace App\Contracts\Services;
 
-use App\Models\Invoice;
-use App\Models\Payment;
-use App\Models\Quote;
-use App\Models\User;
+use App\Domains\Financial\Models\Invoice;
+use App\Domains\Financial\Models\Payment;
+use App\Domains\Financial\Models\Quote;
+use App\Domains\Core\Models\User;
 use Illuminate\Mail\Mailable;
 
 interface EmailServiceInterface

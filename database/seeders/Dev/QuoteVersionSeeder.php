@@ -2,7 +2,7 @@
 
 namespace Database\Seeders\Dev;
 
-use App\Models\QuoteVersion;
+use App\Domains\Financial\Models\QuoteVersion;
 use Illuminate\Database\Seeder;
 
 class QuoteVersionSeeder extends Seeder

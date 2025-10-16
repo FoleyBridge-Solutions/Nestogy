@@ -2,8 +2,8 @@
 
 namespace App\Domains\Core\Services\Settings;
 
-use App\Models\Company;
-use App\Models\SettingsConfiguration;
+use App\Domains\Company\Models\Company;
+use App\Domains\Core\Models\SettingsConfiguration;
 use Illuminate\Support\Facades\Auth;
 
 class CompanySettingsService extends BaseSettingsService

@@ -3,7 +3,7 @@
 namespace Database\Factories\Domains\Contract\Models;
 
 use App\Domains\Contract\Models\ContractTemplate;
-use App\Models\Company;
+use App\Domains\Company\Models\Company;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class ContractTemplateFactory extends Factory

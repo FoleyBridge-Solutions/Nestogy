@@ -3,8 +3,8 @@
 namespace App\Domains\Marketing\Models;
 
 use App\Domains\Lead\Models\Lead;
-use App\Models\Contact;
-use App\Models\User;
+use App\Domains\Client\Models\Contact;
+use App\Domains\Core\Models\User;
 use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;

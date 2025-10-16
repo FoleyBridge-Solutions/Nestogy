@@ -3,7 +3,7 @@
 namespace App\Policies;
 
 use App\Domains\Client\Models\Client;
-use App\Models\User;
+use App\Domains\Core\Models\User;
 
 class ClientPolicy
 {

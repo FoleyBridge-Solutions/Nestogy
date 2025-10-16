@@ -2,7 +2,7 @@
 
 namespace App\Policies;
 
-use App\Models\User;
+use App\Domains\Core\Models\User;
 
 class RolePolicy
 {

@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\CreditNoteItem;
+use App\Domains\Financial\Models\CreditNoteItem;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class CreditNoteItemFactory extends Factory

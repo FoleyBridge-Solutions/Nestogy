@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\CompanyHierarchy;
+use App\Domains\Company\Models\CompanyHierarchy;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class CompanyHierarchyFactory extends Factory

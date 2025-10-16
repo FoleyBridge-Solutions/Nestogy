@@ -2,8 +2,8 @@
 
 namespace App\Policies;
 
-use App\Models\Location;
-use App\Models\User;
+use App\Domains\Client\Models\Location;
+use App\Domains\Core\Models\User;
 
 class LocationPolicy
 {

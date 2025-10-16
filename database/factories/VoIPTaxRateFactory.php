@@ -3,7 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\TaxCategory;
-use App\Models\TaxJurisdiction;
+use App\Domains\Tax\Models\TaxJurisdiction;
 use App\Models\VoIPTaxRate;
 use Illuminate\Database\Eloquent\Factories\Factory;
 

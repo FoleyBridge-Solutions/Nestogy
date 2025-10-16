@@ -2,7 +2,7 @@
 
 namespace App\Livewire\Concerns;
 
-use App\Models\User;
+use App\Domains\Core\Models\User;
 
 trait WithAuthenticatedUser
 {

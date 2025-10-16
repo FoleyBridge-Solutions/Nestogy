@@ -4,7 +4,7 @@ namespace App\Livewire\Financial;
 
 use App\Domains\Core\Services\NavigationService;
 use App\Livewire\BaseIndexComponent;
-use App\Models\Invoice;
+use App\Domains\Financial\Models\Invoice;
 use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
 

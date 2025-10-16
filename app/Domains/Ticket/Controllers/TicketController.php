@@ -11,7 +11,7 @@ use App\Domains\Ticket\Services\TicketQueryService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreTicketRequest;
 use App\Domains\Client\Models\Client;
-use App\Models\User;
+use App\Domains\Core\Models\User;
 use App\Traits\FiltersClientsByAssignment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;

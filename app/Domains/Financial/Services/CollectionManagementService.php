@@ -3,9 +3,9 @@
 namespace App\Domains\Financial\Services;
 
 use App\Domains\Client\Models\Client;
-use App\Models\CollectionNote;
-use App\Models\DunningAction;
-use App\Models\Payment;
+use App\Domains\Collections\Models\CollectionNote;
+use App\Domains\Collections\Models\DunningAction;
+use App\Domains\Financial\Models\Payment;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;

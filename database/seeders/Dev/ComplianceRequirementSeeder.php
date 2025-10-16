@@ -2,7 +2,7 @@
 
 namespace Database\Seeders\Dev;
 
-use App\Models\ComplianceRequirement;
+use App\Domains\Tax\Models\ComplianceRequirement;
 use Illuminate\Database\Seeder;
 
 class ComplianceRequirementSeeder extends Seeder

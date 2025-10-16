@@ -3,8 +3,8 @@
 namespace App\Domains\Core\Services\Notification\Channels;
 
 use App\Domains\Core\Services\Notification\Contracts\NotificationChannelInterface;
-use App\Models\Contact;
-use App\Models\User;
+use App\Domains\Client\Models\Contact;
+use App\Domains\Core\Models\User;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;

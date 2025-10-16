@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\InAppNotification;
+use App\Domains\Core\Models\InAppNotification;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class InAppNotificationFactory extends Factory

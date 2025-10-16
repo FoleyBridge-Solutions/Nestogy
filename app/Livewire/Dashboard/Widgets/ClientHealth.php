@@ -4,7 +4,7 @@ namespace App\Livewire\Dashboard\Widgets;
 
 use App\Domains\Client\Models\Client;
 use App\Domains\Ticket\Models\Ticket;
-use App\Models\Payment;
+use App\Domains\Financial\Models\Payment;
 use App\Traits\LazyLoadable;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;

@@ -4,7 +4,7 @@ namespace App\Livewire\Dashboard\Widgets;
 
 use App\Domains\Client\Models\Client;
 use App\Domains\Ticket\Models\Ticket;
-use App\Models\Invoice;
+use App\Domains\Financial\Models\Invoice;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;

@@ -2,8 +2,8 @@
 
 namespace Database\Seeders\Dev;
 
-use App\Models\Category;
-use App\Models\Company;
+use App\Domains\Financial\Models\Category;
+use App\Domains\Company\Models\Company;
 use Illuminate\Database\Seeder;
 
 class CategorySeeder extends Seeder

@@ -2,8 +2,8 @@
 
 namespace Tests\Unit\Models;
 
-use App\Models\UsagePool;
-use App\Models\Company;
+use App\Domains\Product\Models\UsagePool;
+use App\Domains\Company\Models\Company;
 use Tests\RefreshesDatabase;
 use Tests\TestCase;
 

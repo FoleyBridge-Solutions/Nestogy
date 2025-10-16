@@ -2,7 +2,7 @@
 
 namespace Database\Seeders\Dev;
 
-use App\Models\ComplianceCheck;
+use App\Domains\Tax\Models\ComplianceCheck;
 use Illuminate\Database\Seeder;
 
 class ComplianceCheckSeeder extends Seeder

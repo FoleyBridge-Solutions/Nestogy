@@ -3,7 +3,7 @@
 namespace App\Livewire\Manager;
 
 use App\Domains\Ticket\Models\Ticket;
-use App\Models\User;
+use App\Domains\Core\Models\User;
 use App\Traits\HasFluxToasts;
 use Livewire\Component;
 

@@ -3,7 +3,7 @@
 namespace App\Domains\Contract\Services\Generation;
 
 use App\Domains\Contract\Models\Contract;
-use App\Models\Quote;
+use App\Domains\Financial\Models\Quote;
 use Illuminate\Support\Facades\Log;
 
 class ContractComplianceInitializer

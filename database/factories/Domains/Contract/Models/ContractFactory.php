@@ -4,8 +4,8 @@ namespace Database\Factories\Domains\Contract\Models;
 
 use App\Domains\Contract\Models\Contract;
 use App\Domains\Client\Models\Client;
-use App\Models\Company;
-use App\Models\User;
+use App\Domains\Company\Models\Company;
+use App\Domains\Core\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**

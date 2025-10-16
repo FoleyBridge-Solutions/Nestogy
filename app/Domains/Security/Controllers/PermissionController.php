@@ -4,7 +4,7 @@ namespace App\Domains\Security\Controllers;
 
 use App\Domains\Security\Services\RoleService;
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Domains\Core\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;

@@ -8,7 +8,7 @@ use App\Domains\Marketing\Models\CampaignEnrollment;
 use App\Domains\Marketing\Models\CampaignSequence;
 use App\Domains\Marketing\Models\MarketingCampaign;
 use App\Domains\Marketing\Services\CampaignEmailService;
-use App\Models\Contact;
+use App\Domains\Client\Models\Contact;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;

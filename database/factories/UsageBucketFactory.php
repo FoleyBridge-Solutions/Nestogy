@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\UsageBucket;
+use App\Domains\Product\Models\UsageBucket;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class UsageBucketFactory extends Factory

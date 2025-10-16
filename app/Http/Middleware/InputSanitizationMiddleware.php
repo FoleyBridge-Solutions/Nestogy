@@ -2,7 +2,7 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\AuditLog;
+use App\Domains\Core\Models\AuditLog;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;

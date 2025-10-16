@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests;
 
-use App\Models\Category;
+use App\Domains\Financial\Models\Category;
 use App\Domains\Client\Models\Client;
-use App\Models\Quote;
+use App\Domains\Financial\Models\Quote;
 use Illuminate\Support\Facades\Auth;
 
 /**

@@ -2,11 +2,11 @@
 
 namespace Database\Seeders\Dev;
 
-use App\Models\TimeEntry;
-use App\Models\Company;
-use App\Models\User;
+use App\Domains\Ticket\Models\TimeEntry;
+use App\Domains\Company\Models\Company;
+use App\Domains\Core\Models\User;
 use App\Domains\Client\Models\Client;
-use App\Models\Project;
+use App\Domains\Project\Models\Project;
 use Illuminate\Database\Seeder;
 
 class TimeEntrySeeder extends Seeder

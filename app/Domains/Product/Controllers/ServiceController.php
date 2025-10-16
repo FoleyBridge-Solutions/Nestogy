@@ -6,8 +6,8 @@ use App\Domains\Product\Requests\StoreServiceRequest;
 use App\Domains\Product\Requests\UpdateServiceRequest;
 use App\Domains\Product\Services\ProductService;
 use App\Http\Controllers\Controller;
-use App\Models\Category;
-use App\Models\Product;
+use App\Domains\Financial\Models\Category;
+use App\Domains\Product\Models\Product;
 use Illuminate\Http\Request;
 
 class ServiceController extends Controller

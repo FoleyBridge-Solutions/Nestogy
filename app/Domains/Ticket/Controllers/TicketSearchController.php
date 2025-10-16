@@ -4,7 +4,7 @@ namespace App\Domains\Ticket\Controllers;
 
 use App\Domains\Ticket\Models\Ticket;
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Domains\Core\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 

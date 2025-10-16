@@ -2,7 +2,7 @@
 
 namespace Database\Seeders\Dev;
 
-use App\Models\UsageAlert;
+use App\Domains\Product\Models\UsageAlert;
 use Illuminate\Database\Seeder;
 
 class UsageAlertSeeder extends Seeder

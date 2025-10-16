@@ -5,7 +5,7 @@ namespace App\Console\Commands;
 use App\Domains\Asset\Services\AssetSupportService;
 use App\Domains\Contract\Models\Contract;
 use App\Domains\Contract\Models\ContractSchedule;
-use App\Models\Asset;
+use App\Domains\Asset\Models\Asset;
 use App\Domains\Client\Models\Client;
 use Illuminate\Console\Command;
 

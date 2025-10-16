@@ -4,8 +4,8 @@ namespace App\Livewire\Assets;
 
 use App\Domains\Client\Models\Client;
 use App\Exports\AssetsExport;
-use App\Models\Asset;
-use App\Models\Location;
+use App\Domains\Asset\Models\Asset;
+use App\Domains\Client\Models\Location;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Maatwebsite\Excel\Facades\Excel;

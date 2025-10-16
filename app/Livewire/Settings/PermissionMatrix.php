@@ -2,7 +2,7 @@
 
 namespace App\Livewire\Settings;
 
-use App\Models\AuditLog;
+use App\Domains\Core\Models\AuditLog;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;

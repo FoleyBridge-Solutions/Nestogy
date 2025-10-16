@@ -2,9 +2,9 @@
 
 namespace Tests\Unit\Models;
 
-use App\Models\Category;
-use App\Models\Company;
-use App\Models\Expense;
+use App\Domains\Financial\Models\Category;
+use App\Domains\Company\Models\Company;
+use App\Domains\Financial\Models\Expense;
 use Tests\RefreshesDatabase;
 use Tests\TestCase;
 

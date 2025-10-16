@@ -2,7 +2,7 @@
 
 namespace Database\Seeders\Dev;
 
-use App\Models\DunningAction;
+use App\Domains\Collections\Models\DunningAction;
 use Illuminate\Database\Seeder;
 
 class DunningActionSeeder extends Seeder

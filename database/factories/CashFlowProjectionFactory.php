@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\CashFlowProjection;
+use App\Domains\Financial\Models\CashFlowProjection;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class CashFlowProjectionFactory extends Factory

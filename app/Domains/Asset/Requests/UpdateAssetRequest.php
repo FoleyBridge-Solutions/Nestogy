@@ -2,7 +2,7 @@
 
 namespace App\Domains\Asset\Requests;
 
-use App\Models\Asset;
+use App\Domains\Asset\Models\Asset;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 

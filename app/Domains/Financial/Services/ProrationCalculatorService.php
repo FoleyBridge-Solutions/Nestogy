@@ -2,7 +2,7 @@
 
 namespace App\Domains\Financial\Services;
 
-use App\Models\Product;
+use App\Domains\Product\Models\Product;
 use Carbon\Carbon;
 
 /**

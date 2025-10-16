@@ -3,7 +3,7 @@
 namespace App\Domains\Security\Services;
 
 use App\Domains\Product\Services\SubscriptionService;
-use App\Models\User;
+use App\Domains\Core\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;

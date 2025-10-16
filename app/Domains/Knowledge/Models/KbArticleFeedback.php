@@ -4,7 +4,7 @@ namespace App\Domains\Knowledge\Models;
 
 use App\Domains\Client\Models\ClientContact;
 use App\Models\BaseModel;
-use App\Models\User;
+use App\Domains\Core\Models\User;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**

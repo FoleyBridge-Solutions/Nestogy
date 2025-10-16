@@ -3,8 +3,8 @@
 namespace App\Console\Commands;
 
 use App\Mail\DailyDigest;
-use App\Models\NotificationPreference;
-use App\Models\User;
+use App\Domains\Core\Models\NotificationPreference;
+use App\Domains\Core\Models\User;
 use App\Domains\Ticket\Models\Ticket;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Mail;

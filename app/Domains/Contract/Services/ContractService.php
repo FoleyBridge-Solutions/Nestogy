@@ -6,7 +6,7 @@ use App\Domains\Contract\Models\Contract;
 use App\Domains\Contract\Models\ContractSchedule;
 use App\Domains\Contract\Models\ContractTemplate;
 use App\Domains\Core\Services\TemplateVariableMapper;
-use App\Models\Asset;
+use App\Domains\Asset\Models\Asset;
 use App\Domains\Client\Models\Client;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;

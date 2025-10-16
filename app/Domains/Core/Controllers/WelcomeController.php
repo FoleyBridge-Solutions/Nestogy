@@ -3,7 +3,7 @@
 namespace App\Domains\Core\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Models\SubscriptionPlan;
+use App\Domains\Product\Models\SubscriptionPlan;
 
 class WelcomeController extends Controller
 {

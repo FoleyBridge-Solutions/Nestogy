@@ -2,15 +2,15 @@
 
 namespace App\Domains\Ticket\Models;
 
-use App\Models\Asset;
+use App\Domains\Asset\Models\Asset;
 use App\Domains\Client\Models\Client;
-use App\Models\Contact;
-use App\Models\Invoice;
-use App\Models\Location;
-use App\Models\Project;
+use App\Domains\Client\Models\Contact;
+use App\Domains\Financial\Models\Invoice;
+use App\Domains\Client\Models\Location;
+use App\Domains\Project\Models\Project;
 
-use App\Models\User;
-use App\Models\Vendor;
+use App\Domains\Core\Models\User;
+use App\Domains\Project\Models\Vendor;
 use App\Traits\BelongsToCompany;
 use App\Traits\HasArchive;
 use Carbon\Carbon;

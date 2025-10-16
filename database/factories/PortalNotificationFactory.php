@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\PortalNotification;
+use App\Domains\Core\Models\PortalNotification;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class PortalNotificationFactory extends Factory

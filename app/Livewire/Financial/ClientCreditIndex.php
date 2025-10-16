@@ -3,7 +3,7 @@
 namespace App\Livewire\Financial;
 
 use App\Domains\Core\Services\NavigationService;
-use App\Models\ClientCredit;
+use App\Domains\Financial\Models\ClientCredit;
 use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;

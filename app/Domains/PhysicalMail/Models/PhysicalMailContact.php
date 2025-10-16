@@ -3,7 +3,7 @@
 namespace App\Domains\PhysicalMail\Models;
 
 use App\Domains\Client\Models\Client;
-use App\Models\Traits\HasPostGridIntegration;
+use App\Domains\Core\Traits\HasPostGridIntegration;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;

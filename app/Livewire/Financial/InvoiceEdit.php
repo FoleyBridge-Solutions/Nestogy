@@ -3,9 +3,9 @@
 namespace App\Livewire\Financial;
 
 use App\Domains\Client\Models\Client;
-use App\Models\Category;
-use App\Models\Invoice;
-use App\Models\Product;
+use App\Domains\Financial\Models\Category;
+use App\Domains\Financial\Models\Invoice;
+use App\Domains\Product\Models\Product;
 use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;

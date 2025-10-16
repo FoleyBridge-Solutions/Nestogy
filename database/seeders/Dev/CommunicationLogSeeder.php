@@ -2,10 +2,10 @@
 
 namespace Database\Seeders\Dev;
 
-use App\Models\CommunicationLog;
+use App\Domains\Client\Models\CommunicationLog;
 use App\Domains\Client\Models\Client;
-use App\Models\Company;
-use App\Models\User;
+use App\Domains\Company\Models\Company;
+use App\Domains\Core\Models\User;
 use Illuminate\Database\Seeder;
 
 class CommunicationLogSeeder extends Seeder

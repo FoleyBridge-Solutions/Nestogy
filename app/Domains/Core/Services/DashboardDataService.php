@@ -4,11 +4,11 @@ namespace App\Domains\Core\Services;
 
 use App\Domains\Financial\Services\FinancialAnalyticsService;
 use App\Domains\Client\Models\Client;
-use App\Models\DashboardWidget;
-use App\Models\Invoice;
-use App\Models\Payment;
-use App\Models\Quote;
-use App\Models\Setting;
+use App\Domains\Core\Models\DashboardWidget;
+use App\Domains\Financial\Models\Invoice;
+use App\Domains\Financial\Models\Payment;
+use App\Domains\Financial\Models\Quote;
+use App\Domains\Core\Models\Setting;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Support\Facades\Cache;

@@ -5,7 +5,7 @@ namespace App\Console\Commands;
 use App\Domains\Integration\Models\RmmIntegration;
 use App\Domains\Integration\Services\AssetSyncService;
 use App\Domains\Integration\Services\RmmServiceFactory;
-use App\Models\Asset;
+use App\Domains\Asset\Models\Asset;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 

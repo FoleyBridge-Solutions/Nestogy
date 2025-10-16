@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\TaxCalculation;
+use App\Domains\Tax\Models\TaxCalculation;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class TaxCalculationFactory extends Factory

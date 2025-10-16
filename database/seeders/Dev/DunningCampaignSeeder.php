@@ -2,7 +2,7 @@
 
 namespace Database\Seeders\Dev;
 
-use App\Models\DunningCampaign;
+use App\Domains\Collections\Models\DunningCampaign;
 use Illuminate\Database\Seeder;
 
 class DunningCampaignSeeder extends Seeder

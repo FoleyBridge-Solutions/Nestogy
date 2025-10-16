@@ -2,9 +2,9 @@
 
 namespace Tests\Unit\Models;
 
-use App\Models\Company;
-use App\Models\User;
-use App\Models\UserSetting;
+use App\Domains\Company\Models\Company;
+use App\Domains\Core\Models\User;
+use App\Domains\Core\Models\UserSetting;
 use Tests\RefreshesDatabase;
 use Tests\TestCase;
 

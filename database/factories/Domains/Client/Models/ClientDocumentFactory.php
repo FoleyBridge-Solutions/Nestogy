@@ -2,7 +2,7 @@
 
 namespace Database\Factories\Domains\Client\Models;
 
-use App\Models\ClientDocument;
+use App\Domains\Client\Models\ClientDocument;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class ClientDocumentFactory extends Factory

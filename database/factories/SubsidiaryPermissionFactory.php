@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\SubsidiaryPermission;
+use App\Domains\Company\Models\SubsidiaryPermission;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class SubsidiaryPermissionFactory extends Factory

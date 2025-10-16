@@ -2,9 +2,9 @@
 
 namespace Database\Seeders\Dev;
 
-use App\Models\InAppNotification;
-use App\Models\Company;
-use App\Models\User;
+use App\Domains\Core\Models\InAppNotification;
+use App\Domains\Company\Models\Company;
+use App\Domains\Core\Models\User;
 use Illuminate\Database\Seeder;
 
 class InAppNotificationSeeder extends Seeder

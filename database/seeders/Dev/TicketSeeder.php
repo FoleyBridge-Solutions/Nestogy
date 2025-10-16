@@ -4,9 +4,9 @@ namespace Database\Seeders\Dev;
 
 use App\Domains\Ticket\Models\Ticket;
 use App\Domains\Client\Models\Client;
-use App\Models\Company;
-use App\Models\Contact;
-use App\Models\User;
+use App\Domains\Company\Models\Company;
+use App\Domains\Client\Models\Contact;
+use App\Domains\Core\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 

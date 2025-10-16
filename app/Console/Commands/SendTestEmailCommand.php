@@ -4,7 +4,7 @@ namespace App\Console\Commands;
 
 use App\Domains\Email\Services\DynamicMailConfigService;
 use App\Domains\Email\Services\EmailService;
-use App\Models\Company;
+use App\Domains\Company\Models\Company;
 use Exception;
 use Illuminate\Console\Command;
 

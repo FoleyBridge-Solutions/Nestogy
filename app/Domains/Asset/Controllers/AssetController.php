@@ -7,7 +7,7 @@ use App\Domains\Asset\Requests\UpdateAssetRequest;
 use App\Domains\Asset\Services\AssetService;
 use App\Domains\Core\Controllers\Traits\UsesSelectedClient;
 use App\Http\Controllers\Controller;
-use App\Models\Asset;
+use App\Domains\Asset\Models\Asset;
 use Illuminate\Http\Request;
 
 class AssetController extends Controller

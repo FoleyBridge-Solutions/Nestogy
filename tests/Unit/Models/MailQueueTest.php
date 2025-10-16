@@ -2,8 +2,8 @@
 
 namespace Tests\Unit\Models;
 
-use App\Models\MailQueue;
-use App\Models\Company;
+use App\Domains\Core\Models\MailQueue;
+use App\Domains\Company\Models\Company;
 use Tests\RefreshesDatabase;
 use Tests\TestCase;
 

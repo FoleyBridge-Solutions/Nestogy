@@ -3,7 +3,7 @@
 namespace App\Domains\Client\Controllers\Api\Portal;
 
 use App\Http\Controllers\Controller;
-use App\Models\Invoice;
+use App\Domains\Financial\Models\Invoice;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;

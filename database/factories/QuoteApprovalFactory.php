@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\QuoteApproval;
+use App\Domains\Financial\Models\QuoteApproval;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class QuoteApprovalFactory extends Factory

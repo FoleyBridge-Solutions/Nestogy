@@ -2,7 +2,7 @@
 
 namespace Database\Seeders\Dev;
 
-use App\Models\MailQueue;
+use App\Domains\Core\Models\MailQueue;
 use Illuminate\Database\Seeder;
 
 class MailQueueSeeder extends Seeder
