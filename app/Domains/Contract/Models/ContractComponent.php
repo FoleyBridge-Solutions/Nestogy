@@ -64,12 +64,12 @@ class ContractComponent extends Model
      */
     public function creator(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\User::class, 'created_by');
+        return $this->belongsTo(\App\Domains\Core\Models\User::class, 'created_by');
     }
 
     public function updater(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\User::class, 'updated_by');
+        return $this->belongsTo(\App\Domains\Core\Models\User::class, 'updated_by');
     }
 
     public function assignments(): HasMany

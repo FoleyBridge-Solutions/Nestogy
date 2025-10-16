@@ -11,8 +11,8 @@ class ServiceTaxRateFactory extends Factory
 
     public function definition(): array
     {
-        return ['company_id' => \App\Models\Company::factory(),
-            'tax_jurisdiction_id' => \App\Models\TaxJurisdiction::factory(),
+        return ['company_id' => \App\Domains\Company\Models\Company::factory(),
+            'tax_jurisdiction_id' => \App\Domains\Tax\Models\TaxJurisdiction::factory(),
             'service_type' => $this->faker->numberBetween(1, 5),
             'tax_type' => $this->faker->numberBetween(1, 5),
             'tax_name' => $this->faker->words(3, true),

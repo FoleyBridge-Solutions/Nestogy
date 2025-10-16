@@ -8,7 +8,7 @@ use App\Domains\Client\Models\Contact;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Contact>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Domains\Client\Models\ClientContact>
  */
 class ContactFactory extends Factory
 {

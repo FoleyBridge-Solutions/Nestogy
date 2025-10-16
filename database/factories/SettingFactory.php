@@ -11,7 +11,7 @@ class SettingFactory extends Factory
 
     public function definition(): array
     {
-        return ['company_id' => \App\Models\Company::factory(),
+        return ['company_id' => \App\Domains\Company\Models\Company::factory(),
             'current_database_version' => $this->faker->regexify('[0-9]\.[0-9]'),
             'start_page' => $this->faker->word,
             'company_logo' => $this->faker->optional()->word,

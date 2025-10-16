@@ -11,14 +11,14 @@ class SettingsConfigurationFactory extends Factory
 
     public function definition(): array
     {
-        return ['company_id' => \App\Models\Company::factory(),
+        return ['company_id' => \App\Domains\Company\Models\Company::factory(),
             'domain' => 'general',
             'category' => 'system',
             'settings' => json_encode([]),
             'metadata' => json_encode([]),
             'is_active' => $this->faker->boolean(70),
             'last_modified_at' => $this->faker->optional()->dateTimeBetween('-1 year', 'now'),
-            'last_modified_by' => \App\Models\User::factory()
+            'last_modified_by' => \App\Domains\Core\Models\User::factory()
         ];
     }
 }

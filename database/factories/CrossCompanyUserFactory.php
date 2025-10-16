@@ -12,9 +12,9 @@ class CrossCompanyUserFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id' => \App\Models\User::factory(),
-            'primary_company_id' => \App\Models\Company::factory(),
-            'company_id' => \App\Models\Company::factory(),
+            'user_id' => \App\Domains\Core\Models\User::factory(),
+            'primary_company_id' => \App\Domains\Company\Models\Company::factory(),
+            'company_id' => \App\Domains\Company\Models\Company::factory(),
             'role_in_company' => $this->faker->numberBetween(1, 10),
             'access_type' => $this->faker->randomElement(['full', 'limited', 'view_only']),
             'access_permissions' => json_encode([]),
@@ -32,7 +32,7 @@ class CrossCompanyUserFactory extends Factory
             'audit_actions' => $this->faker->boolean(),
             'compliance_settings' => json_encode([]),
             'notes' => $this->faker->optional()->sentence,
-            'created_by' => \App\Models\User::factory(),
+            'created_by' => \App\Domains\Core\Models\User::factory(),
             'updated_by' => null
         ];
     }

@@ -11,7 +11,7 @@ class TaxApiQueryCacheFactory extends Factory
 
     public function definition(): array
     {
-        return ['company_id' => \App\Models\Company::factory(),
+        return ['company_id' => \App\Domains\Company\Models\Company::factory(),
             'api_provider' => $this->faker->randomElement(['avalara', 'taxjar', 'vertex']),
             'query_type' => $this->faker->numberBetween(1, 5),
             'query_hash' => $this->faker->sha256,

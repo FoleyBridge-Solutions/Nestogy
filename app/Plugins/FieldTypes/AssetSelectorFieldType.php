@@ -3,7 +3,7 @@
 namespace App\Plugins\FieldTypes;
 
 use App\Contracts\ContractFieldInterface;
-use App\Models\Asset;
+use App\Domains\Asset\Models\Asset;
 use App\Support\ValidationResult;
 use Illuminate\Support\Facades\Auth;
 
@@ -133,7 +133,7 @@ class AssetSelectorFieldType implements ContractFieldInterface
 
     public function getDependencies(): array
     {
-        return ['App\Models\Asset'];
+        return ['App\Domains\Asset\Models\Asset'];
     }
 
     public function validate($value, array $config, array $context = []): ValidationResult

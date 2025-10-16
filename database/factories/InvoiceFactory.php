@@ -8,7 +8,7 @@ use App\Domains\Financial\Models\Invoice;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Invoice>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Domains\Financial\Models\Invoice>
  */
 class InvoiceFactory extends Factory
 {
@@ -44,7 +44,7 @@ class InvoiceFactory extends Factory
             'currency_code' => 'USD',
             'note' => $this->faker->optional()->paragraph(),
             'url_key' => $this->faker->uuid(),
-            'category_id' => \App\Models\Category::factory(),
+            'category_id' => \App\Domains\Financial\Models\Category::factory(),
             'created_at' => $date,
             'updated_at' => $date,
         ];

@@ -12,8 +12,8 @@ class CompanySubscriptionFactory extends Factory
     public function definition(): array
     {
         return [
-            'company_id' => \App\Models\Company::factory(),
-            'subscription_plan_id' => \App\Models\SubscriptionPlan::factory(),
+            'company_id' => \App\Domains\Company\Models\Company::factory(),
+            'subscription_plan_id' => \App\Domains\Product\Models\SubscriptionPlan::factory(),
             'status' => $this->faker->randomElement(['active', 'trialing', 'past_due', 'canceled', 'suspended']),
             'max_users' => $this->faker->numberBetween(1, 100),
             'current_user_count' => $this->faker->numberBetween(0, 100),

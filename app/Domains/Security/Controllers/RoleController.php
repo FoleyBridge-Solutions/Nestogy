@@ -32,7 +32,7 @@ class RoleController extends Controller
      */
     public function index(Request $request)
     {
-        $this->authorize('viewAny', \App\Models\Role::class);
+        $this->authorize('viewAny', \App\Domains\Core\Models\Role::class);
 
         $user = Auth::user();
 
@@ -64,7 +64,7 @@ class RoleController extends Controller
      */
     public function create()
     {
-        $this->authorize('create', \App\Models\Role::class);
+        $this->authorize('create', \App\Domains\Core\Models\Role::class);
 
         $abilitiesByCategory = $this->getAbilitiesByCategory();
         $roleTemplates = $this->getMspRoleTemplates();
@@ -77,7 +77,7 @@ class RoleController extends Controller
      */
     public function store(Request $request)
     {
-        $this->authorize('create', \App\Models\Role::class);
+        $this->authorize('create', \App\Domains\Core\Models\Role::class);
 
         $request->validate([
             'name' => self::VALIDATION_REQUIRED_STRING_255 . '|unique:bouncer_roles,name',
@@ -151,7 +151,7 @@ class RoleController extends Controller
      */
     public function show(string $roleName)
     {
-        $this->authorize('view', \App\Models\Role::class);
+        $this->authorize('view', \App\Domains\Core\Models\Role::class);
 
         $role = Bouncer::role()->where('name', $roleName)->with('abilities')->firstOrFail();
 
@@ -171,7 +171,7 @@ class RoleController extends Controller
      */
     public function edit(string $roleName)
     {
-        $this->authorize('update', \App\Models\Role::class);
+        $this->authorize('update', \App\Domains\Core\Models\Role::class);
 
         $role = Bouncer::role()->where('name', $roleName)->with('abilities')->firstOrFail();
 
@@ -197,7 +197,7 @@ class RoleController extends Controller
      */
     public function update(Request $request, string $roleName)
     {
-        $this->authorize('update', \App\Models\Role::class);
+        $this->authorize('update', \App\Domains\Core\Models\Role::class);
 
         $role = Bouncer::role()->where('name', $roleName)->firstOrFail();
 
@@ -289,7 +289,7 @@ class RoleController extends Controller
      */
     public function destroy(Request $request, string $roleName)
     {
-        $this->authorize('delete', \App\Models\Role::class);
+        $this->authorize('delete', \App\Domains\Core\Models\Role::class);
 
         $role = Bouncer::role()->where('name', $roleName)->firstOrFail();
 
@@ -357,7 +357,7 @@ class RoleController extends Controller
      */
     public function duplicate(Request $request, string $roleName)
     {
-        $this->authorize('create', \App\Models\Role::class);
+        $this->authorize('create', \App\Domains\Core\Models\Role::class);
 
         $originalRole = Bouncer::role()->where('name', $roleName)->with('abilities')->firstOrFail();
 
@@ -429,7 +429,7 @@ class RoleController extends Controller
      */
     public function applyTemplate(Request $request)
     {
-        $this->authorize('create', \App\Models\Role::class);
+        $this->authorize('create', \App\Domains\Core\Models\Role::class);
 
         $request->validate([
             'template' => 'required|string|in:help-desk,field-tech,network-admin,security-specialist,project-manager,client-manager,billing-admin',

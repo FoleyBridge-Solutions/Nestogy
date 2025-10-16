@@ -30,7 +30,7 @@
                             <flux:label for="type" required>Type</flux:label>
                             <flux:select name="type" id="type" required :error="$errors->has('type')">
                                 <option value="">Select Type</option>
-                                @foreach(App\Models\Asset::TYPES as $type)
+                                @foreach(App\Domains\Asset\Models\Asset::TYPES as $type)
                                     <option value="{{ $type }}" {{ old('type') == $type ? 'selected' : '' }}>
                                         {{ $type }}
                                     </option>
@@ -61,7 +61,7 @@
                         <flux:field class="mb-6">
                             <flux:label for="status">Status</flux:label>
                             <flux:select name="status" id="status" :error="$errors->has('status')">
-                                @foreach(App\Models\Asset::STATUSES as $status)
+                                @foreach(App\Domains\Asset\Models\Asset::STATUSES as $status)
                                     <option value="{{ $status }}" {{ old('status', 'Ready To Deploy') == $status ? 'selected' : '' }}>
                                         {{ $status }}
                                     </option>

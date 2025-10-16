@@ -370,7 +370,7 @@ class Client extends Model
      */
     public function quotes()
     {
-        return $this->hasMany(\App\Models\Quote::class);
+        return $this->hasMany(\App\Domains\Financial\Models\Quote::class);
     }
 
     /**
@@ -428,7 +428,7 @@ class Client extends Model
      */
     public function favoritedByUsers(): BelongsToMany
     {
-        return $this->belongsToMany(\App\Models\User::class, 'user_favorite_clients', 'client_id', 'user_id')
+        return $this->belongsToMany(\App\Domains\Core\Models\User::class, 'user_favorite_clients', 'client_id', 'user_id')
             ->where('users.company_id', $this->company_id)
             ->withTimestamps();
     }

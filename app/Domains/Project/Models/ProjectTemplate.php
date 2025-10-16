@@ -108,7 +108,7 @@ class ProjectTemplate extends Model
      */
     public function company(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Company::class);
+        return $this->belongsTo(\App\Domains\Company\Models\Company::class);
     }
 
     /**
@@ -116,7 +116,7 @@ class ProjectTemplate extends Model
      */
     public function creator(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\User::class, 'created_by');
+        return $this->belongsTo(\App\Domains\Core\Models\User::class, 'created_by');
     }
 
     /**

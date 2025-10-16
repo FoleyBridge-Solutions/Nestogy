@@ -4,7 +4,7 @@ namespace App\Jobs;
 
 use App\Domains\Financial\Services\TaxEngine\SentimentAnalysisService;
 use App\Domains\Ticket\Models\Ticket;
-use App\Models\TicketReply;
+use App\Domains\Ticket\Models\TicketComment;
 use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;

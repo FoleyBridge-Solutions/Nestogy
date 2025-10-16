@@ -194,7 +194,7 @@ class NavigationController extends Controller
             }
 
             // Get recent quotes
-            $recentQuotes = \App\Models\Quote::where('company_id', $companyId)
+            $recentQuotes = \App\Domains\Financial\Models\Quote::where('company_id', $companyId)
                 ->with('client')
                 ->orderBy('updated_at', 'desc')
                 ->limit(2)
@@ -355,7 +355,7 @@ class NavigationController extends Controller
 
             // Search quotes
             if ($domain === 'all' || $domain === 'financial') {
-                $quotes = \App\Models\Quote::where('company_id', auth()->user()->company_id)
+                $quotes = \App\Domains\Financial\Models\Quote::where('company_id', auth()->user()->company_id)
                     ->where(function ($q) use ($query) {
                         $q->where('quote_number', 'like', "%{$query}%")
                             ->orWhere('id', 'like', "%{$query}%")
@@ -385,7 +385,7 @@ class NavigationController extends Controller
 
             // Search assets
             if ($domain === 'all' || $domain === 'assets') {
-                $assets = \App\Models\Asset::where('company_id', auth()->user()->company_id)
+                $assets = \App\Domains\Asset\Models\Asset::where('company_id', auth()->user()->company_id)
                     ->where(function ($q) use ($query) {
                         $q->where('name', 'like', "%{$query}%")
                             ->orWhere('asset_tag', 'like', "%{$query}%")
@@ -415,7 +415,7 @@ class NavigationController extends Controller
 
             // Search projects
             if ($domain === 'all' || $domain === 'projects') {
-                $projects = \App\Models\Project::where('company_id', auth()->user()->company_id)
+                $projects = \App\Domains\Project\Models\Project::where('company_id', auth()->user()->company_id)
                     ->where(function ($q) use ($query) {
                         $q->where('name', 'like', "%{$query}%")
                             ->orWhere('description', 'like', "%{$query}%")
@@ -473,7 +473,7 @@ class NavigationController extends Controller
 
             // Search expenses
             if ($domain === 'all' || $domain === 'financial') {
-                $expenses = \App\Models\Expense::where('company_id', auth()->user()->company_id)
+                $expenses = \App\Domains\Financial\Models\Expense::where('company_id', auth()->user()->company_id)
                     ->where(function ($q) use ($query) {
                         $q->where('description', 'like', "%{$query}%")
                             ->orWhere('vendor', 'like', "%{$query}%")
@@ -499,7 +499,7 @@ class NavigationController extends Controller
 
             // Search payments
             if ($domain === 'all' || $domain === 'financial') {
-                $payments = \App\Models\Payment::where('company_id', auth()->user()->company_id)
+                $payments = \App\Domains\Financial\Models\Payment::where('company_id', auth()->user()->company_id)
                     ->where(function ($q) use ($query) {
                         $q->where('reference', 'like', "%{$query}%")
                             ->orWhere('notes', 'like', "%{$query}%");
@@ -528,7 +528,7 @@ class NavigationController extends Controller
 
             // Search users
             if ($domain === 'all' || $domain === 'users') {
-                $users = \App\Models\User::where('company_id', auth()->user()->company_id)
+                $users = \App\Domains\Core\Models\User::where('company_id', auth()->user()->company_id)
                     ->where(function ($q) use ($query) {
                         $q->where('name', 'like', "%{$query}%")
                             ->orWhere('email', 'like', "%{$query}%");
@@ -552,7 +552,7 @@ class NavigationController extends Controller
 
             // Search products
             if ($domain === 'all' || $domain === 'products') {
-                $products = \App\Models\Product::products()
+                $products = \App\Domains\Product\Models\Product::products()
                     ->where('company_id', auth()->user()->company_id)
                     ->where(function ($q) use ($query) {
                         $q->where('name', 'like', "%{$query}%")
@@ -579,7 +579,7 @@ class NavigationController extends Controller
 
             // Search services
             if ($domain === 'all' || $domain === 'services') {
-                $services = \App\Models\Product::services()
+                $services = \App\Domains\Product\Models\Product::services()
                     ->where('company_id', auth()->user()->company_id)
                     ->where(function ($q) use ($query) {
                         $q->where('name', 'like', "%{$query}%")
@@ -607,7 +607,7 @@ class NavigationController extends Controller
             // Search knowledge base articles (if exists)
             if ($domain === 'all' || $domain === 'knowledge') {
                 try {
-                    $articles = \App\Models\KbArticle::where('company_id', auth()->user()->company_id)
+                    $articles = \App\Domains\Knowledge\Models\KbArticle::where('company_id', auth()->user()->company_id)
                         ->where(function ($q) use ($query) {
                             $q->where('title', 'like', "%{$query}%")
                                 ->orWhere('content', 'like', "%{$query}%")
@@ -782,7 +782,7 @@ class NavigationController extends Controller
         // Pattern: %ProjectName - Find project by name
         if (preg_match('/^%(.+)$/', $query, $matches)) {
             $projectName = trim($matches[1]);
-            $projects = \App\Models\Project::where('company_id', $companyId)
+            $projects = \App\Domains\Project\Models\Project::where('company_id', $companyId)
                 ->where('name', 'like', "%{$projectName}%")
                 ->with('client')
                 ->limit(3)
@@ -808,7 +808,7 @@ class NavigationController extends Controller
         // Pattern: ^AssetTag - Find asset by tag
         if (preg_match('/^\^(.+)$/', $query, $matches)) {
             $assetTag = trim($matches[1]);
-            $asset = \App\Models\Asset::where('company_id', $companyId)
+            $asset = \App\Domains\Asset\Models\Asset::where('company_id', $companyId)
                 ->where('asset_tag', 'like', "%{$assetTag}%")
                 ->with('client')
                 ->first();

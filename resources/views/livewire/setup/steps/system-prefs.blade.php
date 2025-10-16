@@ -20,7 +20,7 @@
                 label="Timezone" 
                 required
                 :invalid="$errors->has('timezone')">
-                @foreach(\App\Models\Setting::getAvailableTimezones() as $value => $label)
+                @foreach(\App\Domains\Core\Models\Setting::getAvailableTimezones() as $value => $label)
                     <flux:select.option value="{{ $value }}">{{ $label }}</flux:select.option>
                 @endforeach
             </flux:select>
@@ -29,7 +29,7 @@
             <flux:select 
                 wire:model.defer="date_format" 
                 label="Date Format">
-                @foreach(\App\Models\Setting::getAvailableDateFormats() as $value => $label)
+                @foreach(\App\Domains\Core\Models\Setting::getAvailableDateFormats() as $value => $label)
                     <flux:select.option value="{{ $value }}">{{ $label }}</flux:select.option>
                 @endforeach
             </flux:select>
@@ -38,7 +38,7 @@
             <flux:select 
                 wire:model.defer="theme" 
                 label="Theme">
-                @foreach(\App\Models\Setting::getAvailableThemes() as $value => $label)
+                @foreach(\App\Domains\Core\Models\Setting::getAvailableThemes() as $value => $label)
                     <flux:select.option value="{{ $value }}">{{ $label }}</flux:select.option>
                 @endforeach
             </flux:select>
@@ -47,7 +47,7 @@
             <flux:select 
                 wire:model.defer="company_language" 
                 label="Language">
-                @foreach(\App\Models\Setting::getAvailableLanguages() as $value => $label)
+                @foreach(\App\Domains\Core\Models\Setting::getAvailableLanguages() as $value => $label)
                     <flux:select.option value="{{ $value }}">{{ $label }}</flux:select.option>
                 @endforeach
             </flux:select>

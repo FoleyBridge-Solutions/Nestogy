@@ -6,7 +6,7 @@
         <x-slot name="title">Product Bundles</x-slot>
         <x-slot name="description">Manage product bundles and package deals</x-slot>
         <x-slot name="actions">
-            @can('create', App\Models\ProductBundle::class)
+            @can('create', App\Domains\Product\Models\ProductBundle::class)
                 <a href="{{ route('bundles.create') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                     <i class="fas fa-plus"></i> Create Bundle
                 </a>
@@ -133,7 +133,7 @@
                         Create your first product bundle to get started.
                     @endif
                 </p>
-                @can('create', App\Models\ProductBundle::class)
+                @can('create', App\Domains\Product\Models\ProductBundle::class)
                     <a href="{{ route('bundles.create') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                         <i class="fas fa-plus"></i> Create Bundle
                     </a>

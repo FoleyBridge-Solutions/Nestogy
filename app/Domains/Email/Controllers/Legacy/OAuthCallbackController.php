@@ -83,7 +83,7 @@ class OAuthCallbackController extends Controller
             $userId = $oauthContext['user_id'];
 
             // Get company
-            $company = \App\Models\Company::find($companyId);
+            $company = \App\Domains\Company\Models\Company::find($companyId);
             if (! $company) {
                 return redirect()->route('email.accounts.index')
                     ->with('error', 'OAuth authentication failed: Company not found');

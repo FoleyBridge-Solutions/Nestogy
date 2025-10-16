@@ -2,9 +2,9 @@
 
 namespace App\Imports;
 
-use App\Models\Asset;
-use App\Models\Contact;
-use App\Models\Location;
+use App\Domains\Asset\Models\Asset;
+use App\Domains\Client\Models\ClientContact;
+use App\Domains\Client\Models\Location;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Concerns\SkipsErrors;

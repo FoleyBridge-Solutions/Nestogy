@@ -12,7 +12,7 @@
             label="Vendor"
             placeholder="Select Vendor"
             x-model="vendorId">
-            @foreach(\App\Models\Vendor::where('company_id', auth()->user()->company_id)->orderBy('name')->get() as $vendor)
+            @foreach(\App\Domains\Project\Models\Vendor::where('company_id', auth()->user()->company_id)->orderBy('name')->get() as $vendor)
                 <option value="{{ $vendor->id }}">{{ $vendor->name }}</option>
             @endforeach
         </x-forms.select>

@@ -921,7 +921,7 @@ class DashboardDataService
     {
         // Import the Ticket model
         $ticketModel = \App\Domains\Ticket\Models\Ticket::class;
-        $replyModel = \App\Models\TicketReply::class;
+        $replyModel = \App\Domains\Ticket\Models\TicketComment::class;
 
         // Get ticket sentiment stats
         $ticketStats = DB::table('tickets')

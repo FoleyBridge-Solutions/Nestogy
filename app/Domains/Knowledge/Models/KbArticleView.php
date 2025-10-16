@@ -3,7 +3,7 @@
 namespace App\Domains\Knowledge\Models;
 
 use App\Domains\Client\Models\ClientContact;
-use App\Models\BaseModel;
+use Illuminate\Database\Eloquent\Model;
 use App\Domains\Core\Models\User;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -27,7 +27,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Carbon\Carbon $created_at
  * @property \Carbon\Carbon $updated_at
  */
-class KbArticleView extends BaseModel
+class KbArticleView extends Model
 {
     protected $fillable = [
         'company_id',

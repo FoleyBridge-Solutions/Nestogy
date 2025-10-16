@@ -12,7 +12,7 @@ class ClientPortalSessionFactory extends Factory
     public function definition(): array
     {
         return [
-            'company_id' => \App\Models\Company::factory(),
+            'company_id' => \App\Domains\Company\Models\Company::factory(),
             'client_id' => \App\Domains\Client\Models\Client::factory(),
             'session_token' => \Illuminate\Support\Facades\Hash::make(\Illuminate\Support\Str::random(64)),
             'refresh_token' => \Illuminate\Support\Facades\Hash::make(\Illuminate\Support\Str::random(64)),

@@ -227,7 +227,7 @@ class SlaBreachStrategy implements NotificationStrategyInterface
      */
     protected function getSupervisors(Ticket $ticket): array
     {
-        return \App\Models\User::where('company_id', $ticket->company_id)
+        return \App\Domains\Core\Models\User::where('company_id', $ticket->company_id)
             ->where('role', 'supervisor')
             ->where('is_active', true)
             ->get()
@@ -239,7 +239,7 @@ class SlaBreachStrategy implements NotificationStrategyInterface
      */
     protected function getManagers(Ticket $ticket): array
     {
-        return \App\Models\User::where('company_id', $ticket->company_id)
+        return \App\Domains\Core\Models\User::where('company_id', $ticket->company_id)
             ->whereIn('role', ['manager', 'admin'])
             ->where('is_active', true)
             ->get()

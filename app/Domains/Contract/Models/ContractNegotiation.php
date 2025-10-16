@@ -105,7 +105,7 @@ class ContractNegotiation extends Model
 
     public function quote(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Quote::class);
+        return $this->belongsTo(\App\Domains\Financial\Models\Quote::class);
     }
 
     public function currentVersion(): BelongsTo
@@ -115,12 +115,12 @@ class ContractNegotiation extends Model
 
     public function creator(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\User::class, 'created_by');
+        return $this->belongsTo(\App\Domains\Core\Models\User::class, 'created_by');
     }
 
     public function assignee(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\User::class, 'assigned_to');
+        return $this->belongsTo(\App\Domains\Core\Models\User::class, 'assigned_to');
     }
 
     public function versions(): HasMany
@@ -331,7 +331,7 @@ class ContractNegotiation extends Model
         return $phases[$this->phase] ?? 0;
     }
 
-    public function canUserEdit(\App\Models\User $user): bool
+    public function canUserEdit(\App\Domains\Core\Models\User $user): bool
     {
         // Creator and assignee can always edit
         if ($this->created_by === $user->id || $this->assigned_to === $user->id) {

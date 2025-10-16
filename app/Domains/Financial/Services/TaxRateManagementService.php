@@ -2,10 +2,10 @@
 
 namespace App\Domains\Financial\Services;
 
-use App\Models\TaxCategory;
+use App\Domains\Tax\Models\TaxCategory;
 use App\Domains\Tax\Models\TaxJurisdiction;
 use App\Domains\Tax\Models\TaxRateHistory;
-use App\Models\VoIPTaxRate;
+use App\Domains\Tax\Models\VoIPTaxRate;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;

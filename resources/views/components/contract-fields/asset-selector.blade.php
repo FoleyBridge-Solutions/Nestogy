@@ -17,7 +17,7 @@
     $selectedAssets = collect();
     if ($value) {
         $assetIds = is_array($value) ? $value : [$value];
-        $selectedAssets = \App\Models\Asset::where('company_id', auth()->user()->company_id)
+        $selectedAssets = \App\Domains\Asset\Models\Asset::where('company_id', auth()->user()->company_id)
             ->whereIn('id', $assetIds)
             ->get();
     }

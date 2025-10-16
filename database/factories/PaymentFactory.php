@@ -9,7 +9,7 @@ use App\Domains\Core\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Payment>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Domains\Financial\Models\Payment>
  */
 class PaymentFactory extends Factory
 {
@@ -34,7 +34,7 @@ class PaymentFactory extends Factory
         $gateways = ['stripe', 'paypal', 'square', 'manual'];
         $gateway = $this->faker->randomElement($gateways);
 
-        return ['company_id' => \App\Models\Company::factory(),
+        return ['company_id' => \App\Domains\Company\Models\Company::factory(),
             'client_id' => Client::inRandomOrder()->first()?->id ?? Client::factory(),
             'invoice_id' => Invoice::inRandomOrder()->first()?->id ?? Invoice::factory(),
             'processed_by' => User::inRandomOrder()->first()?->id ?? User::factory(),

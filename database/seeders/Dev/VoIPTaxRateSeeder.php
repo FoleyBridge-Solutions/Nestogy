@@ -2,7 +2,7 @@
 
 namespace Database\Seeders\Dev;
 
-use App\Models\VoIPTaxRate;
+use App\Domains\Tax\Models\VoIPTaxRate;
 use Illuminate\Database\Seeder;
 
 class VoIPTaxRateSeeder extends Seeder

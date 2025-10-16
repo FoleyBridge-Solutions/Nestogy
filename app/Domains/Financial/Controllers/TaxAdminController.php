@@ -6,7 +6,7 @@ use App\Domains\Financial\Services\TaxEngine\TaxEngineRouter;
 use App\Domains\Financial\Services\TaxEngine\TaxProfileService;
 use App\Http\Controllers\Controller;
 use App\Domains\Tax\Models\ServiceTaxRate;
-use App\Models\TaxCategory;
+use App\Domains\Tax\Models\TaxCategory;
 use App\Domains\Tax\Models\TaxJurisdiction;
 use App\Domains\Tax\Models\TaxProfile;
 use Illuminate\Http\Request;
@@ -80,7 +80,7 @@ class TaxAdminController extends Controller
             ->ordered()
             ->paginate(20);
 
-        $availableCategories = \App\Models\Category::where('company_id', $companyId)
+        $availableCategories = \App\Domains\Financial\Models\Category::where('company_id', $companyId)
             ->orderBy('name')
             ->get();
 

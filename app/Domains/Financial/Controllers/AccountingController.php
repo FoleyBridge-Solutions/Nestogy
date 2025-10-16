@@ -12,7 +12,7 @@ class AccountingController extends Controller
 {
     public function chartOfAccounts(Request $request): View
     {
-        $accounts = \App\Models\Account::orderBy('type')->orderBy('name')->get();
+        $accounts = \App\Domains\Company\Models\Account::orderBy('type')->orderBy('name')->get();
 
         $accountTypes = [
             'assets' => ['Current Assets', 'Fixed Assets', 'Other Assets'],
@@ -33,7 +33,7 @@ class AccountingController extends Controller
 
     public function journalEntries(Request $request): View
     {
-        $query = \App\Models\Payment::query();
+        $query = \App\Domains\Financial\Models\Payment::query();
 
         $filters = [
             'date_from' => $request->get('date_from', Carbon::now()->subMonth()),
@@ -68,7 +68,7 @@ class AccountingController extends Controller
 
     public function reconciliation(Request $request): View
     {
-        $bankAccounts = \App\Models\Account::whereNotNull('plaid_id')->get();
+        $bankAccounts = \App\Domains\Company\Models\Account::whereNotNull('plaid_id')->get();
         $selectedAccount = $request->get('account_id');
 
         $transactions = collect();
@@ -77,14 +77,14 @@ class AccountingController extends Controller
         $bookBalance = 0;
 
         if ($selectedAccount) {
-            $account = \App\Models\Account::find($selectedAccount);
-            $transactions = \App\Models\Payment::where('account_id', $selectedAccount)
+            $account = \App\Domains\Company\Models\Account::find($selectedAccount);
+            $transactions = \App\Domains\Financial\Models\Payment::where('account_id', $selectedAccount)
                 ->whereNull('reconciled_at')
                 ->get();
             $unreconciledItems = $transactions;
 
             $bankBalance = $account->opening_balance ?? 0;
-            $bookBalance = \App\Models\Payment::where('account_id', $selectedAccount)
+            $bookBalance = \App\Domains\Financial\Models\Payment::where('account_id', $selectedAccount)
                 ->whereNotNull('reconciled_at')
                 ->sum('amount') + $account->opening_balance;
         }
@@ -137,7 +137,7 @@ class AccountingController extends Controller
             // Create payment records for each line
             foreach ($validated['lines'] as $line) {
                 if ($line['debit'] > 0 || $line['credit'] > 0) {
-                    \App\Models\Payment::create([
+                    \App\Domains\Financial\Models\Payment::create([
                         'date' => $validated['entry_date'],
                         'account_id' => $line['account_id'],
                         'amount' => $line['debit'] ?: -$line['credit'],
@@ -162,7 +162,7 @@ class AccountingController extends Controller
         ]);
 
         // Mark transaction as reconciled
-        $payment = \App\Models\Payment::find($validated['transaction_id']);
+        $payment = \App\Domains\Financial\Models\Payment::find($validated['transaction_id']);
         if ($payment) {
             $payment->update([
                 'reconciled_at' => now(),
@@ -178,7 +178,7 @@ class AccountingController extends Controller
         $date = $request->get('date', Carbon::now());
 
         // Generate trial balance data
-        $accounts = \App\Models\Account::with(['payments' => function ($query) use ($date) {
+        $accounts = \App\Domains\Company\Models\Account::with(['payments' => function ($query) use ($date) {
             $query->whereDate('date', '<=', $date);
         }])->get();
 
@@ -210,7 +210,7 @@ class AccountingController extends Controller
         $dateTo = $request->get('date_to', Carbon::now());
 
         // Generate general ledger data
-        $accounts = \App\Models\Account::with(['payments' => function ($query) use ($dateFrom, $dateTo) {
+        $accounts = \App\Domains\Company\Models\Account::with(['payments' => function ($query) use ($dateFrom, $dateTo) {
             $query->whereBetween('date', [$dateFrom, $dateTo])
                 ->orderBy('date');
         }])->get();
@@ -250,7 +250,7 @@ class AccountingController extends Controller
 
     private function calculateAccountBalances(): array
     {
-        $accounts = \App\Models\Account::with('payments')->get();
+        $accounts = \App\Domains\Company\Models\Account::with('payments')->get();
         $balances = [];
 
         foreach ($accounts as $account) {

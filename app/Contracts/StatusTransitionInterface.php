@@ -3,7 +3,7 @@
 namespace App\Contracts;
 
 use App\Domains\Contract\Models\Contract;
-use App\Models\User;
+use App\Domains\Core\Models\User;
 
 /**
  * Interface for status transition plugins

@@ -2,7 +2,7 @@
 
 namespace App\Domains\Report\Models;
 
-use App\Models\BaseModel;
+use Illuminate\Database\Eloquent\Model;
 use App\Domains\Company\Models\Company;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -27,7 +27,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Carbon\Carbon $created_at
  * @property \Carbon\Carbon $updated_at
  */
-class ReportSchedule extends BaseModel
+class ReportSchedule extends Model
 {
     protected $fillable = [
         'company_id',

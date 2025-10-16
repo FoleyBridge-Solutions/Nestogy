@@ -4,7 +4,7 @@ namespace App\Plugins\StatusTransitions;
 
 use App\Contracts\StatusTransitionInterface;
 use App\Domains\Contract\Models\Contract;
-use App\Models\User;
+use App\Domains\Core\Models\User;
 use Illuminate\Support\Facades\Event;
 
 /**

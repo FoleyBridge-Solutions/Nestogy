@@ -349,7 +349,7 @@ class CommunicationLogController extends Controller
 
     protected function getInvoiceCommunications($client)
     {
-        if (!class_exists('App\Models\Invoice')) {
+        if (!class_exists('App\Domains\Financial\Models\Invoice')) {
             return collect();
         }
 

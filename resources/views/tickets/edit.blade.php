@@ -109,7 +109,7 @@ $pageActions = [
                             <flux:label for="vendor_id">Vendor</flux:label>
                             <flux:select name="vendor_id" id="vendor_id" value="{{ old('vendor_id', $ticket->vendor_id) }}">
                                 <flux:select.option value="">Select Vendor</flux:select.option>
-                                @foreach(\App\Models\Vendor::where('company_id', auth()->user()->company_id)->orderBy('name')->get() as $vendor)
+                                @foreach(\App\Domains\Project\Models\Vendor::where('company_id', auth()->user()->company_id)->orderBy('name')->get() as $vendor)
                                     <flux:select.option value="{{ $vendor->id }}">
                                         {{ $vendor->name }}
                                     </flux:select.option>
@@ -178,7 +178,7 @@ $pageActions = [
                         <flux:label for="assigned_to">Assign To</flux:label>
                         <flux:select name="assigned_to" id="assigned_to" value="{{ old('assigned_to', $ticket->assigned_to) }}">
                             <flux:select.option value="">Unassigned</flux:select.option>
-                            @foreach(\App\Models\User::where('company_id', auth()->user()->company_id)->where('status', 1)->orderBy('name')->get() as $user)
+                            @foreach(\App\Domains\Core\Models\User::where('company_id', auth()->user()->company_id)->where('status', 1)->orderBy('name')->get() as $user)
                                 <flux:select.option value="{{ $user->id }}">
                                     {{ $user->name }}
                                 </flux:select.option>

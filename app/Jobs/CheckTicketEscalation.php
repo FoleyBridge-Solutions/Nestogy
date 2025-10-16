@@ -223,7 +223,7 @@ class CheckTicketEscalation implements ShouldQueue
     protected function notifyManagement(string $reason): void
     {
         // Get managers for the company
-        $managers = \App\Models\User::forCompany($this->ticket->company_id)
+        $managers = \App\Domains\Core\Models\User::forCompany($this->ticket->company_id)
             ->where('role', 'manager')
             ->where('is_active', true)
             ->get();
@@ -244,7 +244,7 @@ class CheckTicketEscalation implements ShouldQueue
     protected function reassignToSenior(): void
     {
         // Find senior technicians
-        $seniorTechs = \App\Models\User::forCompany($this->ticket->company_id)
+        $seniorTechs = \App\Domains\Core\Models\User::forCompany($this->ticket->company_id)
             ->where('role', 'senior_technician')
             ->where('is_active', true)
             ->get();

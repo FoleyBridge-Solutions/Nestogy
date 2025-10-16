@@ -64,7 +64,7 @@
                     <!-- Custom Action Edit/Delete -->
                     @if(isset($action['custom_id']))
                         @php
-                            $customAction = \App\Models\CustomQuickAction::find($action['custom_id']);
+                            $customAction = \App\Domains\Core\Models\CustomQuickAction::find($action['custom_id']);
                             $canEdit = false;
                             if ($customAction) {
                                 $user = auth()->user();
@@ -442,7 +442,7 @@
                         <div class="space-y-2">
                             @foreach($customActions as $action)
                                 @php
-                                    $customAction = \App\Models\CustomQuickAction::find($action['custom_id']);
+                                    $customAction = \App\Domains\Core\Models\CustomQuickAction::find($action['custom_id']);
                                     $canEdit = false;
                                     if ($customAction) {
                                         $user = auth()->user();

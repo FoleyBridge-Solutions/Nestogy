@@ -12,7 +12,7 @@ class CompanyMailSettingsFactory extends Factory
     public function definition(): array
     {
         return [
-            'company_id' => \App\Models\Company::factory(),
+            'company_id' => \App\Domains\Company\Models\Company::factory(),
             'driver' => $this->faker->randomElement(['smtp', 'ses', 'mailgun', 'postmark', 'sendgrid', 'log']),
             'is_active' => $this->faker->boolean(70),
             'smtp_host' => $this->faker->optional()->domainName,

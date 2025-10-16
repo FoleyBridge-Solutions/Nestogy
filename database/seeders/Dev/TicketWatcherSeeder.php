@@ -2,8 +2,8 @@
 
 namespace Database\Seeders\Dev;
 
-use App\Models\TicketWatcher;
-use App\Models\Ticket;
+use App\Domains\Ticket\Models\TicketWatcher;
+use App\Domains\Ticket\Models\Ticket;
 use App\Domains\Core\Models\User;
 use Illuminate\Database\Seeder;
 

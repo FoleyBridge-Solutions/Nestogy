@@ -18,7 +18,7 @@
         <flux:select name="assigned_to" label="Assign To" required>
             <flux:select.option value="">Select a technician...</flux:select.option>
             @php
-                $technicians = \App\Models\User::where('company_id', auth()->user()->company_id)
+                $technicians = \App\Domains\Core\Models\User::where('company_id', auth()->user()->company_id)
                     ->where('status', '1')
                     ->whereNull('archived_at')
                     ->orderBy('name')

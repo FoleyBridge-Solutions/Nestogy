@@ -99,7 +99,7 @@ class AutoAssignTicket implements ShouldQueue
     protected function findBestTechnician()
     {
         // Get all active technicians for the company
-        $technicians = \App\Models\User::forCompany($this->ticket->company_id)
+        $technicians = \App\Domains\Core\Models\User::forCompany($this->ticket->company_id)
             ->where('role', 'technician')
             ->where('is_active', true)
             ->get();

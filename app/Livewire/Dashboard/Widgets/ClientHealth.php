@@ -131,7 +131,7 @@ class ClientHealth extends Component
             ->join('payments', 'payment_applications.payment_id', '=', 'payments.id')
             ->join('invoices', function($join) {
                 $join->on('payment_applications.applicable_id', '=', 'invoices.id')
-                     ->where('payment_applications.applicable_type', '=', 'App\Models\Invoice');
+                     ->where('payment_applications.applicable_type', '=', 'App\Domains\Financial\Models\Invoice');
             })
             ->where('payments.client_id', $client->id)
             ->where('payment_applications.is_active', true)
@@ -342,7 +342,7 @@ class ClientHealth extends Component
             ->join('payments', 'payment_applications.payment_id', '=', 'payments.id')
             ->join('invoices', function($join) {
                 $join->on('payment_applications.applicable_id', '=', 'invoices.id')
-                     ->where('payment_applications.applicable_type', '=', 'App\Models\Invoice');
+                     ->where('payment_applications.applicable_type', '=', 'App\Domains\Financial\Models\Invoice');
             })
             ->where('payments.client_id', $client->id)
             ->where('payment_applications.is_active', true)

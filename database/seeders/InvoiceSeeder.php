@@ -180,9 +180,9 @@ class InvoiceSeeder extends Seeder
             $invoiceNumber = isset($matches[1]) ? (int) $matches[1] : rand(1000, 9999);
 
             // Get first category or create a default one
-            $category = \App\Models\Category::first();
+            $category = \App\Domains\Financial\Models\Category::first();
             if (! $category) {
-                $category = \App\Models\Category::create([
+                $category = \App\Domains\Financial\Models\Category::create([
                     'company_id' => $company->id,
                     'name' => 'Services',
                     'type' => 'income',

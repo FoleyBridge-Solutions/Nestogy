@@ -647,7 +647,7 @@ class CommandPalette extends Component
         $commands = [];
         $currentRouteName = $this->currentRoute;
 
-        if ($user && ! $user instanceof \App\Models\Contact) {
+        if ($user && ! $user instanceof \App\Domains\Client\Models\ClientContact) {
             $commands = $this->getQuickActionCommands($user, $currentRouteName);
         }
 

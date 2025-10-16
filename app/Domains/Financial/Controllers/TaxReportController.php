@@ -408,7 +408,7 @@ class TaxReportController extends Controller
     private function getInvoiceQuoteComparison(int $companyId, array $dateRange): array
     {
         $invoiceTaxes = TaxCalculation::where('company_id', $companyId)
-            ->where('calculable_type', 'App\Models\Invoice')
+            ->where('calculable_type', 'App\Domains\Financial\Models\Invoice')
             ->whereBetween('created_at', [$dateRange['start'], $dateRange['end']])
             ->where('status', 'completed')
             ->selectRaw('
@@ -419,7 +419,7 @@ class TaxReportController extends Controller
             ->first();
 
         $quoteTaxes = TaxCalculation::where('company_id', $companyId)
-            ->where('calculable_type', 'App\Models\Quote')
+            ->where('calculable_type', 'App\Domains\Financial\Models\Quote')
             ->whereBetween('created_at', [$dateRange['start'], $dateRange['end']])
             ->where('status', 'completed')
             ->selectRaw('

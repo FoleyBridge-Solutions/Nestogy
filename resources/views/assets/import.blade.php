@@ -63,7 +63,7 @@
                             <ul class="mb-0 mt-2">
                                 <li><strong>Name</strong> (required) - Asset name or tag</li>
                                 <li><strong>Description</strong> (optional) - Asset description</li>
-                                <li><strong>Type</strong> (required) - One of: {{ implode(', ', App\Models\Asset::TYPES) }}</li>
+                                <li><strong>Type</strong> (required) - One of: {{ implode(', ', App\Domains\Asset\Models\Asset::TYPES) }}</li>
                                 <li><strong>Make</strong> (required) - Manufacturer name</li>
                                 <li><strong>Model</strong> (optional) - Model number/name</li>
                                 <li><strong>Serial</strong> (optional) - Serial number</li>

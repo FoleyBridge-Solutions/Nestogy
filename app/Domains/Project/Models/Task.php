@@ -170,7 +170,7 @@ class Task extends Model
      */
     public function assignedUser(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\User::class, 'assigned_to');
+        return $this->belongsTo(\App\Domains\Core\Models\User::class, 'assigned_to');
     }
 
     /**
@@ -178,7 +178,7 @@ class Task extends Model
      */
     public function creator(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\User::class, 'created_by');
+        return $this->belongsTo(\App\Domains\Core\Models\User::class, 'created_by');
     }
 
     /**
@@ -254,7 +254,7 @@ class Task extends Model
      */
     public function watchers(): BelongsToMany
     {
-        return $this->belongsToMany(\App\Models\User::class, 'task_watchers', 'task_id', 'user_id')
+        return $this->belongsToMany(\App\Domains\Core\Models\User::class, 'task_watchers', 'task_id', 'user_id')
             ->withTimestamps();
     }
 

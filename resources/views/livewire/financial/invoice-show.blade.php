@@ -72,7 +72,7 @@
                         
                         <flux:menu.separator />
                         
-                        @can('create', App\Models\Invoice::class)
+                        @can('create', App\Domains\Financial\Models\Invoice::class)
                             <flux:menu.item icon="document-duplicate" wire:click="duplicateInvoice">
                                 Duplicate Invoice
                             </flux:menu.item>
@@ -543,7 +543,7 @@
                         @endif
                     @endcan
                     
-                    @can('create', App\Models\Invoice::class)
+                    @can('create', App\Domains\Financial\Models\Invoice::class)
                         <flux:button size="sm" variant="ghost" class="w-full" wire:click="duplicateInvoice" icon="document-duplicate">
                             Duplicate Invoice
                         </flux:button>

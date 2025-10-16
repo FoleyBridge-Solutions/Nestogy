@@ -11,7 +11,7 @@ class RecurringFactory extends Factory
 
     public function definition(): array
     {
-        return ['company_id' => \App\Models\Company::factory(),
+        return ['company_id' => \App\Domains\Company\Models\Company::factory(),
             'prefix' => $this->faker->optional()->word,
             'number' => $this->faker->numberBetween(1, 100),
             'scope' => $this->faker->optional()->word,
@@ -28,7 +28,7 @@ class RecurringFactory extends Factory
             'invoice_terms_days' => $this->faker->numberBetween(0, 90),
             'email_invoice' => $this->faker->boolean(),
             'email_template' => $this->faker->safeEmail,
-            'category_id' => \App\Models\Category::factory(),
+            'category_id' => \App\Domains\Financial\Models\Category::factory(),
             'client_id' => \App\Domains\Client\Models\Client::factory()
         ];
     }

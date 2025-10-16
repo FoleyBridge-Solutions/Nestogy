@@ -13,9 +13,9 @@ class FileFactory extends Factory
     {
         $extension = $this->faker->fileExtension;
         return [
-            'company_id' => \App\Models\Company::factory(),
+            'company_id' => \App\Domains\Company\Models\Company::factory(),
             'fileable_id' => 1,
-            'fileable_type' => $this->faker->randomElement([\App\Domains\Client\Models\Client::class, \App\Models\Ticket::class, \App\Models\Project::class]),
+            'fileable_type' => $this->faker->randomElement([\App\Domains\Client\Models\Client::class, \App\Domains\Ticket\Models\Ticket::class, \App\Domains\Project\Models\Project::class]),
             'name' => $this->faker->words(3, true),
             'description' => $this->faker->optional()->sentence,
             'file_path' => 'files/'.$this->faker->uuid.'.'.$extension,
@@ -25,7 +25,7 @@ class FileFactory extends Factory
             'mime_type' => $this->faker->randomElement(['application/pdf', 'image/jpeg', 'image/png', 'text/plain']),
             'file_type' => $this->faker->randomElement(['document', 'image', 'spreadsheet', 'other']),
             'is_public' => $this->faker->boolean(30),
-            'uploaded_by' => \App\Models\User::factory(),
+            'uploaded_by' => \App\Domains\Core\Models\User::factory(),
             'metadata' => json_encode([]),
         ];
     }

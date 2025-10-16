@@ -12,7 +12,7 @@ class UsageAlertFactory extends Factory
     public function definition(): array
     {
         return [
-            'company_id' => \App\Models\Company::factory(),
+            'company_id' => \App\Domains\Company\Models\Company::factory(),
             'name' => $this->faker->words(3, true),
             'alert_created_date' => $this->faker->dateTimeBetween('-30 days', 'now'),
         ];

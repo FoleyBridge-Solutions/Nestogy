@@ -12,7 +12,7 @@ class CollectionNoteFactory extends Factory
     public function definition(): array
     {
         return [
-            'company_id' => \App\Models\Company::factory(),
+            'company_id' => \App\Domains\Company\Models\Company::factory(),
             'client_id' => \App\Domains\Client\Models\Client::factory(),
             'note_type' => 'general',
             'priority' => 'normal',
@@ -74,7 +74,7 @@ class CollectionNoteFactory extends Factory
             'quality_score' => $this->faker->optional()->numberBetween(1, 10),
             'quality_feedback' => $this->faker->optional()->sentence,
             'flagged_for_review' => $this->faker->boolean(10),
-            'created_by' => \App\Models\User::factory(),
+            'created_by' => \App\Domains\Core\Models\User::factory(),
             'updated_by' => null,
         ];
     }

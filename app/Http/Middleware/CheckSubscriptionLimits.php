@@ -52,7 +52,7 @@ class CheckSubscriptionLimits
     protected function resolveTargetCompany(Request $request, $user)
     {
         if ($request->has('company_id') && $user->canAccessCrossTenant()) {
-            return \App\Models\Company::find($request->company_id);
+            return \App\Domains\Company\Models\Company::find($request->company_id);
         }
 
         return $user->company;

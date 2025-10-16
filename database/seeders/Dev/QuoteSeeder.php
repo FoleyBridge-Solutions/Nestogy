@@ -4,10 +4,10 @@ namespace Database\Seeders\Dev;
 
 use App\Domains\Client\Models\Client;
 use App\Domains\Company\Models\Company;
-use App\Models\Lead;
+use App\Domains\Lead\Models\Lead;
 use App\Domains\Product\Models\Product;
 use App\Domains\Financial\Models\Quote;
-use App\Models\QuoteItem;
+use App\Domains\Financial\Models\QuoteItem;
 use App\Domains\Core\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;

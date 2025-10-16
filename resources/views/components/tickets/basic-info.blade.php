@@ -59,7 +59,7 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- Keep the original select hidden for JavaScript fallback -->
         <select name="assigned_to_fallback" style="display: none;">
-            @foreach(\App\Models\User::where('company_id', auth()->user()->company_id)->where('status', 1)->orderBy('name')->get() as $user)
+            @foreach(\App\Domains\Core\Models\User::where('company_id', auth()->user()->company_id)->where('status', 1)->orderBy('name')->get() as $user)
                 <option value="{{ $user->id }}">{{ $user->name }}</option>
             @endforeach
         </select>

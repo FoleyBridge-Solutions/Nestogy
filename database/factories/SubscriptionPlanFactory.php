@@ -6,7 +6,7 @@ use App\Domains\Product\Models\SubscriptionPlan;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\SubscriptionPlan>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Domains\Product\Models\SubscriptionPlan>
  */
 class SubscriptionPlanFactory extends Factory
 {

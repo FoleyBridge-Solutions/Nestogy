@@ -329,7 +329,7 @@ class Dashboard extends Component
             return collect();
         }
 
-        return \App\Models\PortalNotification::where('client_id', $this->client->id)
+        return \App\Domains\Core\Models\PortalNotification::where('client_id', $this->client->id)
             ->where('show_in_portal', true)
             ->where('is_dismissed', false)
             ->where(function ($query) {

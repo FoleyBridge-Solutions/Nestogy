@@ -288,8 +288,8 @@ class ClientLocationService
     protected function hasRelatedRecords(Location $location): bool
     {
         // Check for assets at this location
-        if (class_exists(\App\Models\Asset::class)) {
-            if (\App\Models\Asset::where('location_id', $location->id)->exists()) {
+        if (class_exists(\App\Domains\Asset\Models\Asset::class)) {
+            if (\App\Domains\Asset\Models\Asset::where('location_id', $location->id)->exists()) {
                 return true;
             }
         }
@@ -317,8 +317,8 @@ class ClientLocationService
         ];
 
         // Count assets at location
-        if (class_exists(\App\Models\Asset::class)) {
-            $stats['asset_count'] = \App\Models\Asset::where('location_id', $location->id)->count();
+        if (class_exists(\App\Domains\Asset\Models\Asset::class)) {
+            $stats['asset_count'] = \App\Domains\Asset\Models\Asset::where('location_id', $location->id)->count();
         }
 
         // Count tickets at location
@@ -330,8 +330,8 @@ class ClientLocationService
         }
 
         // Count contacts at location
-        if (class_exists(\App\Models\Contact::class)) {
-            $stats['contacts_count'] = \App\Models\Contact::where('location_id', $location->id)->count();
+        if (class_exists(\App\Domains\Client\Models\ClientContact::class)) {
+            $stats['contacts_count'] = \App\Domains\Client\Models\ClientContact::where('location_id', $location->id)->count();
         }
 
         return $stats;

@@ -362,7 +362,7 @@ class QuotePolicy
     /**
      * Determine whether a client contact can view the quote in the client portal.
      */
-    public function viewInClientPortal(\App\Models\Contact $contact, Quote $quote): bool
+    public function viewInClientPortal(\App\Domains\Client\Models\ClientContact $contact, Quote $quote): bool
     {
         // Must be an authenticated client contact
         if (! $contact || ! $contact->client) {

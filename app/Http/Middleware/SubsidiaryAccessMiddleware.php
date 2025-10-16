@@ -205,7 +205,7 @@ class SubsidiaryAccessMiddleware
         // Check subsidiary permissions
         $userCompanyId = $user->company_id;
         foreach ($permissions as $permission) {
-            $hasPermission = \App\Models\SubsidiaryPermission::hasPermission(
+            $hasPermission = \App\Domains\Company\Models\SubsidiaryPermission::hasPermission(
                 $userCompanyId,
                 '*', // Wildcard for general permissions
                 $permission,

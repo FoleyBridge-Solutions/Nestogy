@@ -2,7 +2,7 @@
 
 namespace Database\Seeders\Dev;
 
-use App\Models\Integration;
+use App\Domains\Integration\Models\Integration;
 use Illuminate\Database\Seeder;
 
 class IntegrationSeeder extends Seeder

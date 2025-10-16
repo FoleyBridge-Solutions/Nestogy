@@ -84,7 +84,7 @@
                 label="Default Currency" 
                 required
                 :invalid="$errors->has('currency')">
-                @foreach(\App\Models\Company::SUPPORTED_CURRENCIES as $code => $name)
+                @foreach(\App\Domains\Company\Models\Company::SUPPORTED_CURRENCIES as $code => $name)
                     <flux:select.option value="{{ $code }}">{{ $code }} - {{ $name }}</flux:select.option>
                 @endforeach
             </flux:select>

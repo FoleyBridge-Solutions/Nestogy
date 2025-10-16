@@ -418,7 +418,7 @@ class UnifiedMailService
     protected function logToCommunications(MailQueue $mailQueue): void
     {
         try {
-            \App\Models\CommunicationLog::create([
+            \App\Domains\Client\Models\CommunicationLog::create([
                 'client_id' => $mailQueue->client_id,
                 'user_id' => $mailQueue->user_id,
                 'contact_id' => $mailQueue->contact_id,

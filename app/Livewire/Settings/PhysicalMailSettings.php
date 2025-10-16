@@ -3,7 +3,7 @@
 namespace App\Livewire\Settings;
 
 use App\Domains\PhysicalMail\Services\PostGridClient;
-use App\Models\PhysicalMailSettings as PhysicalMailSettingsModel;
+use App\Domains\PhysicalMail\Models\PhysicalMailSettings as PhysicalMailSettingsModel;
 use Livewire\Component;
 
 class PhysicalMailSettings extends Component

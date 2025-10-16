@@ -25,7 +25,7 @@ class ProductTest extends ModelTestCase
         $company = $this->testCompany;
         $product = Product::factory()->create(['company_id' => $company->id]);
 
-        $this->assertInstanceOf(\App\Models\Company::class, $product->company);
+        $this->assertInstanceOf(\App\Domains\Company\Models\Company::class, $product->company);
         $this->assertEquals($company->id, $product->company->id);
     }
 
@@ -102,7 +102,7 @@ class ProductTest extends ModelTestCase
             'category_id' => $this->testCategory->id,
         ]);
 
-        $this->assertInstanceOf(\App\Models\Category::class, $product->category);
+        $this->assertInstanceOf(\App\Domains\Financial\Models\Category::class, $product->category);
         $this->assertEquals($this->testCategory->id, $product->category->id);
     }
 

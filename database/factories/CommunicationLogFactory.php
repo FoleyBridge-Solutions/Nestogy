@@ -12,9 +12,9 @@ class CommunicationLogFactory extends Factory
     public function definition(): array
     {
         return [
-            'company_id' => \App\Models\Company::factory(),
+            'company_id' => \App\Domains\Company\Models\Company::factory(),
             'client_id' => \App\Domains\Client\Models\Client::factory(),
-            'user_id' => \App\Models\User::factory(),
+            'user_id' => \App\Domains\Core\Models\User::factory(),
             'contact_id' => null,
             'type' => $this->faker->randomElement(['inbound', 'outbound', 'internal', 'follow_up', 'meeting']),
             'channel' => $this->faker->randomElement(['phone', 'email', 'sms', 'chat', 'in_person', 'video_call']),

@@ -11,7 +11,7 @@ class TaxJurisdictionFactory extends Factory
 
     public function definition(): array
     {
-        return ['company_id' => \App\Models\Company::factory(),
+        return ['company_id' => \App\Domains\Company\Models\Company::factory(),
             'name' => $this->faker->city,
             'code' => strtoupper($this->faker->unique()->lexify('???')),
             'jurisdiction_type' => $this->faker->randomElement(['federal', 'state', 'county', 'city']),

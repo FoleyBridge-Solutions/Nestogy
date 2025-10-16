@@ -11,7 +11,7 @@ class PortalNotificationFactory extends Factory
 
     public function definition(): array
     {
-        return ['company_id' => \App\Models\Company::factory(),
+        return ['company_id' => \App\Domains\Company\Models\Company::factory(),
             'client_id' => \App\Domains\Client\Models\Client::factory(),
             'type' => $this->faker->randomElement(['info', 'warning', 'error', 'success', 'update']),
             'category' => $this->faker->optional()->randomNumber(),
@@ -89,7 +89,7 @@ class PortalNotificationFactory extends Factory
             'metadata' => json_encode([]),
             'custom_fields' => $this->faker->optional()->randomNumber(),
             'internal_notes' => $this->faker->optional()->sentence,
-            'created_by' => \App\Models\User::factory(),
+            'created_by' => \App\Domains\Core\Models\User::factory(),
             'updated_by' => null
         ];
     }

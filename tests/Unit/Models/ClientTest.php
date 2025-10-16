@@ -767,8 +767,8 @@ class ClientTest extends ModelTestCase
         $client = Client::factory()->create(['company_id' => $company->id]);
 
         // Create tags
-        $tag1 = \App\Models\Tag::create(['name' => 'VIP', 'company_id' => $company->id]);
-        $tag2 = \App\Models\Tag::create(['name' => 'Priority', 'company_id' => $company->id]);
+        $tag1 = \App\Domains\Core\Models\Tag::create(['name' => 'VIP', 'company_id' => $company->id]);
+        $tag2 = \App\Domains\Core\Models\Tag::create(['name' => 'Priority', 'company_id' => $company->id]);
 
         // Sync tags with company_id in pivot
         $client->tags()->syncWithPivotValues([$tag1->id, $tag2->id], ['company_id' => $company->id]);
@@ -783,9 +783,9 @@ class ClientTest extends ModelTestCase
         $company = Company::factory()->create();
         $client = Client::factory()->create(['company_id' => $company->id]);
 
-        $tag1 = \App\Models\Tag::create(['name' => 'Tag1', 'company_id' => $company->id]);
-        $tag2 = \App\Models\Tag::create(['name' => 'Tag2', 'company_id' => $company->id]);
-        $tag3 = \App\Models\Tag::create(['name' => 'Tag3', 'company_id' => $company->id]);
+        $tag1 = \App\Domains\Core\Models\Tag::create(['name' => 'Tag1', 'company_id' => $company->id]);
+        $tag2 = \App\Domains\Core\Models\Tag::create(['name' => 'Tag2', 'company_id' => $company->id]);
+        $tag3 = \App\Domains\Core\Models\Tag::create(['name' => 'Tag3', 'company_id' => $company->id]);
 
         $client->tags()->syncWithPivotValues([$tag1->id, $tag2->id], ['company_id' => $company->id]);
         $this->assertEquals(2, $client->tags()->count());

@@ -281,7 +281,7 @@ class InvoiceCreate extends Component
         }
 
         // Validate product category has invoice type
-        if (! $product->category || ! $product->category->hasType(\App\Models\Category::TYPE_INVOICE)) {
+        if (! $product->category || ! $product->category->hasType(\App\Domains\Financial\Models\Category::TYPE_INVOICE)) {
             Flux::toast('This product cannot be added to invoices. Its category does not support invoicing.', variant: 'danger');
 
             return;

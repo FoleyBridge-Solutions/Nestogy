@@ -12,7 +12,7 @@ class AuditLogFactory extends Factory
     public function definition(): array
     {
         return [
-            'company_id' => \App\Models\Company::factory(),
+            'company_id' => \App\Domains\Company\Models\Company::factory(),
             'event_type' => $this->faker->randomElement(['create', 'update', 'delete', 'view', 'login']),
             'model_type' => $this->faker->optional()->word,
             'model_id' => $this->faker->optional()->numberBetween(1, 100),

@@ -108,7 +108,7 @@ class DynamicMailConfigService
     /**
      * Check if setting has valid SMTP configuration
      *
-     * @param  \App\Models\Setting  $setting
+     * @param  \App\Domains\Core\Models\Setting  $setting
      */
     protected function hasValidSmtpConfig($setting): bool
     {
@@ -121,7 +121,7 @@ class DynamicMailConfigService
     /**
      * Set Laravel mail configuration
      *
-     * @param  \App\Models\Setting  $setting
+     * @param  \App\Domains\Core\Models\Setting  $setting
      */
     protected function setMailConfiguration($setting): void
     {

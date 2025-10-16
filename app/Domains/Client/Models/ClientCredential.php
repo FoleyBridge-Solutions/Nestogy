@@ -81,7 +81,7 @@ class ClientCredential extends Model
      */
     public function creator()
     {
-        return $this->belongsTo(\App\Models\User::class, 'created_by');
+        return $this->belongsTo(\App\Domains\Core\Models\User::class, 'created_by');
     }
 
     /**

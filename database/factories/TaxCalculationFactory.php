@@ -11,7 +11,7 @@ class TaxCalculationFactory extends Factory
 
     public function definition(): array
     {
-        return ['company_id' => \App\Models\Company::factory(),
+        return ['company_id' => \App\Domains\Company\Models\Company::factory(),
             'calculable_type' => 'App\\Models\\Invoice',
             'calculable_id' => 1,
             'calculation_id' => $this->faker->uuid,
@@ -38,7 +38,7 @@ class TaxCalculationFactory extends Factory
             'validation_notes' => $this->faker->optional()->sentence,
             'status' => $this->faker->randomElement(['draft', 'calculated', 'applied', 'adjusted', 'voided']),
             'status_history' => 'active',
-            'created_by' => \App\Models\User::factory(),
+            'created_by' => \App\Domains\Core\Models\User::factory(),
             'updated_by' => null,
             'change_log' => $this->faker->optional()->randomNumber(),
             'calculation_time_ms' => $this->faker->optional()->randomNumber(),

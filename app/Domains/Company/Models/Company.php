@@ -170,7 +170,7 @@ class Company extends Model
      */
     public function contractConfigurations(): HasMany
     {
-        return $this->hasMany(\App\Models\ContractConfiguration::class);
+        return $this->hasMany(\App\Domains\Contract\Models\ContractConfiguration::class);
     }
 
     /**

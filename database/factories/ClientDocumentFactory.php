@@ -11,7 +11,7 @@ class ClientDocumentFactory extends Factory
 
     public function definition(): array
     {
-        return ['company_id' => \App\Models\Company::factory(),
+        return ['company_id' => \App\Domains\Company\Models\Company::factory(),
             'type' => $this->faker->numberBetween(1, 5),
             'category' => $this->faker->optional()->randomNumber(),
             'subcategory' => $this->faker->optional()->randomNumber(),

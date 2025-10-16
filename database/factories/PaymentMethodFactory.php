@@ -14,7 +14,7 @@ class PaymentMethodFactory extends Factory
         $type = $this->faker->randomElement(['credit_card', 'bank_account', 'digital_wallet', 'crypto']);
         
         return [
-            'company_id' => \App\Models\Company::factory(),
+            'company_id' => \App\Domains\Company\Models\Company::factory(),
             'client_id' => \App\Domains\Client\Models\Client::factory(),
             'type' => $type,
             'provider' => $this->faker->randomElement(['stripe', 'square', 'paypal', 'plaid']),

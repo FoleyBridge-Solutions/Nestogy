@@ -5,7 +5,7 @@ namespace Database\Factories;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Product>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Domains\Product\Models\Product>
  */
 class ProductFactory extends Factory
 {
@@ -17,8 +17,8 @@ class ProductFactory extends Factory
     public function definition(): array
     {
         return [
-            'company_id' => \App\Models\Company::factory(),
-            'category_id' => \App\Models\Category::factory(),
+            'company_id' => \App\Domains\Company\Models\Company::factory(),
+            'category_id' => \App\Domains\Financial\Models\Category::factory(),
             'name' => fake()->words(3, true),
             'description' => fake()->optional()->sentence(),
             'sku' => fake()->unique()->bothify('SKU-####'),

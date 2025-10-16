@@ -3,8 +3,8 @@
 namespace App\Livewire;
 
 use App\Domains\Client\Models\Client;
-use App\Models\RmmClientMapping;
-use App\Models\RmmIntegration;
+use App\Domains\Integration\Models\RmmClientMapping;
+use App\Domains\Integration\Models\RmmIntegration;
 use App\Services\TacticalRmmService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;

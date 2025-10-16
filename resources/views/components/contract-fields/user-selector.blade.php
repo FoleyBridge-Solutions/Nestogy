@@ -26,7 +26,7 @@
             $userIds = [$value];
         }
         
-        $selectedUsers = \App\Models\User::where('company_id', auth()->user()->company_id)
+        $selectedUsers = \App\Domains\Core\Models\User::where('company_id', auth()->user()->company_id)
             ->whereIn('id', $userIds)
             ->get();
     }

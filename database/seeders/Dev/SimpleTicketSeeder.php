@@ -4,7 +4,7 @@ namespace Database\Seeders\Dev;
 
 use App\Domains\Client\Models\Client;
 use App\Domains\Company\Models\Company;
-use App\Models\Ticket;
+use App\Domains\Ticket\Models\Ticket;
 use App\Domains\Core\Models\User;
 use Illuminate\Database\Seeder;
 

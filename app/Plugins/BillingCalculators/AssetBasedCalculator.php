@@ -127,7 +127,7 @@ class AssetBasedCalculator implements BillingCalculatorInterface
 
     public function getDependencies(): array
     {
-        return ['App\Models\Asset'];
+        return ['App\Domains\Asset\Models\Asset'];
     }
 
     public function calculateAmount(Contract $contract, array $context = []): Money

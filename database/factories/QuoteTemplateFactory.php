@@ -11,7 +11,7 @@ class QuoteTemplateFactory extends Factory
 
     public function definition(): array
     {
-        return ['company_id' => \App\Models\Company::factory(),
+        return ['company_id' => \App\Domains\Company\Models\Company::factory(),
             'name' => $this->faker->words(3, true),
             'description' => $this->faker->optional()->sentence,
             'category' => $this->faker->randomElement(['basic', 'standard', 'premium', 'custom']),
@@ -21,7 +21,7 @@ class QuoteTemplateFactory extends Factory
             'tax_config' => $this->faker->optional()->randomFloat(2, 0, 1000),
             'terms_conditions' => $this->faker->optional()->randomNumber(),
             'is_active' => $this->faker->boolean(70),
-            'created_by' => \App\Models\User::factory()
+            'created_by' => \App\Domains\Core\Models\User::factory()
         ];
     }
 }

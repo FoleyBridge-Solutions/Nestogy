@@ -137,7 +137,7 @@ class AssetIndex extends BaseIndexComponent
             ->orderBy('name')
             ->get();
 
-        $locations = \App\Models\Location::where('company_id', Auth::user()->company_id)
+        $locations = \App\Domains\Client\Models\Location::where('company_id', Auth::user()->company_id)
             ->whereNull('archived_at')
             ->orderBy('name')
             ->get();

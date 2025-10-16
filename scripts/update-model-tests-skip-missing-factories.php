@@ -9,7 +9,7 @@ $newTemplate = <<<'PHP'
 namespace Tests\Unit\Models;
 
 use %MODEL_CLASS%;
-use App\Models\Company;
+use App\Domains\Company\Models\Company;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 

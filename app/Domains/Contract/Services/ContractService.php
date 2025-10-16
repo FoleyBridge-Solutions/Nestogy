@@ -2361,7 +2361,7 @@ class ContractService
     /**
      * Create contract from dynamic builder
      */
-    public function createFromBuilder(array $data, \App\Models\User $user): Contract
+    public function createFromBuilder(array $data, \App\Domains\Core\Models\User $user): Contract
     {
         return DB::transaction(function () use ($data, $user) {
             $contractData = $data['contract'] ?? $data;
@@ -2395,7 +2395,7 @@ class ContractService
     /**
      * Prepare contract data for builder creation
      */
-    protected function prepareBuilderContractData(array $contractData, \App\Models\User $user): array
+    protected function prepareBuilderContractData(array $contractData, \App\Domains\Core\Models\User $user): array
     {
         $contractData['company_id'] = $user->company_id;
         $contractData['created_by'] = $user->id;
@@ -2426,7 +2426,7 @@ class ContractService
     /**
      * Create component assignments for a contract
      */
-    protected function createComponentAssignments(Contract $contract, array $componentAssignments, \App\Models\User $user): void
+    protected function createComponentAssignments(Contract $contract, array $componentAssignments, \App\Domains\Core\Models\User $user): void
     {
         foreach ($componentAssignments as $index => $assignmentData) {
             $component = \App\Domains\Contract\Models\ContractComponent::where('company_id', $user->company_id)

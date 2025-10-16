@@ -15,7 +15,7 @@ class CategoryFactory extends Factory
         $icons = ['folder', 'folder-open', 'tag', 'cube', 'document-text', 'chart-bar', 'book-open'];
 
         return [
-            'company_id' => \App\Models\Company::factory(),
+            'company_id' => \App\Domains\Company\Models\Company::factory(),
             'name' => $this->faker->words(3, true),
             'type' => $this->faker->randomElement($types),
             'code' => $this->faker->optional()->bothify('CAT-###'),

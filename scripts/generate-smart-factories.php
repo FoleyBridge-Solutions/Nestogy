@@ -7,21 +7,58 @@ $app = require_once __DIR__ . '/../bootstrap/app.php';
 $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
 $kernel->bootstrap();
 
-$modelsToProcess = [
-    'Account', 'Address', 'AuditLog', 'Category', 'ClientDocument', 'CompanyCustomization',
-    'CompanyMailSettings', 'CompanySubscription', 'ContractConfiguration', 'CrossCompanyUser',
-    'CustomQuickAction', 'DashboardWidget', 'Document', 'ExpenseCategory', 'File',
-    'MailQueue', 'MailTemplate', 'Network', 'PaymentMethod', 'Permission',
-    'PhysicalMailSettings', 'PortalNotification', 'PricingRule', 'ProductBundle',
-    'ProductTaxData', 'QuickActionFavorite', 'Quote', 'QuoteApproval', 'QuoteTemplate',
-    'QuoteVersion', 'Recurring', 'Role', 'Service', 'ServiceTaxRate', 'Setting',
-    'SettingsConfiguration', 'Tag', 'Tax', 'TaxApiQueryCache', 'TaxApiSettings',
-    'TaxCalculation', 'TaxProfile', 'TicketRating', 'TimeEntry', 'UsageRecord',
-    'UsageTier', 'UserSetting', 'Vendor'
+$modelMap = [
+    'Account' => 'App\\Domains\\Company\\Models\\Account',
+    'Address' => 'App\\Domains\\Client\\Models\\Address',
+    'AuditLog' => 'App\\Domains\\Core\\Models\\AuditLog',
+    'Category' => 'App\\Domains\\Financial\\Models\\Category',
+    'ClientDocument' => 'App\\Domains\\Client\\Models\\ClientDocument',
+    'CompanyCustomization' => 'App\\Domains\\Company\\Models\\CompanyCustomization',
+    'CompanyMailSettings' => 'App\\Domains\\Company\\Models\\CompanyMailSettings',
+    'CompanySubscription' => 'App\\Domains\\Company\\Models\\CompanySubscription',
+    'ContractConfiguration' => 'App\\Domains\\Contract\\Models\\ContractConfiguration',
+    'CrossCompanyUser' => 'App\\Domains\\Company\\Models\\CrossCompanyUser',
+    'CustomQuickAction' => 'App\\Domains\\Core\\Models\\CustomQuickAction',
+    'DashboardWidget' => 'App\\Domains\\Core\\Models\\DashboardWidget',
+    'Document' => 'App\\Domains\\Core\\Models\\Document',
+    'ExpenseCategory' => 'App\\Domains\\Financial\\Models\\Category',
+    'File' => 'App\\Domains\\Core\\Models\\File',
+    'MailQueue' => 'App\\Domains\\Core\\Models\\MailQueue',
+    'MailTemplate' => 'App\\Domains\\Core\\Models\\MailTemplate',
+    'Network' => 'App\\Domains\\Client\\Models\\ClientNetwork',
+    'PaymentMethod' => 'App\\Domains\\Financial\\Models\\PaymentMethod',
+    'Permission' => 'App\\Domains\\Core\\Models\\Permission',
+    'PhysicalMailSettings' => 'App\\Domains\\PhysicalMail\\Models\\PhysicalMailSettings',
+    'PortalNotification' => 'App\\Domains\\Core\\Models\\PortalNotification',
+    'PricingRule' => 'App\\Domains\\Product\\Models\\PricingRule',
+    'ProductBundle' => 'App\\Domains\\Product\\Models\\ProductBundle',
+    'ProductTaxData' => 'App\\Domains\\Tax\\Models\\ProductTaxData',
+    'QuickActionFavorite' => 'App\\Domains\\Core\\Models\\QuickActionFavorite',
+    'Quote' => 'App\\Domains\\Financial\\Models\\Quote',
+    'QuoteApproval' => 'App\\Domains\\Financial\\Models\\QuoteApproval',
+    'QuoteTemplate' => 'App\\Domains\\Financial\\Models\\QuoteTemplate',
+    'QuoteVersion' => 'App\\Domains\\Financial\\Models\\QuoteVersion',
+    'Recurring' => 'App\\Domains\\Financial\\Models\\Recurring',
+    'Role' => 'App\\Domains\\Core\\Models\\Role',
+    'Service' => 'App\\Domains\\Product\\Models\\Service',
+    'ServiceTaxRate' => 'App\\Domains\\Tax\\Models\\ServiceTaxRate',
+    'Setting' => 'App\\Domains\\Core\\Models\\Setting',
+    'SettingsConfiguration' => 'App\\Domains\\Core\\Models\\SettingsConfiguration',
+    'Tag' => 'App\\Domains\\Core\\Models\\Tag',
+    'Tax' => 'App\\Domains\\Tax\\Models\\Tax',
+    'TaxApiQueryCache' => 'App\\Domains\\Tax\\Models\\TaxApiQueryCache',
+    'TaxApiSettings' => 'App\\Domains\\Tax\\Models\\TaxApiSettings',
+    'TaxCalculation' => 'App\\Domains\\Tax\\Models\\TaxCalculation',
+    'TaxProfile' => 'App\\Domains\\Tax\\Models\\TaxProfile',
+    'TicketRating' => 'App\\Domains\\Ticket\\Models\\TicketRating',
+    'TimeEntry' => 'App\\Domains\\Ticket\\Models\\TimeEntry',
+    'UsageRecord' => 'App\\Domains\\Product\\Models\\UsageRecord',
+    'UsageTier' => 'App\\Domains\\Product\\Models\\UsageTier',
+    'UserSetting' => 'App\\Domains\\Core\\Models\\UserSetting',
+    'Vendor' => 'App\\Domains\\Project\\Models\\Vendor'
 ];
 
-foreach ($modelsToProcess as $modelName) {
-    $class = "App\\Models\\{$modelName}";
+foreach ($modelMap as $modelName => $class) {
     
     if (!class_exists($class)) {
         echo "SKIP: {$modelName} (class doesn't exist)\n";
@@ -76,7 +113,7 @@ foreach ($modelsToProcess as $modelName) {
 
 namespace Database\Factories;
 
-use App\Models\\{$modelName};
+use {$class};
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class {$modelName}Factory extends Factory

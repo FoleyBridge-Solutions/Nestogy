@@ -12,7 +12,7 @@ class RefundTransactionFactory extends Factory
     public function definition(): array
     {
         return [
-            'company_id' => \App\Models\Company::factory(),
+            'company_id' => \App\Domains\Company\Models\Company::factory(),
             'amount' => $this->faker->randomFloat(2, 10, 1000),
             'transaction_id' => $this->faker->unique()->regexify('[A-Z0-9]{20}'),
             'initiated_at' => $this->faker->dateTimeBetween('-30 days', 'now'),

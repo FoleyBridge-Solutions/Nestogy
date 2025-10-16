@@ -2,9 +2,9 @@
 
 namespace App\Traits;
 
-use App\Models\CompanyHierarchy;
-use App\Models\CrossCompanyUser;
-use App\Models\SubsidiaryPermission;
+use App\Domains\Company\Models\CompanyHierarchy;
+use App\Domains\Company\Models\CrossCompanyUser;
+use App\Domains\Company\Models\SubsidiaryPermission;
 use Illuminate\Database\Eloquent\Builder;
 
 trait BelongsToCompany
@@ -196,7 +196,7 @@ trait BelongsToCompany
             return false;
         }
 
-        $user = \App\Models\User::find($userId);
+        $user = \App\Domains\Core\Models\User::find($userId);
         if (! $user) {
             return false;
         }
@@ -235,7 +235,7 @@ trait BelongsToCompany
             return false;
         }
 
-        $user = \App\Models\User::find($userId);
+        $user = \App\Domains\Core\Models\User::find($userId);
         if (! $user) {
             return false;
         }
@@ -271,6 +271,6 @@ trait BelongsToCompany
      */
     public function company()
     {
-        return $this->belongsTo(\App\Models\Company::class);
+        return $this->belongsTo(\App\Domains\Company\Models\Company::class);
     }
 }

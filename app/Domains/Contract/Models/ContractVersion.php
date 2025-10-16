@@ -93,12 +93,12 @@ class ContractVersion extends Model
 
     public function creator(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\User::class, 'created_by');
+        return $this->belongsTo(\App\Domains\Core\Models\User::class, 'created_by');
     }
 
     public function approver(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\User::class, 'approved_by');
+        return $this->belongsTo(\App\Domains\Core\Models\User::class, 'approved_by');
     }
 
     public function comments(): HasMany
@@ -173,7 +173,7 @@ class ContractVersion extends Model
         return $this->getChangeCount() > 0;
     }
 
-    public function approve(\App\Models\User $user, ?string $notes = null): bool
+    public function approve(\App\Domains\Core\Models\User $user, ?string $notes = null): bool
     {
         $approvals = $this->approvals ?? [];
         $approvals[] = [
@@ -194,7 +194,7 @@ class ContractVersion extends Model
         return true;
     }
 
-    public function reject(\App\Models\User $user, string $reason): bool
+    public function reject(\App\Domains\Core\Models\User $user, string $reason): bool
     {
         $approvals = $this->approvals ?? [];
         $approvals[] = [

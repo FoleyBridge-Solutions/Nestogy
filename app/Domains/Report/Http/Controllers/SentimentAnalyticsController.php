@@ -7,7 +7,7 @@ use App\Domains\Financial\Services\TaxEngine\SentimentAnalysisService;
 use App\Domains\Ticket\Models\Ticket;
 use App\Http\Controllers\Controller;
 use App\Domains\Client\Models\Client;
-use App\Models\TicketReply;
+use App\Domains\Ticket\Models\TicketComment;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;

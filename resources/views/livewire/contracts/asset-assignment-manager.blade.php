@@ -22,7 +22,7 @@
         <div class="space-y-2">
             @foreach($assignments as $assignment)
                 @php
-                    $asset = \App\Models\Asset::find($assignment['asset_id']);
+                    $asset = \App\Domains\Asset\Models\Asset::find($assignment['asset_id']);
                 @endphp
                 
                 <flux:card class="hover:shadow-md transition-shadow">

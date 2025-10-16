@@ -144,7 +144,7 @@
                             <select name="assigned_user_id" id="assigned_user_id"
                                     class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm @error('assigned_user_id') border-red-300 @enderror">
                                 <option value="">Unassigned</option>
-                                @foreach(\App\Models\User::where('company_id', auth()->user()->company_id)->get() as $user)
+                                @foreach(\App\Domains\Core\Models\User::where('company_id', auth()->user()->company_id)->get() as $user)
                                     <option value="{{ $user->id }}" {{ old('assigned_user_id', auth()->id()) == $user->id ? 'selected' : '' }}>
                                         {{ $user->name }}
                                     </option>

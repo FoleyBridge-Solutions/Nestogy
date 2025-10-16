@@ -2,7 +2,7 @@
 
 namespace App\Exports;
 
-use App\Models\Asset;
+use App\Domains\Asset\Models\Asset;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;

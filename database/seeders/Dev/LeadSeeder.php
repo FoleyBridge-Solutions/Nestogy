@@ -3,7 +3,7 @@
 namespace Database\Seeders\Dev;
 
 use App\Domains\Company\Models\Company;
-use App\Models\Lead;
+use App\Domains\Lead\Models\Lead;
 use App\Domains\Core\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;

@@ -11,7 +11,7 @@ class DashboardWidgetFactory extends Factory
 
     public function definition(): array
     {
-        return ['company_id' => \App\Models\Company::factory(),
+        return ['company_id' => \App\Domains\Company\Models\Company::factory(),
             'widget_id' => 'widget-' . $this->faker->unique()->uuid,
             'name' => $this->faker->words(3, true),
             'category' => $this->faker->randomElement(['statistics', 'charts', 'tables', 'alerts']),

@@ -281,7 +281,7 @@ class CheckSlaBreaches extends Command
     {
         // Logic to determine escalation manager
         // Could be based on department, client tier, etc.
-        return \App\Models\User::where('company_id', $ticket->company_id)
+        return \App\Domains\Core\Models\User::where('company_id', $ticket->company_id)
             ->where('role', 'manager')
             ->first();
     }

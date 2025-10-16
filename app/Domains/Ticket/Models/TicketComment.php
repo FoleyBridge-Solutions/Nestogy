@@ -118,7 +118,7 @@ class TicketComment extends Model
     public function getAuthorNameAttribute(): string
     {
         if ($this->author_type === self::AUTHOR_CUSTOMER) {
-            $contact = \App\Models\Contact::find($this->author_id);
+            $contact = \App\Domains\Client\Models\ClientContact::find($this->author_id);
             return $contact ? $contact->name : 'Customer';
         }
 

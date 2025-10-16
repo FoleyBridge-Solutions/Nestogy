@@ -86,7 +86,7 @@ class LoginController extends Controller
 
         try {
             // Step 1: Find user by email (don't reveal if user exists)
-            $user = \App\Models\User::where('email', $request->email)
+            $user = \App\Domains\Core\Models\User::where('email', $request->email)
                 ->whereNull('archived_at')
                 ->first();
 
@@ -190,7 +190,7 @@ class LoginController extends Controller
         }
 
         $userId = session('pending_auth_user_id');
-        $user = \App\Models\User::find($userId);
+        $user = \App\Domains\Core\Models\User::find($userId);
         $companies = $this->getUserCompanies($user);
 
         return view('auth.select-company', compact('user', 'companies'));
@@ -212,7 +212,7 @@ class LoginController extends Controller
             return redirect()->route('login')->withErrors(['email' => 'Session expired. Please login again.']);
         }
 
-        $user = \App\Models\User::find($userId);
+        $user = \App\Domains\Core\Models\User::find($userId);
         $companies = $this->getUserCompanies($user);
 
         $selectedCompany = $companies->where('id', $request->company_id)->first();
@@ -229,7 +229,7 @@ class LoginController extends Controller
     /**
      * Get user's accessible companies
      *
-     * @param  \App\Models\User  $user
+     * @param  \App\Domains\Core\Models\User  $user
      * @return \Illuminate\Support\Collection
      */
     protected function getUserCompanies($user)
@@ -245,7 +245,7 @@ class LoginController extends Controller
         }
 
         // Get additional cross-company access
-        $crossCompanyAccess = \App\Models\CrossCompanyUser::where('user_id', $user->id)
+        $crossCompanyAccess = \App\Domains\Company\Models\CrossCompanyUser::where('user_id', $user->id)
             ->where('is_active', true)
             ->where(function ($query) {
                 $query->whereNull('access_expires_at')
@@ -266,7 +266,7 @@ class LoginController extends Controller
     /**
      * Verify 2FA code
      *
-     * @param  \App\Models\User  $user
+     * @param  \App\Domains\Core\Models\User  $user
      * @param  string  $code
      * @return bool
      */
@@ -289,8 +289,8 @@ class LoginController extends Controller
      * Complete the login process
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\User  $user
-     * @param  \App\Models\Company  $company
+     * @param  \App\Domains\Core\Models\User  $user
+     * @param  \App\Domains\Company\Models\Company  $company
      * @return \Illuminate\Http\RedirectResponse
      */
     protected function completeLogin($request, $user, $company)
@@ -320,7 +320,7 @@ class LoginController extends Controller
     /**
      * Redirect to company selection with user in session
      *
-     * @param  \App\Models\User  $user
+     * @param  \App\Domains\Core\Models\User  $user
      * @param  \Illuminate\Support\Collection  $companies
      * @return \Illuminate\Http\RedirectResponse
      */
@@ -421,8 +421,8 @@ class LoginController extends Controller
      * Log successful login
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\User  $user
-     * @param  \App\Models\Company  $company
+     * @param  \App\Domains\Core\Models\User  $user
+     * @param  \App\Domains\Company\Models\Company  $company
      * @return void
      */
     protected function logSuccessfulLogin($request, $user, $company)
@@ -451,8 +451,8 @@ class LoginController extends Controller
     /**
      * Apply company-specific settings
      *
-     * @param  \App\Models\User  $user
-     * @param  \App\Models\Company  $company
+     * @param  \App\Domains\Core\Models\User  $user
+     * @param  \App\Domains\Company\Models\Company  $company
      * @return void
      */
     protected function applyCompanySettings($user, $company)

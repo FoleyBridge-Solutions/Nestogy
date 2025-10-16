@@ -12,7 +12,7 @@ class UsageTierFactory extends Factory
     public function definition(): array
     {
         return [
-            'company_id' => \App\Models\Company::factory(),
+            'company_id' => \App\Domains\Company\Models\Company::factory(),
             'name' => $this->faker->words(3, true),
         ];
     }

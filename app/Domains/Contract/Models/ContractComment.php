@@ -97,12 +97,12 @@ class ContractComment extends Model
 
     public function author(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\User::class, 'user_id');
+        return $this->belongsTo(\App\Domains\Core\Models\User::class, 'user_id');
     }
 
     public function resolver(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\User::class, 'resolved_by');
+        return $this->belongsTo(\App\Domains\Core\Models\User::class, 'resolved_by');
     }
 
     public function parent(): BelongsTo
@@ -227,7 +227,7 @@ class ContractComment extends Model
         });
     }
 
-    public function resolve(\App\Models\User $user, ?string $notes = null): bool
+    public function resolve(\App\Domains\Core\Models\User $user, ?string $notes = null): bool
     {
         $result = $this->update([
             'is_resolved' => true,
@@ -254,7 +254,7 @@ class ContractComment extends Model
         return $result;
     }
 
-    public function reply(\App\Models\User $user, string $content, array $options = []): self
+    public function reply(\App\Domains\Core\Models\User $user, string $content, array $options = []): self
     {
         return self::create(array_merge([
             'contract_id' => $this->contract_id,
@@ -312,7 +312,7 @@ class ContractComment extends Model
         // Replace user mentions with formatted names
         if ($this->mentions) {
             foreach ($this->mentions as $userId) {
-                $user = \App\Models\User::find($userId);
+                $user = \App\Domains\Core\Models\User::find($userId);
                 if ($user) {
                     $content = str_replace("@{$userId}", "@{$user->name}", $content);
                 }
@@ -353,7 +353,7 @@ class ContractComment extends Model
         return self::getPriorityOptions()[$this->priority] ?? 'Unknown';
     }
 
-    public function canBeEditedBy(\App\Models\User $user): bool
+    public function canBeEditedBy(\App\Domains\Core\Models\User $user): bool
     {
         // Authors can edit their own comments within 15 minutes
         if ($this->user_id === $user->id) {
@@ -363,7 +363,7 @@ class ContractComment extends Model
         return false;
     }
 
-    public function canBeResolvedBy(\App\Models\User $user): bool
+    public function canBeResolvedBy(\App\Domains\Core\Models\User $user): bool
     {
         // Comment author can resolve their own
         if ($this->user_id === $user->id) {

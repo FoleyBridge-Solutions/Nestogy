@@ -56,7 +56,7 @@ class ContractComponentAssignment extends Model
 
     public function assignedBy(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\User::class, 'assigned_by');
+        return $this->belongsTo(\App\Domains\Core\Models\User::class, 'assigned_by');
     }
 
     /**

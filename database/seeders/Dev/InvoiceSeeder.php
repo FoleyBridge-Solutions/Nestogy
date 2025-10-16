@@ -22,7 +22,7 @@ class InvoiceSeeder extends Seeder
         $totalInvoices = 0;
 
         // Create income categories if they don't exist
-        $companies = \App\Models\Company::all();
+        $companies = \App\Domains\Company\Models\Company::all();
         foreach ($companies as $company) {
             if (! Category::where('company_id', $company->id)->where('type', 'income')->exists()) {
                 $categories = [

@@ -4,7 +4,7 @@ namespace App\Domains\Client\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Domains\Client\Models\Client;
-use App\Models\ClientVendor;
+use App\Domains\Client\Models\ClientVendor;
 use App\Traits\UsesSelectedClient;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;

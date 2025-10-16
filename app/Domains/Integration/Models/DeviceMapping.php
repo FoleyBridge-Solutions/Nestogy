@@ -75,7 +75,7 @@ class DeviceMapping extends Model
      */
     public function asset(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Asset::class);
+        return $this->belongsTo(\App\Domains\Asset\Models\Asset::class);
     }
 
     /**

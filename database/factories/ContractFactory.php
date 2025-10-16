@@ -9,7 +9,7 @@ use App\Domains\Core\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Contract>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Domains\Contract\Models\Contract>
  */
 class ContractFactory extends Factory
 {

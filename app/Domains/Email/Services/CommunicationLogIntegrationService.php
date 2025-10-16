@@ -119,7 +119,7 @@ class CommunicationLogIntegrationService
 
         // Try to find client through contacts
         foreach ($allEmails as $email) {
-            $contact = \App\Models\Contact::where('email', $email)->first();
+            $contact = \App\Domains\Client\Models\ClientContact::where('email', $email)->first();
             if ($contact && $contact->client) {
                 return $contact->client;
             }
@@ -180,7 +180,7 @@ class CommunicationLogIntegrationService
                 $primaryRecipient = $emailMessage->to_addresses[0];
 
                 // Try to find contact name
-                $contact = \App\Models\Contact::where('client_id', $client->id)
+                $contact = \App\Domains\Client\Models\ClientContact::where('client_id', $client->id)
                     ->where('email', $primaryRecipient)
                     ->first();
 

@@ -40,7 +40,7 @@
                                     <label for="type" class="block text-sm font-medium text-gray-700 dark:text-gray-300 dark:text-gray-300 mb-1">Type <span class="text-red-600">*</span></label>
                                     <select name="type" id="type" class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('type') border-red-500 @enderror" required>
                                         <option value="">Select Type</option>
-                                        @foreach(App\Models\Asset::TYPES as $type)
+                                        @foreach(App\Domains\Asset\Models\Asset::TYPES as $type)
                                             <option value="{{ $type }}" {{ old('type', $asset->type) == $type ? 'selected' : '' }}>
                                                 {{ $type }}
                                             </option>
@@ -72,7 +72,7 @@
                                 <div class="mb-6">
                                     <label for="status" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
                                     <select name="status" id="status" class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('status') border-red-500 @enderror">
-                                        @foreach(App\Models\Asset::STATUSES as $status)
+                                        @foreach(App\Domains\Asset\Models\Asset::STATUSES as $status)
                                             <option value="{{ $status }}" {{ old('status', $asset->status) == $status ? 'selected' : '' }}>
                                                 {{ $status }}
                                             </option>

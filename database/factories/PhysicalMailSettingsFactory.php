@@ -11,7 +11,7 @@ class PhysicalMailSettingsFactory extends Factory
 
     public function definition(): array
     {
-        return ['company_id' => \App\Models\Company::factory(),
+        return ['company_id' => \App\Domains\Company\Models\Company::factory(),
             'test_key' => $this->faker->optional()->randomNumber(),
             'live_key' => $this->faker->optional()->randomNumber(),
             'webhook_secret' => $this->faker->optional()->randomNumber(),

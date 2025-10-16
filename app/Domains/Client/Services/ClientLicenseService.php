@@ -3,7 +3,7 @@
 namespace App\Domains\Client\Services;
 
 use App\Domains\Client\Models\Client;
-use App\Models\ClientLicense;
+use App\Domains\Client\Models\ClientLicense;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
@@ -223,17 +223,17 @@ class ClientLicenseService
             ]);
 
             // Create renewal record
-            if (class_exists(\App\Models\LicenseRenewal::class)) {
-                \App\Models\LicenseRenewal::create([
-                    'license_id' => $license->id,
-                    'renewal_date' => Carbon::now(),
-                    'expiry_date' => $newExpiryDate,
-                    'cost' => $renewalData['cost'] ?? $license->renewal_cost,
-                    'invoice_id' => $renewalData['invoice_id'] ?? null,
-                    'renewed_by' => auth()->id(),
-                    'company_id' => $license->company_id,
-                ]);
-            }
+            // if (class_exists(\App\Models\LicenseRenewal::class)) {
+            //     \App\Models\LicenseRenewal::create([
+            //         'license_id' => $license->id,
+            //         'renewal_date' => Carbon::now(),
+            //         'expiry_date' => $newExpiryDate,
+            //         'cost' => $renewalData['cost'] ?? $license->renewal_cost,
+            //         'invoice_id' => $renewalData['invoice_id'] ?? null,
+            //         'renewed_by' => auth()->id(),
+            //         'company_id' => $license->company_id,
+            //     ]);
+            // }
 
             // Schedule next renewal reminder if auto-renew
             if ($license->auto_renew) {

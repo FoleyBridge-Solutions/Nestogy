@@ -27,7 +27,7 @@ class PermissionController extends Controller
      */
     public function index(Request $request)
     {
-        $this->authorize('viewAny', \App\Models\Role::class);
+        $this->authorize('viewAny', \App\Domains\Core\Models\Role::class);
 
         $user = Auth::user();
 
@@ -228,7 +228,7 @@ class PermissionController extends Controller
      */
     public function bulkAssign(Request $request)
     {
-        $this->authorize('create', \App\Models\Role::class);
+        $this->authorize('create', \App\Domains\Core\Models\Role::class);
 
         $request->validate([
             'user_ids' => 'required|array|min:1',
@@ -322,7 +322,7 @@ class PermissionController extends Controller
      */
     public function matrix(Request $request)
     {
-        $this->authorize('viewAny', \App\Models\Role::class);
+        $this->authorize('viewAny', \App\Domains\Core\Models\Role::class);
 
         $companyId = Auth::user()->company_id;
 
@@ -363,7 +363,7 @@ class PermissionController extends Controller
      */
     public function updateMatrix(Request $request)
     {
-        $this->authorize('update', \App\Models\Role::class);
+        $this->authorize('update', \App\Domains\Core\Models\Role::class);
 
         $request->validate([
             'role' => 'required|exists:bouncer_roles,name',
@@ -422,7 +422,7 @@ class PermissionController extends Controller
      */
     public function export(Request $request)
     {
-        $this->authorize('viewAny', \App\Models\Role::class);
+        $this->authorize('viewAny', \App\Domains\Core\Models\Role::class);
 
         $roles = Bouncer::role()->with('abilities')->get();
         $abilities = Bouncer::ability()->get();
@@ -457,7 +457,7 @@ class PermissionController extends Controller
      */
     public function import(Request $request)
     {
-        $this->authorize('create', \App\Models\Role::class);
+        $this->authorize('create', \App\Domains\Core\Models\Role::class);
 
         $request->validate([
             'file' => 'required|file|mimes:json|max:2048',

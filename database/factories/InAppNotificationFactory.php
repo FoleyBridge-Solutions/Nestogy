@@ -12,8 +12,8 @@ class InAppNotificationFactory extends Factory
     public function definition(): array
     {
         return [
-            'company_id' => \App\Models\Company::factory(),
-            'user_id' => \App\Models\User::factory(),
+            'company_id' => \App\Domains\Company\Models\Company::factory(),
+            'user_id' => \App\Domains\Core\Models\User::factory(),
             'name' => $this->faker->words(3, true),
             'type' => $this->faker->randomElement(['info', 'warning', 'success', 'error']),
             'title' => $this->faker->sentence(3),

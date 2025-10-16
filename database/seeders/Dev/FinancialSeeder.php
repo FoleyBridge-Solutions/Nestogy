@@ -2,7 +2,6 @@
 
 namespace Database\Seeders\Dev;
 
-use App\Models\Financial;
 use Illuminate\Database\Seeder;
 
 class FinancialSeeder extends Seeder

@@ -136,7 +136,7 @@ class UpdateAssetRequest extends FormRequest
             // Custom validation logic can go here
             // For example, ensuring serial number is unique within company (excluding current asset)
             if ($this->serial) {
-                $exists = \App\Models\Asset::where('company_id', $this->user()->company_id)
+                $exists = \App\Domains\Asset\Models\Asset::where('company_id', $this->user()->company_id)
                     ->where('serial', $this->serial)
                     ->where('id', '!=', $asset->id)
                     ->exists();

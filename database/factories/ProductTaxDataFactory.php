@@ -11,8 +11,8 @@ class ProductTaxDataFactory extends Factory
 
     public function definition(): array
     {
-        return ['company_id' => \App\Models\Company::factory(),
-            'product_id' => \App\Models\Product::factory(),
+        return ['company_id' => \App\Domains\Company\Models\Company::factory(),
+            'product_id' => \App\Domains\Product\Models\Product::factory(),
             'tax_data' => json_encode([]),
             'calculated_taxes' => $this->faker->optional()->randomFloat(2, 0, 1000),
             'effective_tax_rate' => $this->faker->optional()->randomFloat(2, 0, 1000),

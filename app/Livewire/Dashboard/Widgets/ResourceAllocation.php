@@ -155,8 +155,8 @@ class ResourceAllocation extends Component
     {
         try {
             // Try to get actual time entries for today
-            if (class_exists('\App\Models\TimeEntry')) {
-                $hours = \App\Models\TimeEntry::where('user_id', $user->id)
+            if (class_exists('\App\Domains\Ticket\Models\TimeEntry')) {
+                $hours = \App\Domains\Ticket\Models\TimeEntry::where('user_id', $user->id)
                     ->whereDate('created_at', Carbon::today())
                     ->sum('hours');
 

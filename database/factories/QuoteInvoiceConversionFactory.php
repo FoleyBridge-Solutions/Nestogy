@@ -12,7 +12,7 @@ class QuoteInvoiceConversionFactory extends Factory
     public function definition(): array
     {
         return [
-            'company_id' => \App\Models\Company::factory(),
+            'company_id' => \App\Domains\Company\Models\Company::factory(),
             'status' => 'pending',
             'activation_status' => 'pending',
             'current_step' => 1,

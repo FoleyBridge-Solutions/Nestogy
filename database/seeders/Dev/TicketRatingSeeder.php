@@ -3,7 +3,7 @@
 namespace Database\Seeders\Dev;
 
 use App\Domains\Ticket\Models\TicketRating;
-use App\Models\Ticket;
+use App\Domains\Ticket\Models\Ticket;
 use Illuminate\Database\Seeder;
 
 class TicketRatingSeeder extends Seeder

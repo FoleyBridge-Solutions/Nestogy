@@ -68,7 +68,7 @@ abstract class AssetBaseService extends BaseService
 
     protected function validateAssetOwnership($assetId): void
     {
-        $asset = \App\Models\Asset::with('client')
+        $asset = \App\Domains\Asset\Models\Asset::with('client')
             ->where('id', $assetId)
             ->first();
 
@@ -118,7 +118,7 @@ abstract class AssetBaseService extends BaseService
 
     public function getAssetOptions(): array
     {
-        return \App\Models\Asset::whereHas('client', function ($q) {
+        return \App\Domains\Asset\Models\Asset::whereHas('client', function ($q) {
             $q->where('company_id', auth()->user()->company_id);
         })
             ->with('client')

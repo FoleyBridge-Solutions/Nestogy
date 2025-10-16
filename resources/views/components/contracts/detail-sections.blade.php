@@ -83,7 +83,7 @@
                 
             case 'user':
                 if (is_numeric($value)) {
-                    $user = \App\Models\User::find($value);
+                    $user = \App\Domains\Core\Models\User::find($value);
                     if ($user) {
                         return '<div class="flex items-center">
                                     <img src="' . ($user->avatar_url ?? 'https://ui-avatars.com/api/?name=' . urlencode($user->name) . '&size=24') . '" 

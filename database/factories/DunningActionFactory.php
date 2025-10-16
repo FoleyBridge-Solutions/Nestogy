@@ -14,7 +14,7 @@ class DunningActionFactory extends Factory
         $scheduledAt = $this->faker->dateTimeBetween('-30 days', 'now');
         
         return [
-            'company_id' => \App\Models\Company::factory(),
+            'company_id' => \App\Domains\Company\Models\Company::factory(),
             'client_id' => \App\Domains\Client\Models\Client::factory(),
             'action_type' => $this->faker->randomElement(['email', 'sms', 'phone_call', 'letter', 'service_suspension', 'legal_notice']),
             'status' => $this->faker->randomElement(['pending', 'scheduled', 'processing', 'sent', 'delivered', 'failed', 'bounced', 'opened', 'clicked', 'responded', 'completed', 'cancelled', 'escalated']),
@@ -75,7 +75,7 @@ class DunningActionFactory extends Factory
             'pause_reason' => $this->faker->optional()->sentence,
             'sequence_resumed_at' => $this->faker->optional()->dateTimeBetween('-30 days', 'now'),
             'next_action_id' => $this->faker->optional()->numberBetween(1, 1000),
-            'created_by' => \App\Models\User::factory(),
+            'created_by' => \App\Domains\Core\Models\User::factory(),
             'processed_by' => null,
         ];
     }

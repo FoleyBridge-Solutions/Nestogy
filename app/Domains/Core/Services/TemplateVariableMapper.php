@@ -502,7 +502,7 @@ class TemplateVariableMapper
     {
         $this->logContractAssetRetrievalStart($contract, $includeTypeEligibleAlongsideAssignments);
 
-        $assetModel = app(\App\Models\Asset::class);
+        $assetModel = app(\App\Domains\Asset\Models\Asset::class);
         $directlyAssignedIds = $this->getDirectlyAssignedAssetIds($contract);
         $explicitlyAssignedIds = $this->getExplicitlyAssignedAssetIds($contract);
         $mergedIds = collect([$directlyAssignedIds, $explicitlyAssignedIds])->flatten()->unique()->filter();

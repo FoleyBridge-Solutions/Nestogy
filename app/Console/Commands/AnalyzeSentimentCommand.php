@@ -4,7 +4,7 @@ namespace App\Console\Commands;
 
 use App\Domains\Ticket\Models\Ticket;
 use App\Jobs\AnalyzeTicketSentiment;
-use App\Models\TicketReply;
+use App\Domains\Ticket\Models\TicketComment;
 use Illuminate\Console\Command;
 
 class AnalyzeSentimentCommand extends Command

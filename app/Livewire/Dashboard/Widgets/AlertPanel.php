@@ -132,11 +132,11 @@ class AlertPanel extends Component
     protected function getAssetMonitoringAlerts(int $companyId): Collection
     {
         try {
-            if (! class_exists('\App\Models\Asset')) {
+            if (! class_exists('\App\Domains\Asset\Models\Asset')) {
                 return collect();
             }
 
-            $failedAssets = \App\Models\Asset::where('company_id', $companyId)
+            $failedAssets = \App\Domains\Asset\Models\Asset::where('company_id', $companyId)
                 ->where(function ($query) {
                     $query->where('status', 'offline')
                         ->orWhere('last_check_at', '<', now()->subHours(24))

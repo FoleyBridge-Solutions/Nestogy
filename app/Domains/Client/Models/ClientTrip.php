@@ -110,7 +110,7 @@ class ClientTrip extends Model
      */
     public function creator()
     {
-        return $this->belongsTo(\App\Models\User::class, 'created_by');
+        return $this->belongsTo(\App\Domains\Core\Models\User::class, 'created_by');
     }
 
     /**
@@ -118,7 +118,7 @@ class ClientTrip extends Model
      */
     public function approver()
     {
-        return $this->belongsTo(\App\Models\User::class, 'approved_by');
+        return $this->belongsTo(\App\Domains\Core\Models\User::class, 'approved_by');
     }
 
     /**

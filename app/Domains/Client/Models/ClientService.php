@@ -95,7 +95,7 @@ class ClientService extends Model
      */
     public function technician()
     {
-        return $this->belongsTo(\App\Models\User::class, 'assigned_technician');
+        return $this->belongsTo(\App\Domains\Core\Models\User::class, 'assigned_technician');
     }
 
     /**
@@ -103,7 +103,7 @@ class ClientService extends Model
      */
     public function backupTechnician()
     {
-        return $this->belongsTo(\App\Models\User::class, 'backup_technician');
+        return $this->belongsTo(\App\Domains\Core\Models\User::class, 'backup_technician');
     }
 
     /**

@@ -2,7 +2,7 @@
 
 namespace App\Livewire\Admin\Contract;
 
-use App\Models\ContractActionButton;
+use App\Domains\Contract\Models\ContractActionButton;
 use Livewire\Component;
 
 class ActionButtons extends Component

@@ -426,7 +426,7 @@ class QuoteService
     {
         try {
             // Get the first active tax rate for the company
-            $tax = \App\Models\Tax::where('company_id', auth()->user()->company_id)
+            $tax = \App\Domains\Tax\Models\Tax::where('company_id', auth()->user()->company_id)
                 ->whereNull('archived_at')
                 ->orderBy('percent', 'desc')
                 ->first();
@@ -447,7 +447,7 @@ class QuoteService
         try {
             // Try to find jurisdiction based on client's state
             if ($client->state) {
-                $jurisdiction = \App\Models\TaxJurisdiction::where('company_id', $client->company_id)
+                $jurisdiction = \App\Domains\Tax\Models\TaxJurisdiction::where('company_id', $client->company_id)
                     ->where('state_code', $client->state)
                     ->where('is_active', true)
                     ->first();
@@ -458,7 +458,7 @@ class QuoteService
             }
 
             // Fallback to federal jurisdiction
-            $federalJurisdiction = \App\Models\TaxJurisdiction::where('company_id', $client->company_id)
+            $federalJurisdiction = \App\Domains\Tax\Models\TaxJurisdiction::where('company_id', $client->company_id)
                 ->where('jurisdiction_type', 'federal')
                 ->where('is_active', true)
                 ->first();

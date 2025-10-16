@@ -11,7 +11,7 @@ class TaxApiSettingsFactory extends Factory
 
     public function definition(): array
     {
-        return ['company_id' => \App\Models\Company::factory(),
+        return ['company_id' => \App\Domains\Company\Models\Company::factory(),
             'provider' => $this->faker->randomElement(['avalara', 'taxjar', 'vertex']),
             'enabled' => $this->faker->boolean(70),
             'credentials' => $this->faker->optional()->randomNumber(),

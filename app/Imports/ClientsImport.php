@@ -3,8 +3,8 @@
 namespace App\Imports;
 
 use App\Domains\Client\Models\Client;
-use App\Models\Contact;
-use App\Models\Location;
+use App\Domains\Client\Models\ClientContact;
+use App\Domains\Client\Models\Location;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;

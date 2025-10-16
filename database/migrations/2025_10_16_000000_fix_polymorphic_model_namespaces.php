@@ -11,13 +11,13 @@ return new class extends Migration
     {
         if (Schema::hasTable('payment_applications')) {
             DB::table('payment_applications')
-                ->where('applicable_type', 'App\Models\Invoice')
+                ->where('applicable_type', 'App\Domains\Financial\Models\Invoice')
                 ->update(['applicable_type' => 'App\Domains\Financial\Models\Invoice']);
         }
 
         if (Schema::hasTable('client_credit_applications')) {
             DB::table('client_credit_applications')
-                ->where('applicable_type', 'App\Models\Invoice')
+                ->where('applicable_type', 'App\Domains\Financial\Models\Invoice')
                 ->update(['applicable_type' => 'App\Domains\Financial\Models\Invoice']);
         }
     }
@@ -27,13 +27,13 @@ return new class extends Migration
         if (Schema::hasTable('payment_applications')) {
             DB::table('payment_applications')
                 ->where('applicable_type', 'App\Domains\Financial\Models\Invoice')
-                ->update(['applicable_type' => 'App\Models\Invoice']);
+                ->update(['applicable_type' => 'App\Domains\Financial\Models\Invoice']);
         }
 
         if (Schema::hasTable('client_credit_applications')) {
             DB::table('client_credit_applications')
                 ->where('applicable_type', 'App\Domains\Financial\Models\Invoice')
-                ->update(['applicable_type' => 'App\Models\Invoice']);
+                ->update(['applicable_type' => 'App\Domains\Financial\Models\Invoice']);
         }
     }
 };

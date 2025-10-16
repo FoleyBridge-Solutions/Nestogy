@@ -4,7 +4,7 @@
 ])
 
 @php
-    use App\Models\TaxCalculation;
+    use App\Domains\Tax\Models\TaxCalculation;
     use Carbon\Carbon;
     
     $companyId = auth()->user()->company_id;

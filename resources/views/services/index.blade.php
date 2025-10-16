@@ -10,7 +10,7 @@
         subtitle="Manage your service offerings and billing models"
     >
         <x-slot name="actions">
-            @can('create', App\Models\Product::class)
+            @can('create', App\Domains\Product\Models\Product::class)
                 <a href="{{ route('services.create') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                     <i class="fas fa-plus mr-2"></i> Create Service
                 </a>
@@ -186,7 +186,7 @@
                             Create your first service offering to get started.
                         @endif
                     </p>
-                    @can('create', App\Models\Product::class)
+                    @can('create', App\Domains\Product\Models\Product::class)
                         <a href="{{ route('services.create') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                             <i class="fas fa-plus mr-2"></i> Create Service
                         </a>

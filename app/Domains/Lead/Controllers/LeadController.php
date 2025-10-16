@@ -85,7 +85,7 @@ class LeadController extends BaseResourceController
             ->where('is_active', true)
             ->get();
 
-        $users = \App\Models\User::where('company_id', auth()->user()->company_id)
+        $users = \App\Domains\Core\Models\User::where('company_id', auth()->user()->company_id)
             ->get(['id', 'name']);
 
         if ($request->expectsJson()) {
@@ -112,7 +112,7 @@ class LeadController extends BaseResourceController
             ->where('is_active', true)
             ->get();
 
-        $users = \App\Models\User::where('company_id', auth()->user()->company_id)
+        $users = \App\Domains\Core\Models\User::where('company_id', auth()->user()->company_id)
             ->get(['id', 'name']);
 
         return view('leads.create', compact('leadSources', 'users'));
@@ -205,7 +205,7 @@ class LeadController extends BaseResourceController
             ->where('is_active', true)
             ->get();
 
-        $users = \App\Models\User::where('company_id', auth()->user()->company_id)
+        $users = \App\Domains\Core\Models\User::where('company_id', auth()->user()->company_id)
             ->get(['id', 'name']);
 
         return view('lead.leads.edit', compact('lead', 'leadSources', 'users'));
@@ -442,7 +442,7 @@ class LeadController extends BaseResourceController
             ->where('is_active', true)
             ->get();
 
-        $users = \App\Models\User::where('company_id', auth()->user()->company_id)
+        $users = \App\Domains\Core\Models\User::where('company_id', auth()->user()->company_id)
             ->get(['id', 'name']);
 
         return view('leads.import', compact('leadSources', 'users'));

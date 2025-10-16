@@ -25,7 +25,7 @@ class SendManagerDigest extends Command
 
         foreach ($managers as $manager) {
             // Check if manager has digest enabled
-            $prefs = \App\Models\NotificationPreference::getOrCreateForUser($manager);
+            $prefs = \App\Domains\Core\Models\NotificationPreference::getOrCreateForUser($manager);
             
             if (!$prefs->manager_digest_enabled) {
                 continue;

@@ -23,7 +23,7 @@ $pageActions = [
             <p class="text-gray-600">Manage client financial.quotes and proposals</p>
         </div>
         <div>
-            @can('create', App\Models\Quote::class)
+            @can('create', App\Domains\Financial\Models\Quote::class)
             <a href="{{ route('financial.quotes.create') }}" class="inline-flex items-center px-6 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                 <i class="fas fa-plus mr-2"></i>New Quote
             </a>
@@ -315,7 +315,7 @@ $pageActions = [
                     <i class="fas fa-file-alt text-6xl text-gray-400 mb-6"></i>
                     <h3 class="text-lg font-medium text-gray-900 mb-2">No quotes found</h3>
                     <p class="text-gray-600 mb-6">Get started by creating your first quote</p>
-                    @can('create', App\Models\Quote::class)
+                    @can('create', App\Domains\Financial\Models\Quote::class)
                     <a href="{{ route('financial.quotes.create') }}" class="inline-flex items-center px-6 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                         <i class="fas fa-plus mr-2"></i>Create Quote
                     </a>

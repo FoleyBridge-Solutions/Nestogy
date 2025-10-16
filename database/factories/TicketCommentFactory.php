@@ -14,7 +14,7 @@ class TicketCommentFactory extends Factory
     public function definition(): array
     {
         return ['ticket_id' => Ticket::factory(),
-            'company_id' => \App\Models\Company::factory(),
+            'company_id' => \App\Domains\Company\Models\Company::factory(),
             'content' => $this->faker->paragraph(),
             'visibility' => 'public',
             'source' => 'manual',

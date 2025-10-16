@@ -182,7 +182,7 @@ class UpdateTicketRequest extends FormRequest
 
             // Validate assigned user has appropriate role
             if ($this->filled('assigned_to')) {
-                $assignedUser = \App\Models\User::with('settings')->find($this->assigned_to);
+                $assignedUser = \App\Domains\Core\Models\User::with('settings')->find($this->assigned_to);
                 if ($assignedUser) {
                     if ($assignedUser->company_id !== $user->company_id) {
                         $validator->errors()->add('assigned_to', 'The selected user is invalid.');
@@ -194,7 +194,7 @@ class UpdateTicketRequest extends FormRequest
 
             // Validate category is appropriate for tickets
             if ($this->filled('category_id')) {
-                $category = \App\Models\Category::find($this->category_id);
+                $category = \App\Domains\Financial\Models\Category::find($this->category_id);
                 if ($category && $category->type !== 'Ticket') {
                     $validator->errors()->add('category_id', 'The selected category is not valid for tickets.');
                 }

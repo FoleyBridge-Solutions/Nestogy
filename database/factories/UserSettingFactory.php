@@ -12,8 +12,8 @@ class UserSettingFactory extends Factory
     public function definition(): array
     {
         return [
-            'company_id' => \App\Models\Company::factory(),
-            'user_id' => \App\Models\User::factory(),
+            'company_id' => \App\Domains\Company\Models\Company::factory(),
+            'user_id' => \App\Domains\Core\Models\User::factory(),
             'role' => 1,
             'remember_me_token' => $this->faker->optional()->randomNumber(),
             'force_mfa' => $this->faker->boolean(),

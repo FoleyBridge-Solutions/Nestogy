@@ -110,7 +110,7 @@ $pageActions = [
                         <option value="">All Statuses</option>
                         <option value="Ready To Deploy">Available</option>
                         <option value="Deployed">Checked Out</option>
-                        @foreach(\App\Models\Asset::STATUSES as $status)
+                        @foreach(\App\Domains\Asset\Models\Asset::STATUSES as $status)
                             <option value="{{ $status }}">{{ $status }}</option>
                         @endforeach
                     </select>
@@ -119,7 +119,7 @@ $pageActions = [
                     <select x-model="filters.type" @change="loadAssets()" 
                             class="block w-full sm:w-auto px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
                         <option value="">All Types</option>
-                        @foreach(\App\Models\Asset::TYPES as $type)
+                        @foreach(\App\Domains\Asset\Models\Asset::TYPES as $type)
                             <option value="{{ $type }}">{{ $type }}</option>
                         @endforeach
                     </select>

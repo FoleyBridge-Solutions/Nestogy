@@ -50,7 +50,7 @@ class TicketWatcher extends Model
 
     public function user(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\User::class);
+        return $this->belongsTo(\App\Domains\Core\Models\User::class);
     }
 
     // ===========================================
@@ -171,7 +171,7 @@ class TicketWatcher extends Model
     public static function addByEmail(int $ticketId, string $email): self
     {
         // Check if user exists with this email
-        $user = \App\Models\User::where('email', $email)->first();
+        $user = \App\Domains\Core\Models\User::where('email', $email)->first();
 
         return self::updateOrCreate([
             'ticket_id' => $ticketId,
@@ -188,7 +188,7 @@ class TicketWatcher extends Model
      */
     public static function addByUser(int $ticketId, int $userId): self
     {
-        $user = \App\Models\User::findOrFail($userId);
+        $user = \App\Domains\Core\Models\User::findOrFail($userId);
 
         return self::updateOrCreate([
             'ticket_id' => $ticketId,

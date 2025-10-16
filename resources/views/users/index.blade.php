@@ -15,7 +15,7 @@
                 <flux:button href="{{ route('users.export.csv') }}" variant="ghost" icon="arrow-down-tray">
                     Export CSV
                 </flux:button>
-                @can('create', App\Models\User::class)
+                @can('create', App\Domains\Core\Models\User::class)
                 <flux:button href="{{ route('users.create') }}" variant="primary" icon="plus">
                     Add User
                 </flux:button>

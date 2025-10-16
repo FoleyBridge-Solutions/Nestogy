@@ -356,7 +356,7 @@ class StripeSubscriptionService
             }
 
             // Ensure Stripe price exists before creating subscription
-            $plan = \App\Models\SubscriptionPlan::where('stripe_price_id', $data['price_id'])->first();
+            $plan = \App\Domains\Product\Models\SubscriptionPlan::where('stripe_price_id', $data['price_id'])->first();
             if ($plan && $plan->price_monthly > 0) {
                 $actualPriceId = $this->ensureStripePriceExists($plan);
                 if ($actualPriceId) {
@@ -553,7 +553,7 @@ class StripeSubscriptionService
     /**
      * Ensure a Stripe price exists for a subscription plan, creating it if necessary.
      */
-    public function ensureStripePriceExists(\App\Models\SubscriptionPlan $plan): ?string
+    public function ensureStripePriceExists(\App\Domains\Product\Models\SubscriptionPlan $plan): ?string
     {
         // Skip if no Stripe price ID is set
         if (! $plan->stripe_price_id) {
@@ -622,7 +622,7 @@ class StripeSubscriptionService
     /**
      * Ensure a Stripe product exists for a subscription plan.
      */
-    protected function ensureStripeProductExists(\App\Models\SubscriptionPlan $plan): \Stripe\Product
+    protected function ensureStripeProductExists(\App\Domains\Product\Models\SubscriptionPlan $plan): \Stripe\Product
     {
         $productId = 'prod_'.preg_replace('/[^a-zA-Z0-9_]/', '', strtolower($plan->slug ?: $plan->name));
 

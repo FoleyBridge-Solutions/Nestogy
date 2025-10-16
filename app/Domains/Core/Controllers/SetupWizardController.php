@@ -147,7 +147,7 @@ class SetupWizardController extends Controller
             // System Preferences
             'timezone' => 'required|string|max:255',
             'date_format' => 'nullable|string|max:20',
-            'theme' => 'nullable|string|in:'.implode(',', array_keys(\App\Models\Setting::getAvailableThemes())),
+            'theme' => 'nullable|string|in:'.implode(',', array_keys(\App\Domains\Core\Models\Setting::getAvailableThemes())),
             'company_language' => 'nullable|string|size:2',
             'default_net_terms' => 'nullable|integer|min:0|max:365',
             'default_hourly_rate' => 'nullable|numeric|min:0|max:9999.99',
@@ -438,13 +438,13 @@ class SetupWizardController extends Controller
         ];
 
         // Update the existing settings record (created by Company model observer)
-        $existingSettings = \App\Models\Setting::where('company_id', $company->id)->first();
+        $existingSettings = \App\Domains\Core\Models\Setting::where('company_id', $company->id)->first();
 
         if ($existingSettings) {
             $existingSettings->update($settingsData);
         } else {
             // Fallback: create new settings if none exist (shouldn't happen normally)
-            \App\Models\Setting::create($settingsData);
+            \App\Domains\Core\Models\Setting::create($settingsData);
         }
 
         Log::info('Company settings created during setup', [

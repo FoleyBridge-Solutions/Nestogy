@@ -12,8 +12,8 @@ class CustomQuickActionFactory extends Factory
     public function definition(): array
     {
         return [
-            'company_id' => \App\Models\Company::factory(),
-            'user_id' => \App\Models\User::factory(),
+            'company_id' => \App\Domains\Company\Models\Company::factory(),
+            'user_id' => \App\Domains\Core\Models\User::factory(),
             'title' => $this->faker->words(3, true),
             'description' => $this->faker->sentence,
             'icon' => $this->faker->randomElement(['bolt', 'plus', 'pencil', 'trash', 'eye']),

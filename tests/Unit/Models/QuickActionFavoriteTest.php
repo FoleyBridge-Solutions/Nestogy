@@ -30,7 +30,7 @@ class QuickActionFavoriteTest extends TestCase
 
         $model = QuickActionFavorite::factory()->create();
 
-        $this->assertInstanceOf(\App\Models\User::class, $model->user);
+        $this->assertInstanceOf(\App\Domains\Core\Models\User::class, $model->user);
     }
 
     public function test_quick_action_favorite_has_fillable_attributes(): void

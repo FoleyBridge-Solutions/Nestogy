@@ -80,7 +80,7 @@
                             <label for="created_by" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Created By</label>
                             <select name="created_by" id="created_by" class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                                 <option value="">All Users</option>
-                                @foreach(\App\Models\User::where('company_id', auth()->user()->company_id)->get() as $user)
+                                @foreach(\App\Domains\Core\Models\User::where('company_id', auth()->user()->company_id)->get() as $user)
                                     <option value="{{ $user->id }}" {{ request('created_by') == $user->id ? 'selected' : '' }}>
                                         {{ $user->name }}
                                     </option>

@@ -12,8 +12,8 @@ class ServiceFactory extends Factory
     public function definition(): array
     {
         return [
-            'company_id' => \App\Models\Company::factory(),
-            'product_id' => \App\Models\Product::factory(),
+            'company_id' => \App\Domains\Company\Models\Company::factory(),
+            'product_id' => \App\Domains\Product\Models\Product::factory(),
             'service_type' => $this->faker->randomElement(['consulting', 'support', 'maintenance', 'development', 'training', 'implementation', 'custom']),
             'estimated_hours' => $this->faker->optional()->randomFloat(2, 1, 999.99),
             'sla_days' => $this->faker->optional()->randomNumber(),

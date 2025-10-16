@@ -2,7 +2,7 @@
 
 namespace App\Traits;
 
-use App\Models\User;
+use App\Domains\Core\Models\User;
 use Illuminate\Support\Facades\Auth;
 
 /**

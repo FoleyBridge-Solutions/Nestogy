@@ -2,7 +2,7 @@
 
 namespace App\Livewire\Admin\Contract;
 
-use App\Models\ContractClause;
+use App\Domains\Contract\Models\ContractClause;
 use Livewire\Component;
 use Livewire\WithPagination;
 

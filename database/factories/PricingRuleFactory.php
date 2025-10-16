@@ -12,8 +12,8 @@ class PricingRuleFactory extends Factory
     public function definition(): array
     {
         return [
-            'company_id' => \App\Models\Company::factory(),
-            'product_id' => \App\Models\Product::factory(),
+            'company_id' => \App\Domains\Company\Models\Company::factory(),
+            'product_id' => \App\Domains\Product\Models\Product::factory(),
             'name' => $this->faker->words(3, true),
             'pricing_model' => $this->faker->randomElement(['fixed', 'tiered', 'volume', 'usage', 'package', 'custom']),
             'discount_type' => $this->faker->randomElement(['percentage', 'fixed', 'override']),

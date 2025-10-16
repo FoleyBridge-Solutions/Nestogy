@@ -8,7 +8,7 @@ use App\Domains\Client\Models\Location;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Location>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Domains\Client\Models\Location>
  */
 class LocationFactory extends Factory
 {

@@ -319,12 +319,12 @@ class Ticket extends Model
 
     public function ratings(): HasMany
     {
-        return $this->hasMany(\App\Models\TicketRating::class);
+        return $this->hasMany(\App\Domains\Ticket\Models\TicketRating::class);
     }
 
     public function latestRating()
     {
-        return $this->hasOne(\App\Models\TicketRating::class)->latestOfMany();
+        return $this->hasOne(\App\Domains\Ticket\Models\TicketRating::class)->latestOfMany();
     }
 
     // ===========================================

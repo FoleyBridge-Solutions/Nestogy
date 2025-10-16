@@ -369,7 +369,7 @@ class KbSearchController extends Controller
      */
     protected function getAvailableAuthors(): \Illuminate\Support\Collection
     {
-        return \App\Models\User::whereHas('kbArticles', function ($query) {
+        return \App\Domains\Core\Models\User::whereHas('kbArticles', function ($query) {
             $query->where('company_id', $this->getCompanyId())
                 ->where('status', KbArticle::STATUS_PUBLISHED);
         })

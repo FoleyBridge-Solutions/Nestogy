@@ -1184,7 +1184,7 @@ class ClientPortalController extends Controller
             return collect();
         }
 
-        return \App\Models\PortalNotification::where('client_id', $contact->client->id)
+        return \App\Domains\Core\Models\PortalNotification::where('client_id', $contact->client->id)
             ->where('company_id', $contact->client->company_id)
             ->where('show_in_portal', true)
             ->active()
@@ -1201,7 +1201,7 @@ class ClientPortalController extends Controller
     {
         $contact = auth('client')->user();
 
-        $notification = \App\Models\PortalNotification::where('id', $notificationId)
+        $notification = \App\Domains\Core\Models\PortalNotification::where('id', $notificationId)
             ->where('client_id', $contact->client->id)
             ->where('company_id', $contact->client->company_id)
             ->first();
@@ -1236,7 +1236,7 @@ class ClientPortalController extends Controller
     /**
      * Show specific quote
      */
-    public function showQuote(\App\Models\Quote $quote)
+    public function showQuote(\App\Domains\Financial\Models\Quote $quote)
     {
         $contact = auth('client')->user();
 
@@ -1256,7 +1256,7 @@ class ClientPortalController extends Controller
     /**
      * Download quote PDF
      */
-    public function downloadQuotePdf(\App\Models\Quote $quote)
+    public function downloadQuotePdf(\App\Domains\Financial\Models\Quote $quote)
     {
         $contact = auth('client')->user();
 

@@ -222,7 +222,7 @@
                                         name="currency" 
                                         required
                                         class="mt-1 block w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 sm:text-sm">
-                                    @foreach(\App\Models\Company::SUPPORTED_CURRENCIES as $code => $name)
+                                    @foreach(\App\Domains\Company\Models\Company::SUPPORTED_CURRENCIES as $code => $name)
                                         <option value="{{ $code }}" {{ old('currency', 'USD') === $code ? 'selected' : '' }}>
                                             {{ $code }} - {{ $name }}
                                         </option>
@@ -432,7 +432,7 @@
                                         name="timezone" 
                                         required
                                         class="mt-1 block w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 sm:text-sm">
-                                    @foreach(\App\Models\Setting::getAvailableTimezones() as $value => $label)
+                                    @foreach(\App\Domains\Core\Models\Setting::getAvailableTimezones() as $value => $label)
                                         <option value="{{ $value }}" {{ old('timezone', 'America/New_York') === $value ? 'selected' : '' }}>
                                             {{ $label }}
                                         </option>
@@ -448,7 +448,7 @@
                                 <select id="date_format" 
                                         name="date_format" 
                                         class="mt-1 block w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 sm:text-sm">
-                                    @foreach(\App\Models\Setting::getAvailableDateFormats() as $value => $label)
+                                    @foreach(\App\Domains\Core\Models\Setting::getAvailableDateFormats() as $value => $label)
                                         <option value="{{ $value }}" {{ old('date_format', 'Y-m-d') === $value ? 'selected' : '' }}>
                                             {{ $label }}
                                         </option>
@@ -464,7 +464,7 @@
                                 <select id="theme" 
                                         name="theme" 
                                         class="mt-1 block w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 sm:text-sm">
-                                    @foreach(\App\Models\Setting::getAvailableThemes() as $value => $label)
+                                    @foreach(\App\Domains\Core\Models\Setting::getAvailableThemes() as $value => $label)
                                         <option value="{{ $value }}" {{ old('theme', 'blue') === $value ? 'selected' : '' }}>
                                             {{ $label }}
                                         </option>
@@ -480,7 +480,7 @@
                                 <select id="company_language" 
                                         name="company_language" 
                                         class="mt-1 block w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 sm:text-sm">
-                                    @foreach(\App\Models\Setting::getAvailableLanguages() as $value => $label)
+                                    @foreach(\App\Domains\Core\Models\Setting::getAvailableLanguages() as $value => $label)
                                         <option value="{{ $value }}" {{ old('company_language', 'en') === $value ? 'selected' : '' }}>
                                             {{ $label }}
                                         </option>

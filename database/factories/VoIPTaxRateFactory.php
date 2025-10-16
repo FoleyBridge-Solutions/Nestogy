@@ -2,9 +2,9 @@
 
 namespace Database\Factories;
 
-use App\Models\TaxCategory;
+use App\Domains\Tax\Models\TaxCategory;
 use App\Domains\Tax\Models\TaxJurisdiction;
-use App\Models\VoIPTaxRate;
+use App\Domains\Tax\Models\VoIPTaxRate;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class VoIPTaxRateFactory extends Factory
@@ -13,7 +13,7 @@ class VoIPTaxRateFactory extends Factory
 
     public function definition(): array
     {
-        return ['company_id' => \App\Models\Company::factory(),
+        return ['company_id' => \App\Domains\Company\Models\Company::factory(),
             'tax_jurisdiction_id' => TaxJurisdiction::factory(),
             'tax_category_id' => null, // TaxCategoryFactory does not exist
             'tax_name' => $this->faker->words(3, true),

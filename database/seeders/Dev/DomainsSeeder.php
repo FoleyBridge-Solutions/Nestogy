@@ -2,7 +2,6 @@
 
 namespace Database\Seeders\Dev;
 
-use App\Models\Domains;
 use Illuminate\Database\Seeder;
 
 class DomainsSeeder extends Seeder

@@ -6,7 +6,7 @@
         <x-slot name="title">Pricing Rules</x-slot>
         <x-slot name="description">Manage client-specific pricing rules and discounts</x-slot>
         <x-slot name="actions">
-            @can('create', App\Models\PricingRule::class)
+            @can('create', App\Domains\Product\Models\PricingRule::class)
                 <a href="{{ route('pricing-rules.create') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                     <i class="fas fa-plus"></i> Create Pricing Rule
                 </a>
@@ -174,7 +174,7 @@
                         Create your first pricing rule to customize client pricing.
                     @endif
                 </p>
-                @can('create', App\Models\PricingRule::class)
+                @can('create', App\Domains\Product\Models\PricingRule::class)
                     <a href="{{ route('pricing-rules.create') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                         <i class="fas fa-plus"></i> Create Pricing Rule
                     </a>

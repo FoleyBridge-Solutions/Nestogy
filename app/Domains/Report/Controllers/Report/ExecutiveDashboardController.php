@@ -295,7 +295,7 @@ class ExecutiveDashboardController extends Controller
                     ->whereDate('payment_date', today())
                     ->where('status', 'completed')
                     ->sum('amount'),
-                'online_technicians' => \App\Models\User::where('company_id', $companyId)
+                'online_technicians' => \App\Domains\Core\Models\User::where('company_id', $companyId)
                     ->where('last_activity', '>=', now()->subMinutes(5))
                     ->whereHas('roles', function ($query) {
                         $query->where('name', 'technician');

@@ -2,7 +2,7 @@
 
 namespace App\Mail;
 
-use App\Models\Contact;
+use App\Domains\Client\Models\ClientContact;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;

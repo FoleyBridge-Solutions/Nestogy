@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Silber\Bouncer\BouncerFacade as Bouncer;
+use App\Domains\Core\Models\User;
 
 class RolesAndPermissionsSeeder extends Seeder
 {
@@ -338,7 +339,7 @@ class RolesAndPermissionsSeeder extends Seeder
         ];
 
         foreach ($userRoleAssignments as $userId => $assignment) {
-            $user = \App\Models\User::find($userId);
+            $user = User::find($userId);
             if ($user) {
                 // Set Bouncer scope to the user's company
                 Bouncer::scope()->to($assignment['company_id']);

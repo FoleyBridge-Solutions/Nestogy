@@ -1060,7 +1060,7 @@ class CommandPaletteService
             }
 
             // Get recent quotes (last 1)
-            $recentQuotes = \App\Models\Quote::where('company_id', $companyId)
+            $recentQuotes = \App\Domains\Financial\Models\Quote::where('company_id', $companyId)
                 ->with('client')
                 ->orderBy('updated_at', 'desc')
                 ->limit(1)

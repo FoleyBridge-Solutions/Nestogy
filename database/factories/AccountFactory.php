@@ -11,7 +11,7 @@ class AccountFactory extends Factory
 
     public function definition(): array
     {
-        return ['company_id' => \App\Models\Company::factory(),
+        return ['company_id' => \App\Domains\Company\Models\Company::factory(),
             'name' => $this->faker->words(3, true),
             'opening_balance' => $this->faker->randomFloat(2, 0, 10000),
             'currency_code' => 'USD',

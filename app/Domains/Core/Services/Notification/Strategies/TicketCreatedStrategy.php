@@ -213,7 +213,7 @@ class TicketCreatedStrategy implements NotificationStrategyInterface
     protected function getSupervisors(Ticket $ticket): array
     {
         // Get users with supervisor role for this company
-        return \App\Models\User::where('company_id', $ticket->company_id)
+        return \App\Domains\Core\Models\User::where('company_id', $ticket->company_id)
             ->where('role', 'supervisor')
             ->where('is_active', true)
             ->get()

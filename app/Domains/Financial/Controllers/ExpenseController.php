@@ -5,7 +5,7 @@ namespace App\Domains\Financial\Controllers;
 use App\Http\Controllers\Controller;
 use App\Domains\Client\Models\Client;
 use App\Domains\Financial\Models\Expense;
-use App\Models\ExpenseCategory;
+use App\Domains\Financial\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 

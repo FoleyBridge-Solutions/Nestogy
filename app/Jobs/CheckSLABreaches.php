@@ -147,7 +147,7 @@ class CheckSLABreaches implements ShouldQueue
             $recipients->push($ticket->assignee);
         }
 
-        $managers = \App\Models\User::whereHas('roles', function ($q) {
+        $managers = \App\Domains\Core\Models\User::whereHas('roles', function ($q) {
             $q->whereIn('name', ['admin', 'manager']);
         })->where('company_id', $ticket->company_id)->get();
 

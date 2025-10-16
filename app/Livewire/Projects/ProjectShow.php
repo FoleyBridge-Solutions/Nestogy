@@ -223,7 +223,7 @@ class ProjectShow extends Component
 
     public function render()
     {
-        $technicians = \App\Models\User::where('company_id', Auth::user()->company_id)
+        $technicians = \App\Domains\Core\Models\User::where('company_id', Auth::user()->company_id)
             ->whereNull('archived_at')
             ->orderBy('name')
             ->get();

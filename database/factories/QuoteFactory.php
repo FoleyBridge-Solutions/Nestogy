@@ -12,8 +12,8 @@ class QuoteFactory extends Factory
     public function definition(): array
     {
         return [
-            'company_id' => \App\Models\Company::factory(),
-            'category_id' => \App\Models\Category::factory(),
+            'company_id' => \App\Domains\Company\Models\Company::factory(),
+            'category_id' => \App\Domains\Financial\Models\Category::factory(),
             'client_id' => \App\Domains\Client\Models\Client::factory(),
             'prefix' => $this->faker->optional()->randomNumber(),
             'number' => $this->faker->numberBetween(1, 100),
@@ -27,8 +27,8 @@ class QuoteFactory extends Factory
             'currency_code' => 'USD',
             'note' => $this->faker->optional()->randomNumber(),
             'url_key' => $this->faker->optional()->url,
-            'created_by' => \App\Models\User::factory(),
-            'approved_by' => \App\Models\User::factory(),
+            'created_by' => \App\Domains\Core\Models\User::factory(),
+            'approved_by' => \App\Domains\Core\Models\User::factory(),
         ];
     }
 }

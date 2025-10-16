@@ -72,8 +72,8 @@
                             <div class="flex flex-wrap gap-1">
                                 @foreach((array)$category->type as $type)
                                     @php
-                                        $typeColor = \App\Models\Category::getColorForType($type);
-                                        $typeLabel = \App\Models\Category::TYPE_LABELS[$type] ?? ucfirst($type);
+                                        $typeColor = \App\Domains\Financial\Models\Category::getColorForType($type);
+                                        $typeLabel = \App\Domains\Financial\Models\Category::TYPE_LABELS[$type] ?? ucfirst($type);
                                     @endphp
                                     <flux:badge style="background-color: {{ $typeColor }}20; color: {{ $typeColor }}">
                                         {{ $typeLabel }}
@@ -127,8 +127,8 @@
                                     <div class="flex flex-wrap gap-1">
                                         @foreach((array)$child->type as $type)
                                             @php
-                                                $typeColor = \App\Models\Category::getColorForType($type);
-                                                $typeLabel = \App\Models\Category::TYPE_LABELS[$type] ?? ucfirst($type);
+                                                $typeColor = \App\Domains\Financial\Models\Category::getColorForType($type);
+                                                $typeLabel = \App\Domains\Financial\Models\Category::TYPE_LABELS[$type] ?? ucfirst($type);
                                             @endphp
                                             <flux:badge size="sm" style="background-color: {{ $typeColor }}20; color: {{ $typeColor }}">
                                                 {{ $typeLabel }}

@@ -62,7 +62,7 @@ $pageActions = [
                 <flux:label for="type">Type</flux:label>
                 <flux:select id="type" wire:model.live="type">
                     <option value="">All Types</option>
-                    @foreach(App\Models\Asset::TYPES as $assetType)
+                    @foreach(App\Domains\Asset\Models\Asset::TYPES as $assetType)
                         <option value="{{ $assetType }}">{{ $assetType }}</option>
                     @endforeach
                 </flux:select>
@@ -72,7 +72,7 @@ $pageActions = [
                 <flux:label for="status">Status</flux:label>
                 <flux:select id="status" wire:model.live="status">
                     <option value="">All Statuses</option>
-                    @foreach(App\Models\Asset::STATUSES as $assetStatus)
+                    @foreach(App\Domains\Asset\Models\Asset::STATUSES as $assetStatus)
                         <option value="{{ $assetStatus }}">{{ $assetStatus }}</option>
                     @endforeach
                 </flux:select>

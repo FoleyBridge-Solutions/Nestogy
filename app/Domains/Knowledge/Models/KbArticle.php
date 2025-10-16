@@ -2,7 +2,7 @@
 
 namespace App\Domains\Knowledge\Models;
 
-use App\Models\BaseModel;
+use Illuminate\Database\Eloquent\Model;
 use App\Domains\Client\Models\Client;
 use App\Domains\Core\Models\User;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -35,7 +35,7 @@ use Laravel\Scout\Searchable;
  * @property \Carbon\Carbon $created_at
  * @property \Carbon\Carbon $updated_at
  */
-class KbArticle extends BaseModel
+class KbArticle extends Model
 {
     use Searchable, SoftDeletes;
 

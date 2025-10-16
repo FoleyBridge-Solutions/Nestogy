@@ -60,7 +60,7 @@ class ClientFile extends Model
      */
     public function uploader()
     {
-        return $this->belongsTo(\App\Models\User::class, 'uploaded_by');
+        return $this->belongsTo(\App\Domains\Core\Models\User::class, 'uploaded_by');
     }
 
     /**

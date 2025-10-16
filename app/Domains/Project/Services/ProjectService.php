@@ -415,7 +415,7 @@ class ProjectService
                 ];
             }
 
-            $user = \App\Models\User::find($userId);
+            $user = \App\Domains\Core\Models\User::find($userId);
 
             return [
                 'user' => $user ? $user->name : 'Unassigned',

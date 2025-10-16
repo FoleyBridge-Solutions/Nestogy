@@ -5,7 +5,7 @@ namespace Database\Factories;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Expense>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Domains\Financial\Models\Expense>
  */
 class ExpenseFactory extends Factory
 {
@@ -17,9 +17,9 @@ class ExpenseFactory extends Factory
     public function definition(): array
     {
         return [
-            'company_id' => \App\Models\Company::factory(),
-            'category_id' => \App\Models\Category::factory()->expenseCategory(),
-            'user_id' => \App\Models\User::factory(),
+            'company_id' => \App\Domains\Company\Models\Company::factory(),
+            'category_id' => \App\Domains\Financial\Models\Category::factory()->expenseCategory(),
+            'user_id' => \App\Domains\Core\Models\User::factory(),
             'description' => fake()->sentence(),
             'amount' => fake()->randomFloat(2, 10, 500),
             'expense_date' => fake()->dateTimeThisYear(),

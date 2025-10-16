@@ -6,7 +6,7 @@ use App\Domains\Contract\Traits\HasCompanyConfiguration;
 use App\Domains\Contract\Traits\HasStatusWorkflow;
 use App\Domains\Asset\Models\Asset;
 use App\Domains\Client\Models\Client;
-use App\Models\ComplianceRecord;
+use App\Domains\Tax\Models\ComplianceCheck;
 use App\Domains\Financial\Models\Invoice;
 use App\Domains\Financial\Models\Quote;
 use App\Domains\Financial\Models\RecurringInvoice;

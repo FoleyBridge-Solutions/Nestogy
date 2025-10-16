@@ -206,7 +206,7 @@ class StoreClientRequest extends BaseFormRequest
             // If contact email is provided, validate it's unique for this company
             if ($this->filled('contact_email')) {
                 $user = Auth::user();
-                $existingContact = \App\Models\Contact::where('company_id', $user->company_id)
+                $existingContact = \App\Domains\Client\Models\ClientContact::where('company_id', $user->company_id)
                     ->where('email', $this->contact_email)
                     ->first();
 

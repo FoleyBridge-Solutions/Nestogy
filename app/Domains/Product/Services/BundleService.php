@@ -2,7 +2,7 @@
 
 namespace App\Domains\Product\Services;
 
-use App\Models\Bundle;
+use App\Domains\Product\Models\ProductBundle;
 use Illuminate\Support\Facades\DB;
 
 class BundleService
