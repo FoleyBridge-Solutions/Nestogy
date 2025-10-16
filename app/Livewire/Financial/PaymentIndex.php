@@ -171,7 +171,7 @@ class PaymentIndex extends BaseIndexComponent
                 'href' => route('financial.payments.show', $payment),
                 'icon' => 'eye',
                 'variant' => 'ghost',
-                'title' => 'View',
+                'label' => 'View',
             ],
         ];
 
@@ -180,7 +180,7 @@ class PaymentIndex extends BaseIndexComponent
                 'href' => route('financial.payments.edit', $payment),
                 'icon' => 'pencil',
                 'variant' => 'ghost',
-                'title' => 'Edit',
+                'label' => 'Edit',
             ];
 
             $actions[] = [
@@ -189,7 +189,7 @@ class PaymentIndex extends BaseIndexComponent
                 'icon' => 'trash',
                 'variant' => 'ghost',
                 'class' => 'text-red-600 hover:text-red-700',
-                'title' => 'Delete',
+                'label' => 'Delete',
             ];
         }
 

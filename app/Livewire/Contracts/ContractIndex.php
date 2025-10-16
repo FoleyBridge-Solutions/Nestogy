@@ -169,7 +169,7 @@ class ContractIndex extends BaseIndexComponent
                 'href' => route('financial.contracts.show', $contract),
                 'icon' => 'eye',
                 'variant' => 'ghost',
-                'title' => 'View',
+                'label' => 'View',
             ],
         ];
 
@@ -178,7 +178,7 @@ class ContractIndex extends BaseIndexComponent
                 'href' => route('financial.contracts.edit', $contract),
                 'icon' => 'pencil',
                 'variant' => 'ghost',
-                'title' => 'Edit',
+                'label' => 'Edit',
             ];
         }
 

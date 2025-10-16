@@ -192,13 +192,13 @@ class InvoiceIndex extends BaseIndexComponent
                 'href' => route('financial.invoices.show', $invoice),
                 'icon' => 'eye',
                 'variant' => 'ghost',
-                'title' => 'View',
+                'label' => 'View',
             ],
             [
                 'href' => route('financial.invoices.pdf', $invoice),
                 'icon' => 'arrow-down-tray',
                 'variant' => 'ghost',
-                'title' => 'Download PDF',
+                'label' => 'Download PDF',
             ],
         ];
 
@@ -207,7 +207,7 @@ class InvoiceIndex extends BaseIndexComponent
                 'href' => route('financial.invoices.edit', $invoice),
                 'icon' => 'pencil',
                 'variant' => 'ghost',
-                'title' => 'Edit',
+                'label' => 'Edit',
             ];
 
             $actions[] = [
@@ -216,7 +216,7 @@ class InvoiceIndex extends BaseIndexComponent
                 'icon' => 'paper-airplane',
                 'variant' => 'ghost',
                 'class' => 'text-blue-600 hover:text-blue-700',
-                'title' => 'Mark as Sent',
+                'label' => 'Mark as Sent',
             ];
         }
 

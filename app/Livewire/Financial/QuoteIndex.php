@@ -149,7 +149,7 @@ class QuoteIndex extends BaseIndexComponent
                 'href' => route('financial.quotes.show', $quote),
                 'icon' => 'eye',
                 'variant' => 'ghost',
-                'title' => 'View',
+                'label' => 'View',
             ],
         ];
 
@@ -158,7 +158,7 @@ class QuoteIndex extends BaseIndexComponent
                 'href' => route('financial.quotes.edit', $quote),
                 'icon' => 'pencil',
                 'variant' => 'ghost',
-                'title' => 'Edit',
+                'label' => 'Edit',
             ];
         }
 
