@@ -1543,4 +1543,9 @@ class Setting extends Model
 
         return $settings['mailing_address'] ?? null;
     }
+
+    public function settings(): Settings\SettingsAggregator
+    {
+        return new Settings\SettingsAggregator($this);
+    }
 }
