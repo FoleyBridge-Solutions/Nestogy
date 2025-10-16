@@ -263,6 +263,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'tickets.*', 'assets.*', 'projects.*',
             'reports.view', 'reports.tickets', 'reports.assets', 'reports.projects', 'reports.export',
             'financial.view', 'financial.payments.view', 'financial.invoices.view',
+            'settings.view', 'system.logs.view', 'system.backups.manage',
         ];
 
         // Accountant abilities (financial focus)
@@ -274,6 +275,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'clients.quotes.*', 'clients.calendar-events.*',
             'financial.*', 'reports.view', 'reports.financial', 'reports.clients', 'reports.export',
             'projects.view', 'projects.tasks.view',
+            'settings.view',
         ];
 
         // Assign ALL abilities to super-admin role
