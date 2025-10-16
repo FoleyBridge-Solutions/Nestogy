@@ -292,26 +292,7 @@ class Invoice extends Model
         return [];
     }
 
-            /**
-     * Get tax breakdown for all VoIP services.
-     */
-    public function getVoIPTaxBreakdown(): array
-    {
-        $breakdown = [];
-
-        foreach ($this->voipItems as $item) {
-            if ($item->voip_tax_data) {
-                $breakdown[$item->id] = [
-                    'item_name' => $item->name,
-                    'service_type' => $item->service_type,
-                    'tax_breakdown' => $item->voip_tax_data['tax_breakdown'] ?? [],
-                    'total_tax' => $item->voip_tax_data['total_tax_amount'] ?? 0,
-                ];
-            }
-        }
-
-        return $breakdown;
-    }
+        
 
     /**
      * Get compliance report data.

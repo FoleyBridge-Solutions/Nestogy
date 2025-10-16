@@ -110,21 +110,7 @@ class TaxJurisdiction extends Model
 
     const TYPE_ZIP_CODE = 'zip_code';
 
-    /**
-     * Get the tax rates for this jurisdiction.
-     */
-    public function taxRates(): HasMany
-    {
-        return $this->hasMany(VoIPTaxRate::class, 'tax_jurisdiction_id');
-    }
 
-    /**
-     * Get active tax rates for this jurisdiction.
-     */
-    public function activeTaxRates(): HasMany
-    {
-        return $this->taxRates()->active();
-    }
 
     /**
      * Get the parent jurisdiction.

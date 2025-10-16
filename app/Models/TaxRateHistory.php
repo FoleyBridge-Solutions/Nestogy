@@ -15,7 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  *
  * @property int $id
  * @property int $company_id
- * @property int $voip_tax_rate_id
+
  * @property array $old_values
  * @property array $new_values
  * @property array|null $changed_fields
@@ -41,7 +41,6 @@ class TaxRateHistory extends Model
      */
     protected $fillable = [
         'company_id',
-        'voip_tax_rate_id',
         'old_values',
         'new_values',
         'changed_fields',
@@ -57,7 +56,6 @@ class TaxRateHistory extends Model
      */
     protected $casts = [
         'company_id' => 'integer',
-        'voip_tax_rate_id' => 'integer',
         'old_values' => 'array',
         'new_values' => 'array',
         'changed_fields' => 'array',
@@ -66,13 +64,7 @@ class TaxRateHistory extends Model
         'updated_at' => 'datetime',
     ];
 
-    /**
-     * Get the tax rate this history record belongs to.
-     */
-    public function taxRate(): BelongsTo
-    {
-        return $this->belongsTo(VoIPTaxRate::class, 'voip_tax_rate_id');
-    }
+
 
     /**
      * Get the user who made the change.
@@ -157,13 +149,7 @@ class TaxRateHistory extends Model
         }
     }
 
-    /**
-     * Scope to get history for a specific tax rate.
-     */
-    public function scopeForTaxRate($query, int $taxRateId)
-    {
-        return $query->where('voip_tax_rate_id', $taxRateId);
-    }
+
 
     /**
      * Scope to get history by change reason.

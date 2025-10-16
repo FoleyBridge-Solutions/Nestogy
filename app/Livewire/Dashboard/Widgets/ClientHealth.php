@@ -127,8 +127,14 @@ class ClientHealth extends Component
             ->where('due_date', '<', $now)
             ->sum('amount');
 
-        $paymentDelay = $client->payments()
-            ->join('invoices', 'payments.invoice_id', '=', 'invoices.id')
+        $paymentDelay = \DB::table('payment_applications')
+            ->join('payments', 'payment_applications.payment_id', '=', 'payments.id')
+            ->join('invoices', function($join) {
+                $join->on('payment_applications.applicable_id', '=', 'invoices.id')
+                     ->where('payment_applications.applicable_type', '=', 'App\Models\Invoice');
+            })
+            ->where('payments.client_id', $client->id)
+            ->where('payment_applications.is_active', true)
             ->where('payments.created_at', '>=', $thirtyDaysAgo)
             ->selectRaw('AVG(payments.created_at::date - invoices.due_date::date) as avg_delay')
             ->first()
@@ -332,8 +338,14 @@ class ClientHealth extends Component
         $now = Carbon::now();
         $thirtyDaysAgo = $now->copy()->subDays(30);
 
-        $paymentDelay = $client->payments()
-            ->join('invoices', 'payments.invoice_id', '=', 'invoices.id')
+        $paymentDelay = \DB::table('payment_applications')
+            ->join('payments', 'payment_applications.payment_id', '=', 'payments.id')
+            ->join('invoices', function($join) {
+                $join->on('payment_applications.applicable_id', '=', 'invoices.id')
+                     ->where('payment_applications.applicable_type', '=', 'App\Models\Invoice');
+            })
+            ->where('payments.client_id', $client->id)
+            ->where('payment_applications.is_active', true)
             ->where('payments.created_at', '>=', $thirtyDaysAgo)
             ->selectRaw('AVG(payments.created_at::date - invoices.due_date::date) as avg_delay')
             ->first()

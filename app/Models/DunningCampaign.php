@@ -212,13 +212,7 @@ class DunningCampaign extends Model
             return false;
         }
 
-        // Check service type filters (for VoIP-specific campaigns)
-        if ($this->service_type_filters && $invoice->hasVoIPServices()) {
-            $invoiceServiceTypes = $invoice->voipItems->pluck('service_type')->unique()->toArray();
-            if (! array_intersect($invoiceServiceTypes, $this->service_type_filters)) {
-                return false;
-            }
-        }
+
 
         // Check jurisdiction filters
         if ($this->jurisdiction_filters && ! in_array($invoice->client->state, $this->jurisdiction_filters)) {
