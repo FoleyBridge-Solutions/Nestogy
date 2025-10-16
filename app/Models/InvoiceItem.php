@@ -149,9 +149,7 @@ class InvoiceItem extends Model
     }
 
     /**
-     * Get the VoIP tax category this item belongs to.
      */
-    public function voipTaxCategory(): BelongsTo
     {
         return $this->belongsTo(TaxCategory::class, 'tax_category_id');
     }
@@ -169,7 +167,6 @@ class InvoiceItem extends Model
         $companyId = $this->invoice?->company_id ?? $this->quote?->company_id ?? 1;
         $clientId = $this->invoice?->client_id ?? $this->quote?->client_id;
 
-        $taxService = new VoIPTaxService;
         $taxService->setCompanyId($companyId);
 
         $params = [
@@ -185,7 +182,6 @@ class InvoiceItem extends Model
         $taxCalculation = $taxService->calculateTaxes($params);
 
         // Store detailed tax data
-        // Note: voip_tax_data column doesn't exist in database yet
 
         return $taxCalculation;
     }
@@ -274,9 +270,7 @@ class InvoiceItem extends Model
         // Calculate tax
         $taxAmount = 0;
 
-        // Use VoIP tax calculation if service type is specified
         if ($this->service_type) {
-            $taxCalculation = $this->calculateVoIPTaxes();
             $taxAmount = $taxCalculation['total_tax_amount'] ?? 0;
         } elseif ($this->taxRate) {
             // Fallback to legacy tax calculation
@@ -297,19 +291,14 @@ class InvoiceItem extends Model
     }
 
     /**
-     * Check if this is a VoIP service item.
      */
-    public function isVoIPService(): bool
     {
         return ! empty($this->service_type);
     }
 
     /**
-     * Get VoIP tax breakdown.
      */
-    public function getVoIPTaxBreakdown(): array
     {
-        // voip_tax_data column doesn't exist in database yet
         return [];
     }
 
@@ -318,7 +307,6 @@ class InvoiceItem extends Model
      */
     public function getAppliedExemptions(): array
     {
-        // voip_tax_data column doesn't exist in database yet
         return [];
     }
 
@@ -424,9 +412,7 @@ class InvoiceItem extends Model
     }
 
     /**
-     * Create VoIP service item.
      */
-    public static function createVoIPServiceItem(array $data): array
     {
         return array_merge([
             'name' => $data['name'],
@@ -442,9 +428,7 @@ class InvoiceItem extends Model
     }
 
     /**
-     * Scope to get VoIP service items.
      */
-    public function scopeVoIPServices($query)
     {
         return $query->whereNotNull('service_type');
     }

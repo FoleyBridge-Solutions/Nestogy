@@ -4,8 +4,6 @@ namespace App\Providers;
 
 use App\Domains\Core\Services\ConfigurationValidationService;
 use App\Domains\Core\Services\NavigationService;
-use App\Domains\Product\Services\VoIPTieredPricingService;
-use App\Domains\Product\Services\VoIPUsageService;
 use App\Http\ViewComposers\ClientViewComposer;
 use App\Http\ViewComposers\NavigationComposer;
 use App\Models\Company;
@@ -33,15 +31,6 @@ class AppServiceProvider extends ServiceProvider
         // Register the navigation service
         $this->app->singleton(NavigationService::class, function ($app) {
             return new NavigationService;
-        });
-
-        // Register VoIP services with proper dependency injection
-        $this->app->bind(VoIPUsageService::class, function ($app) {
-            return new VoIPUsageService;
-        });
-
-        $this->app->bind(VoIPTieredPricingService::class, function ($app) {
-            return new VoIPTieredPricingService;
         });
 
         // Register Tax Profile Service with company context

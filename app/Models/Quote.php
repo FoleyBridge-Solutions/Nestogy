@@ -18,7 +18,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * Quote Model
  *
  * Enterprise-grade quote management with multi-tier approval workflows,
- * versioning, expiration handling, and VoIP-specific features.
  *
  * @property int $id
  * @property int $company_id
@@ -41,7 +40,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property bool $auto_renew
  * @property int|null $auto_renew_days
  * @property string|null $template_name
- * @property array|null $voip_config
  * @property array|null $pricing_model
  * @property \Illuminate\Support\Carbon|null $sent_at
  * @property \Illuminate\Support\Carbon|null $viewed_at
@@ -88,7 +86,6 @@ class Quote extends Model
         'auto_renew',
         'auto_renew_days',
         'template_name',
-        'voip_config',
         'pricing_model',
         'sent_at',
         'viewed_at',
@@ -115,7 +112,6 @@ class Quote extends Model
         'amount' => 'decimal:2',
         'auto_renew' => 'boolean',
         'auto_renew_days' => 'integer',
-        'voip_config' => 'array',
         'pricing_model' => 'array',
         'sent_at' => 'datetime',
         'viewed_at' => 'datetime',
@@ -177,7 +173,6 @@ class Quote extends Model
     const DISCOUNT_FIXED = 'fixed';
 
     /**
-     * VoIP pricing model types
      */
     const PRICING_FLAT_RATE = 'flat_rate';
 
@@ -393,36 +388,18 @@ class Quote extends Model
         return [];
     }
 
-    /**
-     * Get VoIP service items on this quote.
-     */
-    public function voipItems()
-    {
-        return $this->items()->voipServices();
-    }
+
+
+
 
     /**
-     * Check if quote has VoIP services.
      */
-    public function hasVoIPServices(): bool
-    {
-        return $this->voipItems()->exists();
-    }
-
-    /**
-     * Get tax breakdown for all VoIP services.
-     */
-    public function getVoIPTaxBreakdown(): array
     {
         $breakdown = [];
 
-        foreach ($this->voipItems as $item) {
-            if ($item->voip_tax_data) {
                 $breakdown[$item->id] = [
                     'item_name' => $item->name,
                     'service_type' => $item->service_type,
-                    'tax_breakdown' => $item->voip_tax_data['tax_breakdown'] ?? [],
-                    'total_tax' => $item->voip_tax_data['total_tax_amount'] ?? 0,
                 ];
             }
         }
@@ -588,37 +565,7 @@ class Quote extends Model
         $this->update(['amount' => $total]);
     }
 
-    /**
-     * Recalculate all taxes using VoIP tax engine.
-     */
-    public function recalculateVoIPTaxes(?array $serviceAddress = null): void
-    {
-        if (! $this->hasVoIPServices()) {
-            return;
-        }
 
-        $taxCalculations = $this->calculateVoIPTaxes($serviceAddress);
-
-        // Update individual items with new tax calculations
-        foreach ($taxCalculations['calculations'] as $calculation) {
-            $item = $this->items()->find($calculation['item_id']);
-            if ($item) {
-                $item->update([
-                    'tax' => $calculation['total_tax_amount'],
-                    'voip_tax_data' => $calculation,
-                ]);
-            }
-        }
-
-        // Recalculate quote totals
-        $this->calculateTotals();
-
-        \Log::info('Quote VoIP taxes recalculated', [
-            'quote_id' => $this->id,
-            'total_tax' => $taxCalculations['total_tax_amount'],
-            'items_processed' => count($taxCalculations['calculations']),
-        ]);
-    }
 
     /**
      * Get public URL for client access.
@@ -719,10 +666,7 @@ class Quote extends Model
 
         $invoice->calculateTotals();
 
-        // If quote has VoIP services, recalculate taxes for the invoice
-        if ($this->hasVoIPServices()) {
-            $invoice->recalculateVoIPTaxes();
-        }
+
 
         // Update quote status
         $this->update([
@@ -898,7 +842,6 @@ class Quote extends Model
             'auto_renew' => 'boolean',
             'auto_renew_days' => 'nullable|integer|min:1|max:365',
             'template_name' => 'nullable|string|max:100',
-            'voip_config' => 'nullable|array',
             'pricing_model' => 'nullable|array',
             'category_id' => 'required|integer|exists:categories,id',
             'client_id' => 'required|integer|exists:clients,id',
