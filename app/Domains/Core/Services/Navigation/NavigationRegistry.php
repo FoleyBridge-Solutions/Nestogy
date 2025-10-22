@@ -50,6 +50,7 @@ class NavigationRegistry
         static::registerClientsDomain();
         static::registerAssetsDomain();
         static::registerProjectsDomain();
+        static::registerMarketingDomain();
     }
 
     protected static function registerFinancialDomain(): void
@@ -343,17 +344,6 @@ class NavigationRegistry
             'order' => 10,
         ]);
 
-        static::register('clients', 'documents', [
-            'label' => 'Documents',
-            'icon' => 'folder-open',
-            'route' => 'clients.documents.index',
-            'params' => ['client' => '{client_id}'],
-            'requires_client' => true,
-            'permission' => 'clients.view',
-            'section' => 'infrastructure',
-            'order' => 20,
-        ]);
-
         static::register('clients', 'domains', [
             'label' => 'Domains',
             'icon' => 'globe-alt',
@@ -491,6 +481,162 @@ class NavigationRegistry
             'permission' => 'projects.view',
             'section' => 'filters',
             'order' => 20,
+        ]);
+    }
+
+    protected static function registerMarketingDomain(): void
+    {
+        // CAMPAIGNS Section
+        static::register('marketing', 'all-campaigns', [
+            'label' => 'All Campaigns',
+            'icon' => 'megaphone',
+            'route' => 'marketing.campaigns.index',
+            'permission' => 'view-campaigns',
+            'section' => 'campaigns',
+            'order' => 10,
+            'description' => 'Email marketing campaigns and automation',
+            'commands' => [
+                'show' => ['campaigns', 'marketing', 'email campaigns'],
+                'goto' => ['campaigns', 'marketing'],
+            ],
+        ]);
+
+        static::register('marketing', 'create-campaign', [
+            'label' => 'Create Campaign',
+            'icon' => 'plus',
+            'route' => 'marketing.campaigns.create',
+            'permission' => 'create-campaigns',
+            'section' => 'campaigns',
+            'order' => 20,
+            'description' => 'Create new marketing campaign',
+            'commands' => [
+                'create' => ['campaign', 'marketing campaign', 'email campaign'],
+            ],
+        ]);
+
+        static::register('marketing', 'active-campaigns', [
+            'label' => 'Active Campaigns',
+            'icon' => 'play',
+            'route' => 'marketing.campaigns.index',
+            'params' => ['status' => 'active'],
+            'permission' => 'view-campaigns',
+            'section' => 'campaigns',
+            'order' => 30,
+        ]);
+
+        static::register('marketing', 'draft-campaigns', [
+            'label' => 'Draft Campaigns',
+            'icon' => 'document-text',
+            'route' => 'marketing.campaigns.index',
+            'params' => ['status' => 'draft'],
+            'permission' => 'view-campaigns',
+            'section' => 'campaigns',
+            'order' => 40,
+        ]);
+
+        // LEADS & CONTACTS Section
+        static::register('marketing', 'all-leads', [
+            'label' => 'All Leads',
+            'icon' => 'user-group',
+            'route' => 'leads.index',
+            'permission' => 'view-leads',
+            'section' => 'leads',
+            'order' => 10,
+            'description' => 'Manage and track leads',
+        ]);
+
+        static::register('marketing', 'qualified-leads', [
+            'label' => 'Qualified Leads',
+            'icon' => 'star',
+            'route' => 'leads.index',
+            'params' => ['status' => 'qualified'],
+            'permission' => 'view-leads',
+            'section' => 'leads',
+            'order' => 20,
+        ]);
+
+        static::register('marketing', 'high-score-leads', [
+            'label' => 'High-Score Leads',
+            'icon' => 'fire',
+            'route' => 'leads.index',
+            'params' => ['score' => 'high'],
+            'permission' => 'view-leads',
+            'section' => 'leads',
+            'order' => 25,
+        ]);
+
+        static::register('marketing', 'lead-dashboard', [
+            'label' => 'Lead Dashboard',
+            'icon' => 'chart-bar',
+            'route' => 'leads.dashboard',
+            'permission' => 'view-leads',
+            'section' => 'leads',
+            'order' => 30,
+        ]);
+
+        static::register('marketing', 'import-leads', [
+            'label' => 'Import Leads',
+            'icon' => 'arrow-down-tray',
+            'route' => 'leads.import.form',
+            'permission' => 'manage-leads',
+            'section' => 'leads',
+            'order' => 40,
+        ]);
+
+        // AUTOMATION & SEQUENCES Section
+        static::register('marketing', 'active-enrollments', [
+            'label' => 'Active Enrollments',
+            'icon' => 'bolt',
+            'route' => 'marketing.enrollments.index',
+            'permission' => 'view-campaigns',
+            'section' => 'automation',
+            'order' => 10,
+        ]);
+
+        static::register('marketing', 'email-templates', [
+            'label' => 'Email Templates',
+            'icon' => 'document-duplicate',
+            'route' => 'marketing.templates.index',
+            'permission' => 'manage-templates',
+            'section' => 'automation',
+            'order' => 20,
+        ]);
+
+        // ANALYTICS & INSIGHTS Section
+        static::register('marketing', 'campaign-performance', [
+            'label' => 'Campaign Performance',
+            'icon' => 'chart-bar',
+            'route' => 'marketing.analytics.campaigns',
+            'permission' => 'view-analytics',
+            'section' => 'analytics',
+            'order' => 10,
+        ]);
+
+        static::register('marketing', 'email-tracking', [
+            'label' => 'Email Performance',
+            'icon' => 'envelope-open',
+            'route' => 'marketing.analytics.email-tracking',
+            'permission' => 'view-analytics',
+            'section' => 'analytics',
+            'order' => 20,
+        ]);
+
+        static::register('marketing', 'attribution', [
+            'label' => 'Attribution Report',
+            'icon' => 'link',
+            'route' => 'marketing.analytics.attribution',
+            'permission' => 'view-analytics',
+            'section' => 'analytics',
+            'order' => 30,
+        ]);
+
+        static::register('marketing', 'revenue-attribution', [
+            'label' => 'Revenue Attribution',
+            'icon' => 'currency-dollar',
+            'route' => 'marketing.analytics.revenue',
+            'permission' => 'view-analytics',
+            'section' => 'analytics',
+            'order' => 40,
         ]);
     }
 }

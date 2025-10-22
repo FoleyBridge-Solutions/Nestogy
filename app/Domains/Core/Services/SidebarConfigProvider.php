@@ -249,13 +249,6 @@ class SidebarConfigProvider
                             'params' => [],
                         ],
                         [
-                            'name' => 'Documents',
-                            'route' => 'clients.documents.index',
-                            'icon' => 'folder-open',
-                            'key' => 'documents',
-                            'params' => [],
-                        ],
-                        [
                             'name' => 'Files',
                             'route' => 'clients.files.index',
                             'icon' => 'paper-clip',
