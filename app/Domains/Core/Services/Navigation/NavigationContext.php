@@ -19,6 +19,7 @@ class NavigationContext
         'email' => ['email.*'],
         'physical-mail' => ['mail.*', 'physical-mail.*'],
         'manager' => ['manager.*'],
+        'marketing' => ['marketing.*', 'leads.*'],
     ];
 
     public static function getCurrentDomain(): ?string
@@ -38,10 +39,24 @@ class NavigationContext
             return 'settings';
         }
 
+        // Check for specific domain routes that should NOT use client context
+        $noClientContextDomains = ['marketing', 'email', 'physical-mail', 'reports', 'financial'];
+        foreach ($noClientContextDomains as $domain) {
+            if (isset(static::$domainMappings[$domain])) {
+                foreach (static::$domainMappings[$domain] as $pattern) {
+                    if (Str::is($pattern, $route)) {
+                        return $domain;
+                    }
+                }
+            }
+        }
+
+        // Now check client context (only for client-specific domains)
         if (static::hasSelectedClient()) {
             return 'clients';
         }
 
+        // Finally check remaining domain mappings
         foreach (static::$domainMappings as $domain => $patterns) {
             foreach ($patterns as $pattern) {
                 if (Str::is($pattern, $route)) {

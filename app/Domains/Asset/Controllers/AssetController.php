@@ -35,7 +35,23 @@ class AssetController extends Controller
 
     public function create()
     {
-        return view('assets.create');
+        $vendors = \App\Domains\Project\Models\Vendor::where('company_id', auth()->user()->company_id)
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        $networks = \App\Domains\Client\Models\Network::where('company_id', auth()->user()->company_id)
+            ->orderBy('name')
+            ->get(['id', 'name', 'network']);
+
+        $locations = $this->assetService->getLocationsForFilter();
+        $contacts = $this->assetService->getContactsForFilter();
+        
+        $users = \App\Domains\Core\Models\User::where('company_id', auth()->user()->company_id)
+            ->whereNull('archived_at')
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        return view('assets.create', compact('vendors', 'networks', 'locations', 'contacts', 'users'));
     }
 
     public function store(StoreAssetRequest $request)

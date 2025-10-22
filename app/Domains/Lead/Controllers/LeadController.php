@@ -42,65 +42,30 @@ class LeadController extends BaseResourceController
      */
     public function index(Request $request): View|JsonResponse
     {
-        $query = Lead::where('company_id', auth()->user()->company_id)
-            ->with(['leadSource', 'assignedUser', 'client']);
-
-        // Apply filters
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        if ($request->filled('priority')) {
-            $query->where('priority', $request->priority);
-        }
-
-        if ($request->filled('assigned_user_id')) {
-            $query->where('assigned_user_id', $request->assigned_user_id);
-        }
-
-        if ($request->filled('lead_source_id')) {
-            $query->where('lead_source_id', $request->lead_source_id);
-        }
-
-        if ($request->filled('score_min')) {
-            $query->where('total_score', '>=', $request->score_min);
-        }
-
-        if ($request->filled('search')) {
-            $query->search($request->search);
-        }
-
-        // Apply sorting
-        $sortField = $request->get('sort', 'total_score');
-        $sortDirection = $request->get('direction', 'desc');
-
-        if (in_array($sortField, ['total_score', 'created_at', 'last_contact_date', 'qualified_at'])) {
-            $query->orderBy($sortField, $sortDirection);
-        }
-
-        $leads = $query->paginate($request->get('per_page', 25));
-
-        // Get filter options
-        $leadSources = LeadSource::where('company_id', auth()->user()->company_id)
-            ->where('is_active', true)
-            ->get();
-
-        $users = \App\Domains\Core\Models\User::where('company_id', auth()->user()->company_id)
-            ->get(['id', 'name']);
-
         if ($request->expectsJson()) {
+            $query = Lead::where('company_id', auth()->user()->company_id)
+                ->with(['leadSource', 'assignedUser', 'client']);
+
+            if ($request->filled('status')) {
+                $query->where('status', $request->status);
+            }
+
+            if ($request->filled('priority')) {
+                $query->where('priority', $request->priority);
+            }
+
+            $leads = $query->paginate($request->get('per_page', 25));
+
             return response()->json([
                 'leads' => $leads,
                 'filters' => [
                     'statuses' => Lead::getStatuses(),
                     'priorities' => Lead::getPriorities(),
-                    'leadSources' => $leadSources,
-                    'users' => $users,
                 ],
             ]);
         }
 
-        return view('leads.index', compact('leads', 'leadSources', 'users'));
+        return view('leads.index-livewire');
     }
 
     /**
@@ -108,14 +73,7 @@ class LeadController extends BaseResourceController
      */
     public function create(): View
     {
-        $leadSources = LeadSource::where('company_id', auth()->user()->company_id)
-            ->where('is_active', true)
-            ->get();
-
-        $users = \App\Domains\Core\Models\User::where('company_id', auth()->user()->company_id)
-            ->get(['id', 'name']);
-
-        return view('leads.create', compact('leadSources', 'users'));
+        return view('leads.create-livewire');
     }
 
     /**
@@ -190,7 +148,7 @@ class LeadController extends BaseResourceController
             return response()->json(['lead' => $lead]);
         }
 
-        return view('lead.leads.show', compact('lead'));
+        return view('leads.show', compact('lead'));
     }
 
     /**
@@ -208,7 +166,7 @@ class LeadController extends BaseResourceController
         $users = \App\Domains\Core\Models\User::where('company_id', auth()->user()->company_id)
             ->get(['id', 'name']);
 
-        return view('lead.leads.edit', compact('lead', 'leadSources', 'users'));
+        return view('leads.edit', compact('lead', 'leadSources', 'users'));
     }
 
     /**
@@ -436,16 +394,7 @@ class LeadController extends BaseResourceController
      */
     public function importForm(): View
     {
-        $this->authorize('create', Lead::class);
-
-        $leadSources = LeadSource::where('company_id', auth()->user()->company_id)
-            ->where('is_active', true)
-            ->get();
-
-        $users = \App\Domains\Core\Models\User::where('company_id', auth()->user()->company_id)
-            ->get(['id', 'name']);
-
-        return view('leads.import', compact('leadSources', 'users'));
+        return view('leads.import-livewire');
     }
 
     /**

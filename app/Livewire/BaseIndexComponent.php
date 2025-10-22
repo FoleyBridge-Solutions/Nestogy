@@ -22,6 +22,12 @@ abstract class BaseIndexComponent extends Component
 
     public $viewMode = 'table';
     
+    public $showCellModal = false;
+    
+    public $selectedItemForModal = null;
+    
+    public $selectedCellKey = null;
+    
     protected $filterOptionsCache = [];
     
     protected $columnStatsCache = [];
@@ -359,6 +365,34 @@ abstract class BaseIndexComponent extends Component
         }
         
         return $this->columnStatsCache[$columnKey];
+    }
+
+    public function openCellModal($cellKey, $itemId)
+    {
+        $columns = $this->getColumns();
+        
+        if (!isset($columns[$cellKey]) || !($columns[$cellKey]['clickable'] ?? false)) {
+            return;
+        }
+        
+        $item = $this->getBaseQuery()
+            ->where('company_id', $this->companyId)
+            ->find($itemId);
+        
+        if (!$item) {
+            return;
+        }
+        
+        $this->selectedCellKey = $cellKey;
+        $this->selectedItemForModal = $item;
+        $this->showCellModal = true;
+    }
+
+    public function closeCellModal()
+    {
+        $this->showCellModal = false;
+        $this->selectedCellKey = null;
+        $this->selectedItemForModal = null;
     }
 
     abstract protected function getBaseQuery(): Builder;

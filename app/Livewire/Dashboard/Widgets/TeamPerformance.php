@@ -143,16 +143,14 @@ class TeamPerformance extends Component
             $resolutionRate = $totalTickets > 0 ?
                 min(100, round(($resolvedTickets / $totalTickets) * 100, 1)) : 0;
 
-            // Get time metrics (or estimate)
+            // Get time metrics
             $userTimeMetrics = $timeMetrics->get($userId);
             if ($userTimeMetrics) {
                 $totalHours = round($userTimeMetrics->total_hours, 1);
                 $billableHours = round($userTimeMetrics->billable_hours, 1);
             } else {
-                // Estimate if no time entries
-                $estimatedHours = $this->estimateHours($totalTickets, $openTickets, $periodStart, $userId);
-                $totalHours = $estimatedHours['total_hours'];
-                $billableHours = $estimatedHours['billable_hours'];
+                $totalHours = 0;
+                $billableHours = 0;
             }
 
             $utilizationRate = $totalHours > 0 ?
@@ -161,21 +159,19 @@ class TeamPerformance extends Component
             // Calculate revenue (simplified)
             $revenueGenerated = $this->calculateRevenue($billableHours, $user->roles->pluck('name')->first());
 
-            // Customer satisfaction (simplified)
-            $customerSat = $this->estimateCustomerSatisfaction($resolvedTickets, $avgResolutionHours, $userId);
-
-            // Calculate performance score
+            // Calculate performance score (no fake customer satisfaction)
             $performanceScore = $this->calculatePerformanceScore(
                 $resolutionRate,
                 $utilizationRate,
                 $avgResolutionHours,
-                $customerSat,
+                0,
                 $totalHours,
                 $totalTickets,
                 $openTickets,
                 $resolvedTickets,
                 $userId
             );
+            $customerSat = 0;
 
             // Determine performance level
             $performanceLevel = match (true) {
@@ -210,35 +206,7 @@ class TeamPerformance extends Component
         });
     }
 
-    protected function estimateHours($totalTickets, $openTickets, $periodStart, $userId)
-    {
-        $periodDays = max(1, $periodStart->diffInDays(now()));
 
-        // Estimate based on ticket workload
-        $estimatedHours = ($totalTickets * 3) + ($openTickets * 2);
-
-        // Add baseline hours if user has tickets
-        if ($totalTickets > 0) {
-            $userFactor = 1 + (($userId % 7) / 10); // 1.0-1.6 variance
-            $baselineMultiplier = min(6, 2 + ($totalTickets * 0.15 * $userFactor));
-            $baselineHours = $periodDays * $baselineMultiplier;
-            $totalHours = max($estimatedHours, $baselineHours);
-        } else {
-            $minimalBase = 10 + ($userId % 15); // 10-24 hours
-            $totalHours = $minimalBase;
-        }
-
-        // Utilization rate
-        $baseUtilization = $totalTickets > 5 ? 0.75 : 0.55;
-        $utilizationVariance = (($userId % 8) / 20);
-        $utilizationRate = min(0.95, $baseUtilization + $utilizationVariance);
-        $billableHours = $totalHours * $utilizationRate;
-
-        return [
-            'total_hours' => round($totalHours, 1),
-            'billable_hours' => round($billableHours, 1),
-        ];
-    }
 
     protected function calculateRevenue($billableHours, $role)
     {
@@ -256,29 +224,7 @@ class TeamPerformance extends Component
         return round($billableHours * $hourlyRate, 2);
     }
 
-    protected function estimateCustomerSatisfaction($resolvedTickets, $avgResolutionHours, $userId)
-    {
-        if ($resolvedTickets == 0) {
-            return 3.0; // Neutral score
-        }
 
-        // Base score varies by user for diversity
-        $baseScore = 4.0 + (($userId % 10) * 0.1); // 4.0 to 4.9
-
-        // Adjust based on resolution time
-        if ($avgResolutionHours > 48) {
-            $baseScore -= 0.8;
-        } elseif ($avgResolutionHours > 24) {
-            $baseScore -= 0.4;
-        } elseif ($avgResolutionHours <= 4) {
-            $baseScore += 0.5;
-        }
-
-        // Add small variation
-        $variation = (($userId + $resolvedTickets) % 5) * 0.1 - 0.2;
-
-        return round(max(2.0, min(5.0, $baseScore + $variation)), 1);
-    }
 
     protected function calculatePerformanceScore(
         $resolutionRate,
@@ -292,7 +238,6 @@ class TeamPerformance extends Component
         $userId
     ) {
         $performanceScore = 0;
-        $userVarianceFactor = 0.9 + (($userId % 11) / 50); // 0.9-1.12 variance
 
         $hasActiveWork = $openTickets > 0 || $totalTickets > 0;
         $hasResolvedWork = $resolvedTickets > 0;
@@ -301,36 +246,29 @@ class TeamPerformance extends Component
             // For users with work in progress but nothing resolved yet
             $periodDays = $this->getPeriodDays();
             $engagementScore = min(100, ($totalTickets / max(1, $periodDays)) * 100);
-            $performanceScore += $engagementScore * 0.4 * $userVarianceFactor;
+            $performanceScore += $engagementScore * 0.4;
 
             $workloadScore = $openTickets <= 5 ? 100 : max(0, 100 - (($openTickets - 5) * 10));
-            $performanceScore += $workloadScore * 0.3 * $userVarianceFactor;
+            $performanceScore += $workloadScore * 0.3;
 
-            $performanceScore += $utilizationRate * 0.2 * $userVarianceFactor;
+            $performanceScore += $utilizationRate * 0.2;
 
-            $baseSat = ($customerSat > 0 ? $customerSat : (2.5 + ($userId % 5) * 0.3));
-            $performanceScore += $baseSat / 5 * 100 * 0.1 * $userVarianceFactor;
+            $performanceScore += $customerSat / 5 * 100 * 0.1;
         } else {
             // Standard scoring
-            $performanceScore += $resolutionRate * 0.3 * $userVarianceFactor;
-            $performanceScore += $utilizationRate * 0.25 * $userVarianceFactor;
+            $performanceScore += $resolutionRate * 0.3;
+            $performanceScore += $utilizationRate * 0.25;
 
             $responseScore = $avgResolutionHours > 0 ?
-                max(0, 100 - ($avgResolutionHours / 24 * 50)) : (80 + ($userId % 20));
-            $performanceScore += $responseScore * 0.2 * $userVarianceFactor;
+                max(0, 100 - ($avgResolutionHours / 24 * 50)) : 0;
+            $performanceScore += $responseScore * 0.2;
 
-            $performanceScore += ($customerSat / 5) * 100 * 0.15 * $userVarianceFactor;
+            $performanceScore += ($customerSat / 5) * 100 * 0.15;
 
-            $expectedHours = $this->getPeriodDays() * (5 + ($userId % 3));
-            $activityScore = min(100, ($totalHours / max(1, $expectedHours)) * 100);
-            $performanceScore += $activityScore * 0.1 * $userVarianceFactor;
+            $performanceScore += $totalHours > 0 ? min(100, $totalHours / max(1, $totalHours) * 100) * 0.1 : 0;
         }
 
-        // Final adjustment
-        $finalAdjustment = ($userId % 13) - 6;
-        $performanceScore = max(0, min(100, $performanceScore + $finalAdjustment));
-
-        return round($performanceScore, 1);
+        return round(max(0, min(100, $performanceScore)), 1);
     }
 
     protected function getPeriodDays()

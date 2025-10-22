@@ -21,6 +21,7 @@ class CampaignController extends BaseResourceController
 
     public function __construct(CampaignEmailService $campaignEmailService)
     {
+        parent::__construct();
         $this->campaignEmailService = $campaignEmailService;
     }
 
@@ -42,40 +43,42 @@ class CampaignController extends BaseResourceController
      */
     public function index(Request $request): View|JsonResponse
     {
-        $query = MarketingCampaign::where('company_id', auth()->user()->company_id)
-            ->with(['createdBy']);
-
-        // Apply filters
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        if ($request->filled('type')) {
-            $query->where('type', $request->type);
-        }
-
-        if ($request->filled('created_by')) {
-            $query->where('created_by_user_id', $request->created_by);
-        }
-
-        if ($request->filled('search')) {
-            $query->where(function ($q) use ($request) {
-                $q->where('name', 'like', '%'.$request->search.'%')
-                    ->orWhere('description', 'like', '%'.$request->search.'%');
-            });
-        }
-
-        // Apply sorting
-        $sortField = $request->get('sort', 'created_at');
-        $sortDirection = $request->get('direction', 'desc');
-
-        if (in_array($sortField, ['created_at', 'start_date', 'total_recipients', 'total_converted'])) {
-            $query->orderBy($sortField, $sortDirection);
-        }
-
-        $campaigns = $query->paginate($request->get('per_page', 25));
+        $this->authorize('viewAny', MarketingCampaign::class);
 
         if ($request->expectsJson()) {
+            $query = MarketingCampaign::where('company_id', auth()->user()->company_id)
+                ->with(['createdBy']);
+
+            // Apply filters
+            if ($request->filled('status')) {
+                $query->where('status', $request->status);
+            }
+
+            if ($request->filled('type')) {
+                $query->where('type', $request->type);
+            }
+
+            if ($request->filled('created_by')) {
+                $query->where('created_by_user_id', $request->created_by);
+            }
+
+            if ($request->filled('search')) {
+                $query->where(function ($q) use ($request) {
+                    $q->where('name', 'like', '%'.$request->search.'%')
+                        ->orWhere('description', 'like', '%'.$request->search.'%');
+                });
+            }
+
+            // Apply sorting
+            $sortField = $request->get('sort', 'created_at');
+            $sortDirection = $request->get('direction', 'desc');
+
+            if (in_array($sortField, ['created_at', 'start_date', 'total_recipients', 'total_converted'])) {
+                $query->orderBy($sortField, $sortDirection);
+            }
+
+            $campaigns = $query->paginate($request->get('per_page', 25));
+
             return response()->json([
                 'campaigns' => $campaigns,
                 'filters' => [
@@ -85,7 +88,7 @@ class CampaignController extends BaseResourceController
             ]);
         }
 
-        return view('marketing.campaigns.index', compact('campaigns'));
+        return view('marketing.campaigns.index');
     }
 
     /**
@@ -93,6 +96,8 @@ class CampaignController extends BaseResourceController
      */
     public function create(): View
     {
+        $this->authorize('create', MarketingCampaign::class);
+
         return view('marketing.campaigns.create');
     }
 

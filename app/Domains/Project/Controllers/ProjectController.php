@@ -119,25 +119,11 @@ class ProjectController extends Controller
      */
     public function create(Request $request)
     {
-        $clients = Client::where('company_id', auth()->user()->company_id)
-            ->orderBy('name')
-            ->get();
-
-        $managers = User::where('company_id', auth()->user()->company_id)
-            ->orderBy('name')
-            ->get();
-
-        $templates = ProjectTemplate::where('company_id', auth()->user()->company_id)
-            ->orWhere('is_public', true)
-            ->active()
-            ->orderBy('name')
-            ->get();
-
         $selectedClientId = $request->get('client_id');
         $selectedTemplateId = $request->get('template_id');
 
         return view('projects.create', compact(
-            'clients', 'managers', 'templates', 'selectedClientId', 'selectedTemplateId'
+            'selectedClientId', 'selectedTemplateId'
         ));
     }
 

@@ -15,62 +15,39 @@ class ExpenseController extends Controller
 
     public function index(Request $request)
     {
-        $companyId = Auth::user()->company_id;
+        if ($request->wantsJson()) {
+            $companyId = Auth::user()->company_id;
 
-        $expenses = Expense::where('company_id', $companyId)
-            ->when($request->get('category_id'), function ($query, $categoryId) {
-                $query->where('category_id', $categoryId);
-            })
-            ->when($request->get('status'), function ($query, $status) {
-                $query->where('status', $status);
-            })
-            ->when($request->get('client_id'), function ($query, $clientId) {
-                $query->where('client_id', $clientId);
-            })
-            ->when($request->get('search'), function ($query, $search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('description', 'like', "%{$search}%")
-                        ->orWhere('vendor', 'like', "%{$search}%")
-                        ->orWhere('reference_number', 'like', "%{$search}%");
-                });
-            })
-            ->with(['category', 'user', 'client'])
-            ->orderBy('expense_date', 'desc')
-            ->paginate(20);
+            $expenses = Expense::where('company_id', $companyId)
+                ->when($request->get('category_id'), function ($query, $categoryId) {
+                    $query->where('category_id', $categoryId);
+                })
+                ->when($request->get('status'), function ($query, $status) {
+                    $query->where('status', $status);
+                })
+                ->when($request->get('client_id'), function ($query, $clientId) {
+                    $query->where('client_id', $clientId);
+                })
+                ->when($request->get('search'), function ($query, $search) {
+                    $query->where(function ($q) use ($search) {
+                        $q->where('description', 'like', "%{$search}%")
+                            ->orWhere('vendor', 'like', "%{$search}%")
+                            ->orWhere('reference_number', 'like', "%{$search}%");
+                    });
+                })
+                ->with(['category', 'submittedBy', 'client'])
+                ->orderBy('expense_date', 'desc')
+                ->paginate(20);
 
-        $categories = ExpenseCategory::where('company_id', $companyId)->get();
+            return response()->json($expenses);
+        }
 
-        $clients = Client::where('company_id', $companyId)
-            ->whereNull('archived_at')
-            ->where('status', 'active')
-            ->orderBy('name')
-            ->get();
-
-        $statuses = [
-            'draft' => 'Draft',
-            'pending_approval' => 'Pending Approval',
-            'approved' => 'Approved',
-            'rejected' => 'Rejected',
-            'paid' => 'Paid',
-        ];
-
-        // Calculate statistics
-        $stats = [
-            'total_amount' => Expense::where('company_id', $companyId)->sum('amount'),
-            'pending_approval_count' => Expense::where('company_id', $companyId)->where('status', 'pending_approval')->count(),
-            'this_month_amount' => Expense::where('company_id', $companyId)
-                ->whereMonth('expense_date', now()->month)
-                ->whereYear('expense_date', now()->year)
-                ->sum('amount'),
-            'billable_amount' => Expense::where('company_id', $companyId)->where('is_billable', true)->sum('amount'),
-        ];
-
-        return view('financial.expenses.index', compact('expenses', 'categories', 'clients', 'statuses', 'stats'));
+        return view('financial.expenses.index-livewire');
     }
 
     public function create()
     {
-        $categories = ExpenseCategory::where('company_id', Auth::user()->company_id)->get();
+        $categories = Category::where('company_id', Auth::user()->company_id)->get();
 
         $clients = Client::where('company_id', Auth::user()->company_id)
             ->whereNull('archived_at')
@@ -130,7 +107,7 @@ class ExpenseController extends Controller
     {
         $this->authorize('update', $expense);
 
-        $categories = ExpenseCategory::where('company_id', Auth::user()->company_id)->get();
+        $categories = Category::where('company_id', Auth::user()->company_id)->get();
 
         $clients = Client::where('company_id', Auth::user()->company_id)
             ->whereNull('archived_at')

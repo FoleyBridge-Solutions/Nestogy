@@ -14,12 +14,12 @@
 
     <!-- Actions Bar -->
     <div class="flex justify-between items-center mb-6">
-        <div class="flex space-x-2">
-            <flux:button href="{{ route('clients.vendors.create', ['client' => $client->id]) }}" color="primary">
-                <flux:icon name="plus" />
-                Add Vendor
-            </flux:button>
-        </div>
+         <div class="flex space-x-2">
+             <flux:button href="{{ route('clients.vendors.create', ['client' => $client->id]) }}" variant="primary" color="zinc">
+                 <flux:icon name="plus" />
+                 Add Vendor
+             </flux:button>
+         </div>
 
         <!-- Filters -->
         <div class="flex space-x-2">
@@ -111,10 +111,10 @@
                         <flux:icon name="building-storefront" class="w-12 h-12 mx-auto mb-6 text-gray-300" />
                         <p class="text-lg font-medium">No vendors found</p>
                         <p class="text-sm">Get started by adding your first vendor for this client.</p>
-                        <flux:button href="{{ route('clients.vendors.create', ['client' => $client->id]) }}" color="primary" class="mt-6">
-                            <flux:icon name="plus" />
-                            Add First Vendor
-                        </flux:button>
+                         <flux:button href="{{ route('clients.vendors.create', ['client' => $client->id]) }}" variant="primary" color="zinc" class="mt-6">
+                             <flux:icon name="plus" />
+                             Add First Vendor
+                         </flux:button>
                     </div>
                 </flux:table.cell>
             </flux:table.row>

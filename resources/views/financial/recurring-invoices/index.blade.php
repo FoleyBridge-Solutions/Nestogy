@@ -14,12 +14,12 @@
 
     <!-- Actions Bar -->
     <div class="flex justify-between items-center mb-6">
-        <div class="flex space-x-2">
-            <flux:button href="{{ route('financial.recurring-invoices.create') }}" color="primary">
-                <flux:icon name="plus" />
-                Create Recurring Invoice
-            </flux:button>
-        </div>
+         <div class="flex space-x-2">
+             <flux:button href="{{ route('financial.recurring-invoices.create') }}" variant="primary" color="zinc">
+                 <flux:icon name="plus" />
+                 Create Recurring Invoice
+             </flux:button>
+         </div>
 
         <!-- Filters -->
         <div class="flex space-x-2">
@@ -93,10 +93,10 @@
                         <flux:icon name="document-text" class="w-12 h-12 mx-auto mb-6 text-gray-300" />
                         <p class="text-lg font-medium">No recurring invoices found</p>
                         <p class="text-sm">Get started by creating your first recurring invoice template.</p>
-                        <flux:button href="{{ route('financial.recurring-invoices.create') }}" color="primary" class="mt-6">
-                            <flux:icon name="plus" />
-                            Create First Recurring Invoice
-                        </flux:button>
+                         <flux:button href="{{ route('financial.recurring-invoices.create') }}" variant="primary" color="zinc" class="mt-6">
+                             <flux:icon name="plus" />
+                             Create First Recurring Invoice
+                         </flux:button>
                     </div>
                 </flux:table.cell>
             </flux:table.row>

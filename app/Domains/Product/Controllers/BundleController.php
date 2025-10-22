@@ -21,24 +21,28 @@ class BundleController extends Controller
 
     public function index(Request $request)
     {
-        $query = ProductBundle::with(['products'])
-            ->where('company_id', auth()->user()->company_id);
+        if ($request->wantsJson()) {
+            $query = ProductBundle::with(['products'])
+                ->where('company_id', auth()->user()->company_id);
 
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('description', 'like', "%{$search}%");
-            });
+            if ($request->filled('search')) {
+                $search = $request->search;
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('description', 'like', "%{$search}%");
+                });
+            }
+
+            if ($request->filled('is_active')) {
+                $query->where('is_active', $request->boolean('is_active'));
+            }
+
+            $bundles = $query->orderBy('name')->paginate(20);
+
+            return response()->json($bundles);
         }
 
-        if ($request->filled('is_active')) {
-            $query->where('is_active', $request->boolean('is_active'));
-        }
-
-        $bundles = $query->orderBy('name')->paginate(20)->appends($request->query());
-
-        return view('bundles.index', compact('bundles'));
+        return view('bundles.index-livewire');
     }
 
     public function show(ProductBundle $bundle)

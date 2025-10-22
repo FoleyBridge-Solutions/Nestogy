@@ -13,6 +13,8 @@ class EmailTracking extends Model
 {
     use BelongsToCompany, HasFactory;
 
+    protected $table = 'email_tracking';
+
     protected $fillable = [
         'company_id',
         'tracking_id',

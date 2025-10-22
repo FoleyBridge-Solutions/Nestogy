@@ -3,7 +3,7 @@
 namespace App\Domains\Project\Models;
 
 use App\Domains\Client\Models\Client;
-
+use App\Domains\Core\Models\User;
 use App\Domains\Ticket\Models\Ticket;
 use App\Traits\BelongsToCompany;
 use Carbon\Carbon;
@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
@@ -107,6 +108,94 @@ class Project extends Model
     public function tickets(): HasMany
     {
         return $this->hasMany(Ticket::class);
+    }
+
+    /**
+     * Get project members.
+     */
+    public function members(): HasMany
+    {
+        return $this->hasMany(ProjectMember::class);
+    }
+
+    /**
+     * Get project team members (alias for members).
+     */
+    public function teamMembers(): HasMany
+    {
+        return $this->members();
+    }
+
+    /**
+     * Get project tasks.
+     */
+    public function tasks(): HasMany
+    {
+        return $this->hasMany(ProjectTask::class);
+    }
+
+    /**
+     * Get project milestones.
+     */
+    public function milestones(): HasMany
+    {
+        return $this->hasMany(ProjectMilestone::class);
+    }
+
+    /**
+     * Get project time entries.
+     */
+    public function timeEntries(): HasMany
+    {
+        return $this->hasMany(ProjectTimeEntry::class);
+    }
+
+    /**
+     * Get project comments.
+     */
+    public function comments(): HasMany
+    {
+        return $this->hasMany(ProjectComment::class);
+    }
+
+    /**
+     * Get project files.
+     */
+    public function files(): HasMany
+    {
+        return $this->hasMany(ProjectFile::class);
+    }
+
+    /**
+     * Get project expenses.
+     */
+    public function expenses(): HasMany
+    {
+        return $this->hasMany(ProjectExpense::class);
+    }
+
+    /**
+     * Get project notes.
+     */
+    public function notes(): HasMany
+    {
+        return $this->hasMany(ProjectComment::class);
+    }
+
+    /**
+     * Get project invoices.
+     */
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(\App\Domains\Financial\Models\Invoice::class);
+    }
+
+    /**
+     * Get project activities.
+     */
+    public function activities(): MorphMany
+    {
+        return $this->morphMany(\Spatie\Activitylog\Models\Activity::class, 'subject');
     }
 
     /**

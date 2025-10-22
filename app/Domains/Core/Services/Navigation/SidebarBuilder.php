@@ -158,6 +158,21 @@ class SidebarBuilder
         ];
     }
 
+    protected function buildMarketingSidebar(): array
+    {
+        return [
+            'title' => 'Marketing',
+            'subtitle' => 'Marketing Automation & Analytics',
+            'icon' => 'megaphone',
+            'sections' => [
+                $this->buildRegistrySection('marketing', 'campaigns', 'CAMPAIGNS'),
+                $this->buildRegistrySection('marketing', 'leads', 'LEADS & CONTACTS'),
+                $this->buildRegistrySection('marketing', 'automation', 'AUTOMATION & SEQUENCES'),
+                $this->buildRegistrySection('marketing', 'analytics', 'ANALYTICS & INSIGHTS'),
+            ],
+        ];
+    }
+
     protected function buildSettingsSidebar(): array
     {
         return \App\Domains\Core\Services\Navigation\SettingsSidebarContext::getConfiguration();

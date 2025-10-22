@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Bar Chart Debug</title>
+    <script src="/flux/flux.js"></script>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        ui-chart { display: block; border: 1px solid #ccc; }
+    </style>
+</head>
+<body>
+    <h1>Bar Chart Debug</h1>
+    
+    <ui-chart value='[{"month":"Jan","sales":100},{"month":"Feb","sales":150},{"month":"Mar","sales":120}]' style="width: 600px; height: 400px;">
+        <template name="svg">
+            <svg>
+                <template name="bar" field="sales">
+                    <rect fill="blue"></rect>
+                </template>
+                <template name="axis" axis="x" field="month">
+                    <template name="tick-label">
+                        <text></text>
+                    </template>
+                </template>
+                <template name="axis" axis="y">
+                    <template name="grid-line">
+                        <line stroke="#eee"></line>
+                    </template>
+                    <template name="tick-label">
+                        <text></text>
+                    </template>
+                </template>
+            </svg>
+        </template>
+    </ui-chart>
+    
+    <script>
+        setTimeout(() => {
+            console.log('=== BAR CHART DEBUG ===');
+            const chart = document.querySelector('ui-chart');
+            console.log('Chart element:', chart);
+            console.log('Chart value:', chart.getAttribute('value'));
+            
+            const svg = chart.querySelector('svg');
+            console.log('SVG:', svg);
+            
+            const barTemplates = chart.querySelectorAll('template[name="bar"]');
+            console.log('Bar templates found:', barTemplates.length);
+            
+            const barGroups = svg?.querySelectorAll('[data-bar-group]');
+            console.log('Bar groups rendered:', barGroups?.length);
+            
+            const bars = svg?.querySelectorAll('[data-bar]');
+            console.log('Bars rendered:', bars?.length);
+            
+            if (bars && bars.length > 0) {
+                console.log('First bar:', bars[0]);
+                console.log('Bar attributes:', {
+                    x: bars[0].getAttribute('x'),
+                    y: bars[0].getAttribute('y'),
+                    width: bars[0].getAttribute('width'),
+                    height: bars[0].getAttribute('height')
+                });
+            }
+        }, 1000);
+    </script>
+</body>
+</html>

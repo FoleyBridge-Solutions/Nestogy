@@ -324,28 +324,194 @@ class StoreYourModelRequest extends BaseStoreRequest
 }
 ```
 
-### View Pattern (RECOMMENDED)
-**Use standardized Blade components:**
+### Index Pages with BaseIndexComponent (REQUIRED)
+
+**ALL index pages MUST use BaseIndexComponent for consistency. DO NOT create custom index implementations.**
+
+#### 1. Create Livewire Component
+
+Extend BaseIndexComponent and implement required abstract methods:
+
+```php
+<?php
+
+namespace App\Livewire\Marketing;
+
+use App\Livewire\BaseIndexComponent;
+use App\Domains\Marketing\Models\MarketingCampaign;
+use Illuminate\Database\Eloquent\Builder;
+
+class CampaignIndex extends BaseIndexComponent
+{
+    // Custom filters (optional)
+    public $statusFilter = '';
+    public $typeFilter = '';
+
+    protected function getDefaultSort(): array
+    {
+        return ['field' => 'created_at', 'direction' => 'desc'];
+    }
+
+    protected function getSearchFields(): array
+    {
+        return ['name', 'description'];
+    }
+
+    protected function getColumns(): array
+    {
+        return [
+            'name' => [
+                'label' => 'Campaign',
+                'sortable' => true,
+                'filterable' => false,
+            ],
+            'status' => [
+                'label' => 'Status',
+                'sortable' => true,
+                'filterable' => true,
+                'type' => 'select',
+                'options' => MarketingCampaign::getStatuses(),
+            ],
+            'created_at' => [
+                'label' => 'Created',
+                'sortable' => true,
+                'type' => 'date',
+            ],
+        ];
+    }
+
+    protected function getStats(): array
+    {
+        $baseQuery = MarketingCampaign::where('company_id', $this->companyId);
+        
+        return [
+            ['label' => 'Total', 'value' => $baseQuery->count(), 'icon' => 'megaphone', 'iconBg' => 'bg-blue-500'],
+            ['label' => 'Active', 'value' => $baseQuery->clone()->where('status', 'active')->count(), 'icon' => 'play', 'iconBg' => 'bg-green-500'],
+        ];
+    }
+
+    protected function getEmptyState(): array
+    {
+        return [
+            'title' => 'No Campaigns',
+            'message' => 'Create your first campaign to get started.',
+            'icon' => 'megaphone',
+            'action' => ['label' => 'Create Campaign', 'href' => route('marketing.campaigns.create')],
+        ];
+    }
+
+    protected function getBaseQuery(): Builder
+    {
+        return MarketingCampaign::where('company_id', $this->companyId)
+            ->with(['createdBy']);
+    }
+
+    protected function applyCustomFilters($query)
+    {
+        if ($this->statusFilter) {
+            $query->where('status', $this->statusFilter);
+        }
+        return $query;
+    }
+
+    protected function getRowActions($item)
+    {
+        return [
+            ['label' => 'View', 'href' => route('marketing.campaigns.show', $item->id), 'icon' => 'eye'],
+            ['label' => 'Edit', 'href' => route('marketing.campaigns.edit', $item->id), 'icon' => 'pencil'],
+        ];
+    }
+
+    protected function getBulkActions()
+    {
+        return [];
+    }
+
+    protected function getQueryStringProperties(): array
+    {
+        return [
+            'search' => ['except' => ''],
+            'statusFilter' => ['except' => ''],
+            'sortField' => ['except' => 'created_at'],
+            'sortDirection' => ['except' => 'desc'],
+        ];
+    }
+}
+```
+
+#### 2. Inherited Features (Automatic)
+
+From BaseIndexComponent you automatically get:
+- Search (via `$search` property)
+- Sorting (via `$sortField`, `$sortDirection`)
+- Pagination (via `$perPage`)
+- Bulk actions (via `$selected[]`, `$selectAll`)
+- Company scoping (automatic)
+- Archive filtering (automatic if `archived_at` column exists)
+- Client context (automatic from NavigationService)
+
+#### 3. NO Custom Blade View Needed
+
+**DO NOT create a custom blade view** for your Livewire component. The component automatically uses `livewire.base-index.blade.php` which provides:
+- Stats cards display
+- Filter controls
+- Table/Cards view toggle
+- Empty states
+- Pagination
+
+#### 4. Update Controller
+
+```php
+public function index(Request $request)
+{
+    if ($request->wantsJson()) {
+        // API logic here
+    }
+    
+    return view('marketing.campaigns.index-livewire');
+}
+```
+
+#### 5. Create Wrapper View
+
+Create `resources/views/marketing/campaigns/index-livewire.blade.php`:
 
 ```blade
-{{-- index.blade.php --}}
-<x-crud-layout title="Your Resources">
-    <x-slot name="actions">
-        <a href="{{ route('domain.resources.create') }}" class="btn-primary">
-            Create Resource
-        </a>
-    </x-slot>
-    
-    <x-filter-form :filters="$filters" />
-    <x-crud-table :items="$items" :columns="$columns" 
-                  route-prefix="domain.resources" checkboxes="true" />
-</x-crud-layout>
+@extends('layouts.app')
 
-{{-- create.blade.php --}}
-<x-crud-layout title="Create Resource">
-    <x-crud-form :action="route('domain.resources.store')" :fields="$fields" />
-</x-crud-layout>
+@php
+$pageTitle = 'Marketing Campaigns';
+$pageSubtitle = 'Create and manage email campaigns';
+$pageActions = [
+    ['label' => 'Create Campaign', 'href' => route('marketing.campaigns.create'), 'icon' => 'plus', 'variant' => 'primary']
+];
+@endphp
+
+@section('content')
+    <div class="container-fluid">
+        @livewire('marketing.campaign-index')
+    </div>
+@endsection
 ```
+
+#### Variable Names (CRITICAL)
+
+**ALWAYS use these exact variable names from traits:**
+- `$sortField` (NOT `$sortBy`)
+- `$sortDirection` (NOT `$sortOrder`, `$sortDir`)
+- `$search`
+- `$perPage`
+- `$selected` (for bulk actions)
+
+#### DO NOT
+
+- ❌ Create custom pagination logic
+- ❌ Implement sorting manually
+- ❌ Add `company_id` filters manually (automatic via BaseIndexComponent)
+- ❌ Create custom search implementations
+- ❌ Use different variable names than the traits provide
+- ❌ Create custom blade views for the Livewire component (use base-index.blade.php)
+- ❌ Override the `render()` method unless absolutely necessary
 
 ### Laravel Best Practices
 

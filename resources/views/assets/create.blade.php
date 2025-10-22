@@ -330,10 +330,10 @@
                     Cancel
                 </flux:button>
                 <div class="flex gap-2">
-                    <flux:button type="submit" name="action" value="save_and_new" variant="secondary">
+                    <flux:button type="submit" name="action" value="save_and_new" variant="outline" color="zinc">
                         Save & Create Another
                     </flux:button>
-                    <flux:button type="submit" name="action" value="save" variant="primary">
+                    <flux:button type="submit" name="action" value="save" variant="primary" color="zinc">
                         Create Asset
                     </flux:button>
                 </div>

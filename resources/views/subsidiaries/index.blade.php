@@ -92,10 +92,10 @@ $pageActions = [
             <flux:between>
                 <flux:heading size="lg">Company Hierarchy</flux:heading>
                 <flux:button.group>
-                    <flux:button variant="secondary" size="sm" icon="arrows-expand" id="expandAll">
+                    <flux:button variant="outline" size="sm" icon="arrows-expand" id="expandAll">
                         Expand All
                     </flux:button>
-                    <flux:button variant="secondary" size="sm" icon="arrows-collapse" id="collapseAll">
+                    <flux:button variant="outline" size="sm" icon="arrows-collapse" id="collapseAll">
                         Collapse All
                     </flux:button>
                 </flux:button.group>
@@ -143,13 +143,13 @@ $pageActions = [
         
         <flux:card.body>
             <flux:grid cols="3">
-                <flux:button variant="secondary" class="w-full justify-start" icon="document-plus">
+                <flux:button variant="outline" class="w-full justify-start" icon="document-plus">
                     Import Subsidiaries
                 </flux:button>
-                <flux:button variant="secondary" class="w-full justify-start" icon="document-arrow-down">
+                <flux:button variant="outline" class="w-full justify-start" icon="document-arrow-down">
                     Export Hierarchy
                 </flux:button>
-                <flux:button variant="secondary" class="w-full justify-start" icon="cog-6-tooth">
+                <flux:button variant="outline" class="w-full justify-start" icon="cog-6-tooth">
                     Manage Permissions
                 </flux:button>
             </flux:grid>

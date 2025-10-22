@@ -307,4 +307,11 @@
          </flux:table.rows>
      </x-index-page-table>
     @endif
+
+    {{-- Cell Modal --}}
+    @if($showCellModal && method_exists($this, 'renderCellModal'))
+        <flux:modal name="cell-modal" wire:model="showCellModal">
+            {!! $this->renderCellModal($selectedCellKey, $selectedItemForModal) !!}
+        </flux:modal>
+    @endif
 </div>

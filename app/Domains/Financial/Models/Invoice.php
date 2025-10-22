@@ -68,6 +68,7 @@ class Invoice extends Model
         'url_key',
         'category_id',
         'client_id',
+        'project_id',
     ];
 
     /**
@@ -89,6 +90,7 @@ class Invoice extends Model
         'archived_at' => 'datetime',
         'category_id' => 'integer',
         'client_id' => 'integer',
+        'project_id' => 'integer',
     ];
 
     /**
@@ -128,6 +130,11 @@ class Invoice extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function project(): BelongsTo
+    {
+        return $this->belongsTo(\App\Domains\Project\Models\Project::class);
     }
 
     /**

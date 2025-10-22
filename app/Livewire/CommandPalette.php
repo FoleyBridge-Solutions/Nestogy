@@ -461,6 +461,8 @@ class CommandPalette extends Component
             ['keywords' => ['new project', 'create project'], 'action' => ['title' => 'Create New Project', 'subtitle' => 'Quick Action', 'route_name' => 'projects.create', 'route_params' => [], 'icon' => 'plus-circle', 'type' => 'quick_action']],
             ['keywords' => ['new asset', 'add asset'], 'action' => ['title' => 'Add New Asset', 'subtitle' => 'Quick Action', 'route_name' => 'assets.create', 'route_params' => [], 'icon' => 'plus-circle', 'type' => 'quick_action']],
             ['keywords' => ['compose email', 'send email', 'write email'], 'action' => ['title' => 'Compose Email', 'subtitle' => 'Quick Action', 'route_name' => 'email.compose.index', 'route_params' => [], 'icon' => 'pencil-square', 'type' => 'quick_action']],
+            ['keywords' => ['new campaign', 'create campaign', 'marketing campaign', 'email campaign'], 'action' => ['title' => 'Create Marketing Campaign', 'subtitle' => 'Quick Action', 'route_name' => 'marketing.campaigns.create', 'route_params' => [], 'icon' => 'megaphone', 'type' => 'quick_action']],
+            ['keywords' => ['campaigns', 'marketing', 'view campaigns', 'email campaigns'], 'action' => ['title' => 'View Marketing Campaigns', 'subtitle' => 'Quick Action', 'route_name' => 'marketing.campaigns.index', 'route_params' => [], 'icon' => 'megaphone', 'type' => 'quick_action']],
         ];
     }
 

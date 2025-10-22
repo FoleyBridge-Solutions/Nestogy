@@ -38,15 +38,11 @@ class ResponseTimes extends Component
         };
 
         // Calculate average response times
-        // Note: first_response_at column doesn't exist, using simulated data
-        $avgFirstResponse = DB::table('tickets')
-            ->where('company_id', $companyId)
-            ->where('created_at', '>=', $startDate)
-            ->select(DB::raw('AVG(EXTRACT(EPOCH FROM (NOW() - created_at))/60) as avg_minutes'))
-            ->value('avg_minutes') ?? 0;
-
-        // Simulate realistic response times based on priority
-        $avgFirstResponse = rand(30, 240); // 30 minutes to 4 hours
+         $avgFirstResponse = DB::table('tickets')
+             ->where('company_id', $companyId)
+             ->where('created_at', '>=', $startDate)
+             ->select(DB::raw('AVG(EXTRACT(EPOCH FROM (NOW() - created_at))/60) as avg_minutes'))
+             ->value('avg_minutes') ?? 0;
 
         // Calculate average resolution times
         // Note: resolved_at column doesn't exist, using updated_at for closed tickets
@@ -57,32 +53,29 @@ class ResponseTimes extends Component
             ->select(DB::raw('AVG(EXTRACT(EPOCH FROM (updated_at - created_at))/60) as avg_minutes'))
             ->value('avg_minutes') ?? 0;
 
-        // Get response times by priority
-        // Using simulated data since first_response_at doesn't exist
-        $byPriority = DB::table('tickets')
-            ->where('company_id', $companyId)
-            ->where('created_at', '>=', $startDate)
-            ->select('priority', DB::raw('COUNT(*) as count'))
-            ->groupBy('priority')
-            ->get()
-            ->map(function ($item) {
-                // Simulate response times based on priority
-                $baseTime = match (strtolower($item->priority)) {
-                    'critical' => 30,  // 30 minutes base
-                    'high' => 120,     // 2 hours base
-                    'medium' => 480,   // 8 hours base
-                    'low' => 1440,     // 24 hours base
-                    default => 240
-                };
-
-                return (object) [
-                    'priority' => $item->priority,
-                    'avg_response' => $baseTime + rand(-$baseTime / 4, $baseTime / 2),
-                    'min_response' => $baseTime / 2,
-                    'max_response' => $baseTime * 2,
-                    'count' => $item->count,
-                ];
-            });
+         // Get response times by priority
+         $byPriority = DB::table('tickets')
+             ->where('company_id', $companyId)
+             ->where('created_at', '>=', $startDate)
+             ->whereNotNull('resolved_at')
+             ->select(
+                 'priority',
+                 DB::raw('COUNT(*) as count'),
+                 DB::raw('AVG(EXTRACT(EPOCH FROM (resolved_at - created_at))/60) as avg_response_minutes'),
+                 DB::raw('MIN(EXTRACT(EPOCH FROM (resolved_at - created_at))/60) as min_response_minutes'),
+                 DB::raw('MAX(EXTRACT(EPOCH FROM (resolved_at - created_at))/60) as max_response_minutes')
+             )
+             ->groupBy('priority')
+             ->get()
+             ->map(function ($item) {
+                 return (object) [
+                     'priority' => $item->priority,
+                     'avg_response' => $item->avg_response_minutes ?? 0,
+                     'min_response' => $item->min_response_minutes ?? 0,
+                     'max_response' => $item->max_response_minutes ?? 0,
+                     'count' => $item->count,
+                 ];
+             })->keyBy('priority');
 
         // Get daily trends for chart - optimized bulk query
         $days = match ($this->period) {
@@ -104,22 +97,28 @@ class ResponseTimes extends Component
             ->pluck('count', 'date')
             ->toArray();
 
-        // Build the trends data
-        $dailyTrends = collect();
-        for ($i = $days - 1; $i >= 0; $i--) {
-            $date = Carbon::now()->subDays($i)->toDateString();
-            $ticketCount = $dailyCounts[$date] ?? 0;
+         // Build the trends data
+         $dailyTrendData = DB::table('tickets')
+             ->where('company_id', $companyId)
+             ->whereBetween('created_at', [$startDate->startOfDay(), $endDate->endOfDay()])
+             ->whereNotNull('resolved_at')
+             ->selectRaw('DATE(created_at) as date, AVG(EXTRACT(EPOCH FROM (resolved_at - created_at))/60) as avg_response_minutes')
+             ->groupBy('date')
+             ->pluck('avg_response_minutes', 'date')
+             ->toArray();
 
-            // Simulate response time (in reality would calculate from actual response times)
-            $baseResponse = 240; // 4 hours base
-            $variance = rand(-60, 60);
+         $dailyTrends = collect();
+         for ($i = $days - 1; $i >= 0; $i--) {
+             $date = Carbon::now()->subDays($i)->toDateString();
+             $ticketCount = $dailyCounts[$date] ?? 0;
+             $avgResponse = $dailyTrendData[$date] ?? 0;
 
-            $dailyTrends->push((object) [
-                'date' => $date,
-                'avg_response' => $baseResponse + $variance,
-                'ticket_count' => $ticketCount,
-            ]);
-        }
+             $dailyTrends->push((object) [
+                 'date' => $date,
+                 'avg_response' => $avgResponse,
+                 'ticket_count' => $ticketCount,
+             ]);
+         }
 
         $this->responseData = [
             'avg_first_response' => round($avgFirstResponse / 60, 1), // Convert to hours
@@ -145,14 +144,10 @@ class ResponseTimes extends Component
         $this->loading = false;
     }
 
-    protected function calculateImprovement($current)
-    {
-        // Mock previous period comparison
-        $previous = $current * 1.1; // Assume 10% improvement
-        $change = (($previous - $current) / $previous) * 100;
-
-        return round($change, 1);
-    }
+     protected function calculateImprovement($current)
+     {
+         return 0;
+     }
 
     /**
      * Livewire lifecycle hook for when period property changes

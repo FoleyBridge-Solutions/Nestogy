@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Flux Chart Debug</title>
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('=== FLUX CHART DEBUG ===');
+            console.log('Custom elements defined:', window.customElements);
+            
+            setTimeout(() => {
+                const charts = document.querySelectorAll('ui-chart');
+                console.log('Found ui-chart elements:', charts.length);
+                
+                charts.forEach((chart, i) => {
+                    console.log(`Chart ${i}:`, {
+                        value: chart.getAttribute('value'),
+                        hasValue: !!chart.getAttribute('value'),
+                        innerHTML: chart.innerHTML.substring(0, 100)
+                    });
+                });
+                
+                // Check if Flux JS is loaded
+                console.log('Window object keys containing "flux":', 
+                    Object.keys(window).filter(k => k.toLowerCase().includes('flux'))
+                );
+            }, 1000);
+        });
+    </script>
+</head>
+<body>
+    <h1>Check browser console</h1>
+</body>
+</html>

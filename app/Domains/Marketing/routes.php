@@ -39,7 +39,7 @@ Route::get('marketing/unsubscribe', function () {
 })->name('marketing.unsubscribe');
 
 // Authenticated marketing routes
-Route::middleware(['auth', 'verified'])->prefix('marketing')->name('marketing.')->group(function () {
+Route::middleware(['web', 'auth', 'verified'])->prefix('marketing')->name('marketing.')->group(function () {
     // Marketing campaigns
     Route::resource('campaigns', CampaignController::class);
 
@@ -57,5 +57,24 @@ Route::middleware(['auth', 'verified'])->prefix('marketing')->name('marketing.')
         // Enrollment
         Route::post('enroll-leads', [CampaignController::class, 'enrollLeads'])->name('enroll-leads');
         Route::post('enroll-contacts', [CampaignController::class, 'enrollContacts'])->name('enroll-contacts');
+    });
+
+    // Enrollments
+    Route::get('enrollments', [\App\Domains\Marketing\Controllers\EnrollmentController::class, 'index'])
+        ->name('enrollments.index');
+
+    // Email Templates
+    Route::resource('templates', \App\Domains\Marketing\Controllers\EmailTemplateController::class);
+
+    // Analytics
+    Route::prefix('analytics')->name('analytics.')->group(function () {
+        Route::get('campaigns', [\App\Domains\Marketing\Controllers\AnalyticsController::class, 'campaigns'])
+            ->name('campaigns');
+        Route::get('email-tracking', [\App\Domains\Marketing\Controllers\AnalyticsController::class, 'emailTracking'])
+            ->name('email-tracking');
+        Route::get('attribution', [\App\Domains\Marketing\Controllers\AnalyticsController::class, 'attribution'])
+            ->name('attribution');
+        Route::get('revenue', [\App\Domains\Marketing\Controllers\AnalyticsController::class, 'revenue'])
+            ->name('revenue');
     });
 });

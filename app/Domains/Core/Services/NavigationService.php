@@ -50,4 +50,9 @@ class NavigationService
     {
         return null;
     }
+
+    public static function getNavigationRegistry(string $scope = 'all', $user = null): array
+    {
+        return \App\Domains\Core\Services\Navigation\NavigationRegistry::all();
+    }
 }

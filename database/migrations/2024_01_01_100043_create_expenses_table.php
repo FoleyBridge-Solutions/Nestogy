@@ -25,6 +25,7 @@ return new class extends Migration
                         $table->foreignId('client_id')->nullable()->constrained()->onDelete('set null');
                         $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
                         $table->timestamps();
+                        $table->softDeletes();
 
                         $table->index(['company_id', 'expense_date']);
                         $table->index(['company_id', 'category_id']);

@@ -131,7 +131,7 @@ class Product extends Model
      */
     public function tax(): BelongsTo
     {
-        return $this->belongsTo(Tax::class);
+        return $this->belongsTo(\App\Domains\Tax\Models\Tax::class);
     }
 
     /**
@@ -139,7 +139,7 @@ class Product extends Model
      */
     public function taxProfile(): BelongsTo
     {
-        return $this->belongsTo(TaxProfile::class);
+        return $this->belongsTo(\App\Domains\Tax\Models\TaxProfile::class);
     }
 
     /**
@@ -147,7 +147,7 @@ class Product extends Model
      */
     public function category(): BelongsTo
     {
-        return $this->belongsTo(Category::class);
+        return $this->belongsTo(\App\Domains\Financial\Models\Category::class);
     }
 
     /**
@@ -155,7 +155,7 @@ class Product extends Model
      */
     public function invoiceItems(): HasMany
     {
-        return $this->hasMany(InvoiceItem::class);
+        return $this->hasMany(\App\Domains\Financial\Models\InvoiceItem::class);
     }
 
     /**

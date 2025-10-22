@@ -5,11 +5,8 @@
 use App\Domains\Lead\Controllers\LeadController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', 'verified'])->group(function () {
-    // Lead management routes
-    Route::resource('leads', LeadController::class);
-
-    // Additional lead routes
+Route::middleware(['web', 'auth', 'verified'])->group(function () {
+    // Additional lead routes (must be BEFORE resource to avoid conflicts)
     Route::prefix('leads')->name('leads.')->group(function () {
         Route::get('dashboard', [LeadController::class, 'dashboard'])->name('dashboard');
         Route::post('bulk-assign', [LeadController::class, 'bulkAssign'])->name('bulk-assign');
@@ -30,4 +27,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('timeline', [LeadController::class, 'timeline'])->name('timeline');
         });
     });
+
+    // Lead resource routes
+    Route::resource('leads', LeadController::class);
 });

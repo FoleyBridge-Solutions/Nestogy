@@ -77,20 +77,18 @@ class CustomerSatisfaction extends Component
             ->limit(10)
             ->get();
 
-        return $recentTickets->map(function ($ticket) {
-            // Calculate satisfaction score based on resolution time and status
-            $resolutionTime = $ticket->resolved_at ? $ticket->resolved_at->diffInHours($ticket->created_at) : 0;
-            $score = $this->calculateTicketSatisfactionScore($ticket, $resolutionTime);
+         return $recentTickets->map(function ($ticket) {
+             $resolutionTime = $ticket->resolved_at ? $ticket->resolved_at->diffInHours($ticket->created_at) : 0;
 
-            return [
-                'client_name' => $ticket->client?->name ?? 'Unknown Client',
-                'rating' => $score,
-                'comment' => $ticket->subject, // Using subject as comment for now
-                'ticket_number' => $ticket->id,
-                'date' => $ticket->updated_at->format('M j, Y'),
-                'resolution_time' => $resolutionTime.' hours',
-            ];
-        })->toArray();
+             return [
+                 'client_name' => $ticket->client?->name ?? 'Unknown Client',
+                 'rating' => 0,
+                 'comment' => $ticket->subject,
+                 'ticket_number' => $ticket->id,
+                 'date' => $ticket->updated_at->format('M j, Y'),
+                 'resolution_time' => $resolutionTime.' hours',
+             ];
+         })->toArray();
     }
 
     protected function getSatisfactionStats($companyId)
@@ -114,52 +112,15 @@ class CustomerSatisfaction extends Component
             ->where('updated_at', '>=', now()->subDays(30))
             ->get();
 
-        // Calculate scores once and cache the results to prevent multiple iterations
-        $totalScore = 0;
-        $satisfiedTickets = 0;
-
-        foreach ($recentTickets as $ticket) {
-            $resolutionTime = $ticket->resolved_at ? $ticket->resolved_at->diffInHours($ticket->created_at) : 24;
-            $score = $this->calculateTicketSatisfactionScore($ticket, $resolutionTime);
-
-            $totalScore += $score;
-            if ($score >= 4.0) {
-                $satisfiedTickets++;
-            }
-        }
-
-        $averageScore = $recentTickets->count() > 0 ? $totalScore / $recentTickets->count() : 0;
-        $satisfactionRate = $recentTickets->count() > 0 ? ($satisfiedTickets / $recentTickets->count()) * 100 : 0;
-
-        return [
-            'average_score' => round($averageScore, 1),
-            'total_responses' => $recentTickets->count(),
-            'satisfaction_rate' => round($satisfactionRate, 1),
-            'trend' => 'stable', // Could be calculated based on historical data
-        ];
+         return [
+             'average_score' => 0,
+             'total_responses' => $recentTickets->count(),
+             'satisfaction_rate' => 0,
+             'trend' => 'stable',
+         ];
     }
 
-    protected function calculateTicketSatisfactionScore($ticket, $resolutionTime)
-    {
-        // Simple scoring algorithm based on resolution time and ticket priority
-        $baseScore = 5.0;
 
-        // Deduct points for longer resolution times
-        if ($resolutionTime > 24) {
-            $baseScore -= 1.0;
-        } elseif ($resolutionTime > 8) {
-            $baseScore -= 0.5;
-        }
-
-        // Deduct points for high priority tickets that took longer
-        if ($ticket->priority === 'Critical' && $resolutionTime > 4) {
-            $baseScore -= 0.5;
-        } elseif ($ticket->priority === 'High' && $resolutionTime > 12) {
-            $baseScore -= 0.5;
-        }
-
-        return max(1.0, min(5.0, $baseScore));
-    }
 
     protected function getSatisfactionLabel($score)
     {

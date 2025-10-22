@@ -21,42 +21,42 @@ class ServiceController extends Controller
 
     public function index(Request $request)
     {
-        $query = Product::services()
-            ->with(['category', 'tax'])
-            ->where('company_id', auth()->user()->company_id);
+        if ($request->wantsJson()) {
+            $query = Product::services()
+                ->with(['category', 'tax'])
+                ->where('company_id', auth()->user()->company_id);
 
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('description', 'like', "%{$search}%")
-                    ->orWhere('sku', 'like', "%{$search}%");
-            });
+            if ($request->filled('search')) {
+                $search = $request->search;
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('description', 'like', "%{$search}%")
+                        ->orWhere('sku', 'like', "%{$search}%");
+                });
+            }
+
+            if ($request->filled('category_id')) {
+                $query->where('category_id', $request->category_id);
+            }
+
+            if ($request->filled('billing_model')) {
+                $query->where('billing_model', $request->billing_model);
+            }
+
+            if ($request->filled('unit_type')) {
+                $query->where('unit_type', $request->unit_type);
+            }
+
+            if ($request->filled('is_active')) {
+                $query->where('is_active', $request->boolean('is_active'));
+            }
+
+            $services = $query->orderBy('name')->paginate(20);
+
+            return response()->json($services);
         }
-
-        if ($request->filled('category_id')) {
-            $query->where('category_id', $request->category_id);
-        }
-
-        if ($request->filled('billing_model')) {
-            $query->where('billing_model', $request->billing_model);
-        }
-
-        if ($request->filled('unit_type')) {
-            $query->where('unit_type', $request->unit_type);
-        }
-
-        if ($request->filled('is_active')) {
-            $query->where('is_active', $request->boolean('is_active'));
-        }
-
-        $services = $query->orderBy('name')->paginate(20)->appends($request->query());
-
-        $categories = Category::where('company_id', auth()->user()->company_id)
-            ->orderBy('name')
-            ->get();
-
-        return view('services.index', compact('services', 'categories'));
+        
+        return view('services.index-livewire');
     }
 
     public function show(Product $service)

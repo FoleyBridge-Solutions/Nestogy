@@ -1,0 +1,1 @@
+/opt/nestogy/docs/REPOSITORY_GUIDELINES.md

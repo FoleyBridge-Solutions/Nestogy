@@ -42,9 +42,9 @@ class TechWorkload extends Component
                 ])
                 ->get()
                 ->map(function ($tech) use ($startOfWeek) {
-                    $hoursThisWeek = TicketTimeEntry::where('user_id', $tech->id)
-                        ->where('work_date', '>=', $startOfWeek)
-                        ->sum('minutes') / 60;
+                     $hoursThisWeek = TicketTimeEntry::where('user_id', $tech->id)
+                         ->where('created_at', '>=', $startOfWeek)
+                         ->sum('minutes') / 60;
 
                     $workloadScore = ($tech->critical_tickets * 10) + ($tech->active_tickets * 1) + ($hoursThisWeek / 10);
 

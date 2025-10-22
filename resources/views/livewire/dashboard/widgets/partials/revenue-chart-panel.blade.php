@@ -51,11 +51,29 @@
                 <div>
                     <flux:text size="sm">Latest</flux:text>
                     <flux:heading size="lg" class="mt-1 tabular-nums">
-                        ${{ number_format($latestData['revenue'] ?? 0, 2) }}
-                    </flux:heading>
-                    <flux:text size="xs" class="mt-1 text-zinc-500">
-                        {{ \Carbon\Carbon::parse($latestData['date'] ?? now())->format('M d, Y') }}
-                    </flux:text>
+                         ${{ number_format($latestData['revenue'] ?? 0, 2) }}
+                     </flux:heading>
+                     <flux:text size="xs" class="mt-1 text-zinc-500">
+                         @php
+                             $dateStr = $latestData['date'] ?? now()->toDateString();
+                             try {
+                                 if ($period === 'month') {
+                                     $parsedDate = \Carbon\Carbon::createFromFormat('Y-m-d', $dateStr);
+                                 } elseif ($period === 'quarter') {
+                                     list($year, $week) = explode('-', $dateStr);
+                                     $parsedDate = \Carbon\Carbon::now()
+                                         ->setISODate((int)$year, (int)$week)
+                                         ->startOfWeek();
+                                 } else {
+                                     list($year, $month) = explode('-', $dateStr);
+                                     $parsedDate = \Carbon\Carbon::createFromDate((int)$year, (int)$month, 1);
+                                 }
+                             } catch (\Exception $e) {
+                                 $parsedDate = \Carbon\Carbon::parse(now());
+                             }
+                         @endphp
+                         {{ $parsedDate->format('M d, Y') }}
+                     </flux:text>
                 </div>
             </flux:chart.summary>
             
