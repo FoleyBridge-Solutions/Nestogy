@@ -20,6 +20,7 @@ class NavigationContext
         'physical-mail' => ['mail.*', 'physical-mail.*'],
         'manager' => ['manager.*'],
         'marketing' => ['marketing.*', 'leads.*'],
+        'hr' => ['hr.*', 'time-clock.*'],
     ];
 
     public static function getCurrentDomain(): ?string
@@ -93,6 +94,11 @@ class NavigationContext
         return false;
     }
 
+    public static function getSelectedClientId(): ?int
+    {
+        return Session::get('selected_client_id');
+    }
+
     public static function getSelectedClient(): ?\App\Domains\Client\Models\Client
     {
         $clientId = Session::get('selected_client_id');
@@ -108,9 +114,13 @@ class NavigationContext
         }
     }
 
-    public static function setSelectedClient(int $clientId): void
+    public static function setSelectedClient(?int $clientId): void
     {
-        Session::put('selected_client_id', $clientId);
+        if ($clientId === null) {
+            Session::forget('selected_client_id');
+        } else {
+            Session::put('selected_client_id', $clientId);
+        }
     }
 
     public static function clearSelectedClient(): void

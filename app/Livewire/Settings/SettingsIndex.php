@@ -83,6 +83,12 @@ class SettingsIndex extends Component
                 'description' => 'Backup, export, and data retention',
                 'route' => 'settings.data-management',
             ],
+            'hr' => [
+                'name' => 'HR & Time Tracking',
+                'icon' => 'clock',
+                'description' => 'Employee time tracking, break policies, and overtime rules',
+                'route' => 'settings.hr',
+            ],
         ];
     }
 

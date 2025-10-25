@@ -21,7 +21,14 @@
                         <a href="{{ url()->previous() }}" class="btn 
                             <i class="fas fa-arrow-left mr-2"></i>Go Back
                         </a>
-                        <a href="{{ route('dashboard') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        @php
+                            try {
+                                $dashboardUrl = route('dashboard');
+                            } catch (\Exception $e) {
+                                $dashboardUrl = '/';
+                            }
+                        @endphp
+                        <a href="{{ $dashboardUrl }}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                             <i class="fas fa-home mr-2"></i>Dashboard
                         </a>
                     </div>

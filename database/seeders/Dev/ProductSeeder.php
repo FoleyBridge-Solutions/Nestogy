@@ -41,7 +41,7 @@ class ProductSeeder extends Seeder
                     $categories->push(Category::create([
                         'company_id' => $company->id,
                         'name' => $catName,
-                        'type' => 'income',
+                        'type' => ['income'],
                         'color' => fake()->hexColor(),
                     ]));
                 }
@@ -80,14 +80,14 @@ class ProductSeeder extends Seeder
                 [
                     'category' => 'Hardware',
                     'products' => [
-                        ['name' => 'Desktop Computer - Basic', 'price' => 599, 'type' => 'product', 'recurring' => null],
-                        ['name' => 'Desktop Computer - Professional', 'price' => 999, 'type' => 'product', 'recurring' => null],
-                        ['name' => 'Laptop - Basic', 'price' => 799, 'type' => 'product', 'recurring' => null],
-                        ['name' => 'Laptop - Professional', 'price' => 1499, 'type' => 'product', 'recurring' => null],
-                        ['name' => 'Server - Entry Level', 'price' => 2999, 'type' => 'product', 'recurring' => null],
-                        ['name' => 'Network Switch - 24 Port', 'price' => 499, 'type' => 'product', 'recurring' => null],
-                        ['name' => 'Firewall Appliance', 'price' => 899, 'type' => 'product', 'recurring' => null],
-                        ['name' => 'UPS Battery Backup', 'price' => 299, 'type' => 'product', 'recurring' => null],
+                        ['name' => 'Desktop Computer - Basic', 'price' => 599, 'type' => ['product'], 'recurring' => null],
+                        ['name' => 'Desktop Computer - Professional', 'price' => 999, 'type' => ['product'], 'recurring' => null],
+                        ['name' => 'Laptop - Basic', 'price' => 799, 'type' => ['product'], 'recurring' => null],
+                        ['name' => 'Laptop - Professional', 'price' => 1499, 'type' => ['product'], 'recurring' => null],
+                        ['name' => 'Server - Entry Level', 'price' => 2999, 'type' => ['product'], 'recurring' => null],
+                        ['name' => 'Network Switch - 24 Port', 'price' => 499, 'type' => ['product'], 'recurring' => null],
+                        ['name' => 'Firewall Appliance', 'price' => 899, 'type' => ['product'], 'recurring' => null],
+                        ['name' => 'UPS Battery Backup', 'price' => 299, 'type' => ['product'], 'recurring' => null],
                     ],
                 ],
                 // Software Licenses

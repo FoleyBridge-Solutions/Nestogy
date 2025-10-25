@@ -18,7 +18,7 @@ class ExpenseTest extends TestCase
         $category = Category::factory()->create([
             'company_id' => $company->id,
             'name' => 'Expense',
-            'type' => Category::TYPE_EXPENSE_CATEGORY,
+            'type' => [Category::TYPE_EXPENSE_CATEGORY],
             'code' => 'EXP001',
             'color' => '#dc3545',
             'is_active' => true,
@@ -39,7 +39,7 @@ class ExpenseTest extends TestCase
         $category = Category::factory()->create([
             'company_id' => $company->id,
             'name' => 'Expense',
-            'type' => Category::TYPE_EXPENSE_CATEGORY,
+            'type' => [Category::TYPE_EXPENSE_CATEGORY],
             'code' => 'EXP001',
             'color' => '#dc3545',
             'is_active' => true,
@@ -60,7 +60,7 @@ class ExpenseTest extends TestCase
         $category = Category::factory()->create([
             'company_id' => $company->id,
             'name' => 'Expense',
-            'type' => Category::TYPE_EXPENSE_CATEGORY,
+            'type' => [Category::TYPE_EXPENSE_CATEGORY],
             'code' => 'EXP001',
             'color' => '#dc3545',
             'is_active' => true,
@@ -81,7 +81,7 @@ class ExpenseTest extends TestCase
         $category = Category::factory()->create([
             'company_id' => $company->id,
             'name' => 'Expense',
-            'type' => Category::TYPE_EXPENSE_CATEGORY,
+            'type' => [Category::TYPE_EXPENSE_CATEGORY],
             'code' => 'EXP001',
             'color' => '#dc3545',
             'is_active' => true,
@@ -102,7 +102,7 @@ class ExpenseTest extends TestCase
         $category = Category::factory()->create([
             'company_id' => $company->id,
             'name' => 'Expense',
-            'type' => Category::TYPE_EXPENSE_CATEGORY,
+            'type' => [Category::TYPE_EXPENSE_CATEGORY],
             'code' => 'EXP001',
             'color' => '#dc3545',
             'is_active' => true,
@@ -133,7 +133,7 @@ class ExpenseTest extends TestCase
         $category = Category::factory()->create([
             'company_id' => $company->id,
             'name' => 'Expense',
-            'type' => Category::TYPE_EXPENSE_CATEGORY,
+            'type' => [Category::TYPE_EXPENSE_CATEGORY],
             'code' => 'EXP001',
             'color' => '#dc3545',
             'is_active' => true,

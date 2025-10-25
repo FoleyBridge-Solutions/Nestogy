@@ -18,7 +18,6 @@ class UpdateTicketRequest extends FormRequest
 
         return [
             'client_id' => [
-                'sometimes',
                 'required',
                 'integer',
                 Rule::exists('clients', 'id')->where('company_id', $user->company_id),
@@ -28,10 +27,10 @@ class UpdateTicketRequest extends FormRequest
                 'integer',
                 Rule::exists('contacts', 'id')->where('client_id', $this->input('client_id', $this->route('ticket')->client_id)),
             ],
-            'subject' => 'sometimes|required|string|max:255',
-            'details' => 'sometimes|required|string',
-            'priority' => 'sometimes|required|in:Low,Medium,High,Critical',
-            'status' => 'sometimes|required|in:new,open,in_progress,pending,resolved,closed',
+            'subject' => 'required|string|max:255',
+            'details' => 'required|string',
+            'priority' => 'required|in:Low,Medium,High,Critical',
+            'status' => 'required|in:new,open,in_progress,pending,resolved,closed',
             'assigned_to' => [
                 'nullable',
                 'integer',

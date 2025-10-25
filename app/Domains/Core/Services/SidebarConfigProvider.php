@@ -116,6 +116,8 @@ class SidebarConfigProvider
                 return $this->getSettingsConfig();
             case 'physical-mail':
                 return $this->getPhysicalMailConfig();
+            case 'hr':
+                return $this->getHRConfig();
             default:
                 return [];
         }
@@ -1246,6 +1248,162 @@ class SidebarConfigProvider
                             'icon' => 'face-smile',
                             'key' => 'satisfaction',
                             'description' => 'Customer satisfaction survey results',
+                        ],
+                    ],
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * Get HR sidebar configuration
+     */
+    protected function getHRConfig(): array
+    {
+        $user = Auth::user();
+
+        $pendingTimeEntriesCount = 0;
+        $pendingTimeOffCount = 0;
+
+        if ($user && $user->company_id) {
+            try {
+                if ($user->can('manage-hr')) {
+                    $pendingTimeEntriesCount = \App\Domains\HR\Models\EmployeeTimeEntry::where('company_id', $user->company_id)
+                        ->where('status', 'completed')
+                        ->count();
+
+                    $pendingTimeOffCount = \App\Domains\HR\Models\TimeOffRequest::where('company_id', $user->company_id)
+                        ->where('status', 'pending')
+                        ->count();
+                }
+            } catch (\Exception $e) {
+            }
+        }
+
+        return [
+            'title' => 'HR & Time Tracking',
+            'icon' => 'clock',
+            'sections' => [
+                [
+                    'type' => 'primary',
+                    'items' => [
+                        [
+                            'name' => 'HR Dashboard',
+                            'route' => 'hr.dashboard',
+                            'icon' => 'home',
+                            'key' => 'hr-dashboard',
+                            'description' => 'Overview and quick actions',
+                        ],
+                        [
+                            'name' => 'Time Clock',
+                            'route' => 'hr.time-clock.index',
+                            'icon' => 'clock',
+                            'key' => 'time-clock',
+                            'description' => 'Clock in/out and track time',
+                        ],
+                    ],
+                ],
+                [
+                    'type' => 'section',
+                    'title' => 'EMPLOYEE',
+                    'expandable' => false,
+                    'items' => [
+                        [
+                            'name' => 'My Time History',
+                            'route' => 'hr.time-clock.history',
+                            'icon' => 'calendar',
+                            'key' => 'time-history',
+                            'description' => 'View your time entries',
+                        ],
+                        [
+                            'name' => 'My Schedule',
+                            'route' => 'hr.time-clock.schedule',
+                            'icon' => 'calendar-days',
+                            'key' => 'my-schedule',
+                            'description' => 'View your work schedule',
+                        ],
+                        [
+                            'name' => 'Time Off Requests',
+                            'route' => 'hr.time-off.index',
+                            'icon' => 'sun',
+                            'key' => 'time-off',
+                            'description' => 'Request time off',
+                        ],
+                    ],
+                ],
+                [
+                    'type' => 'section',
+                    'title' => 'MANAGEMENT',
+                    'expandable' => true,
+                    'default_expanded' => true,
+                    'items' => [
+                        [
+                            'name' => 'Time Entries',
+                            'route' => 'hr.time-entries.index',
+                            'icon' => 'table-cells',
+                            'key' => 'admin-time-entries',
+                            'badge' => $pendingTimeEntriesCount > 0 ? $pendingTimeEntriesCount : null,
+                            'badge_type' => 'warning',
+                            'description' => 'Manage all time entries',
+                            'permission' => 'manage-hr',
+                        ],
+                        [
+                            'name' => 'Schedules',
+                            'route' => 'hr.schedules.index',
+                            'icon' => 'calendar-days',
+                            'key' => 'schedules',
+                            'description' => 'Manage employee schedules',
+                            'permission' => 'manage-hr',
+                        ],
+                        [
+                            'name' => 'Pay Periods',
+                            'route' => 'hr.pay-periods.index',
+                            'icon' => 'currency-dollar',
+                            'key' => 'pay-periods',
+                            'description' => 'Manage payroll periods',
+                            'permission' => 'manage-hr',
+                        ],
+                        [
+                            'name' => 'Time Off Approvals',
+                            'route' => 'hr.time-off.approvals',
+                            'icon' => 'check-circle',
+                            'key' => 'time-off-approvals',
+                            'badge' => $pendingTimeOffCount > 0 ? $pendingTimeOffCount : null,
+                            'badge_type' => 'info',
+                            'description' => 'Approve time off requests',
+                            'permission' => 'manage-hr',
+                        ],
+                    ],
+                ],
+                [
+                    'type' => 'section',
+                    'title' => 'REPORTS',
+                    'expandable' => true,
+                    'default_expanded' => false,
+                    'items' => [
+                        [
+                            'name' => 'Timesheets',
+                            'route' => 'hr.reports.timesheets',
+                            'icon' => 'document-text',
+                            'key' => 'timesheets',
+                            'description' => 'View timesheet reports',
+                            'permission' => 'manage-hr',
+                        ],
+                        [
+                            'name' => 'Overtime Report',
+                            'route' => 'hr.reports.overtime',
+                            'icon' => 'chart-bar',
+                            'key' => 'overtime',
+                            'description' => 'View overtime statistics',
+                            'permission' => 'manage-hr',
+                        ],
+                        [
+                            'name' => 'Attendance',
+                            'route' => 'hr.reports.attendance',
+                            'icon' => 'user-group',
+                            'key' => 'attendance',
+                            'description' => 'View attendance records',
+                            'permission' => 'manage-hr',
                         ],
                     ],
                 ],

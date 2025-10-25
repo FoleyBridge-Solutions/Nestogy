@@ -245,7 +245,7 @@ class TicketTimeTrackingController extends Controller
             ->first();
     }
 
-    private function user()
+    protected function user()
     {
         return auth()->user();
     }

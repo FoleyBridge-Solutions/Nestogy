@@ -1,0 +1,18 @@
+<?php
+
+namespace Database\Factories\Domains\Core\Models;
+
+use App\Domains\Core\Models\AnalyticsSnapshot;
+use Illuminate\Database\Eloquent\Factories\Factory;
+
+class AnalyticsSnapshotFactory extends Factory
+{
+    protected $model = AnalyticsSnapshot::class;
+
+    public function definition(): array
+    {
+        return ['company_id' => \App\Domains\Company\Models\Company::factory(),
+            'name' => $this->faker->word(),
+        ];
+    }
+}

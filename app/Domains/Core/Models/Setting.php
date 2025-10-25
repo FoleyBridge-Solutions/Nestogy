@@ -2,6 +2,7 @@
 
 namespace App\Domains\Core\Models;
 
+use App\Domains\Company\Models\Company;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -322,6 +323,7 @@ class Setting extends Model
         'approval_workflows',
         'time_tracking_enabled',
         'time_tracking_settings',
+        'hr_settings',
         'customer_satisfaction_enabled',
         'csat_settings',
         'ticket_templates',
@@ -659,6 +661,7 @@ class Setting extends Model
         'approval_workflows' => 'array',
         'time_tracking_enabled' => 'boolean',
         'time_tracking_settings' => 'array',
+        'hr_settings' => 'array',
         'customer_satisfaction_enabled' => 'boolean',
         'csat_settings' => 'array',
         'ticket_templates' => 'array',
@@ -1547,5 +1550,10 @@ class Setting extends Model
     public function settings(): Settings\SettingsAggregator
     {
         return new Settings\SettingsAggregator($this);
+    }
+
+    protected static function newFactory()
+    {
+        return \Database\Factories\Domains\Core\Models\SettingFactory::new();
     }
 }

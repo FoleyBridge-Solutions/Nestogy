@@ -7,6 +7,20 @@
 // already defines its own middleware, prefix, or name to avoid double application
 
 return [
+    'Core' => [
+        'enabled' => true,
+        'apply_grouping' => false,  // Routes define their own middleware and grouping
+        'priority' => 1,  // Load Core routes first
+        'description' => 'Core application routes: auth, dashboard, users, admin',
+        'tags' => ['authentication', 'authorization', 'dashboard', 'admin'],
+        'features' => [
+            'authentication' => true,
+            'authorization' => true,
+            'user_management' => true,
+            'admin_panel' => true,
+        ],
+    ],
+
     'Asset' => [
         'enabled' => true,
         'apply_grouping' => false,  // Routes handle their own grouping
@@ -222,6 +236,21 @@ return [
             'bulk_mail' => true,
             'tracking' => true,
             'webhooks' => true,
+        ],
+    ],
+
+    'HR' => [
+        'enabled' => true,
+        'apply_grouping' => false,
+        'priority' => 85,
+        'description' => 'Employee time tracking and payroll routes',
+        'tags' => ['hr', 'payroll', 'time-tracking'],
+        'features' => [
+            'time_clock' => true,
+            'overtime_calculation' => true,
+            'payroll_export' => true,
+            'approval_workflow' => true,
+            'gps_tracking' => true,
         ],
     ],
 ];

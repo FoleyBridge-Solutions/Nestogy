@@ -161,19 +161,6 @@ class CommunicationService
 
         return $this->checkCommunicationFrequencyLimits($client);
     }
-                    break;
-
-                case 'phone_call':
-                    if ($client->do_not_call) {
-                        return false;
-                    }
-                    break;
-            }
-        }
-
-        // Check communication frequency limits
-        return $this->checkCommunicationFrequencyLimits($client);
-    }
 
     /**
      * Check communication frequency limits to avoid harassment.

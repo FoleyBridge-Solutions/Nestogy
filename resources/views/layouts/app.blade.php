@@ -118,11 +118,18 @@
         <!-- Single Row Navigation with Everything -->
         <flux:navbar class="w-full px-4">
             <!-- Brand (Far Left) -->
-            <flux:brand href="{{ route('dashboard') }}" 
+            @php
+                try {
+                    $dashboardRoute = route('dashboard');
+                } catch (\Exception $e) {
+                    $dashboardRoute = '#';
+                }
+            @endphp
+            <flux:brand href="{{ $dashboardRoute }}" 
                         logo="{{ asset('static-assets/img/branding/nestogy-logo.png') }}" 
                         name="{{ Auth::user()?->company?->name ?? config('app.name', 'Nestogy') }}" 
                         class="dark:hidden" />
-            <flux:brand href="{{ route('dashboard') }}" 
+            <flux:brand href="{{ $dashboardRoute }}" 
                         logo="{{ asset('static-assets/img/branding/nestogy-logo.png') }}" 
                         name="{{ Auth::user()?->company?->name ?? config('app.name', 'Nestogy') }}" 
                         class="hidden dark:flex" />
@@ -166,18 +173,41 @@
             @auth
                 @livewire('notifications.notification-center')
             @endauth
+            @php
+                try {
+                    $emailRoute = route('email.inbox.index');
+                } catch (\Exception $e) {
+                    $emailRoute = null;
+                }
+                try {
+                    $mailRoute = route('mail.index');
+                } catch (\Exception $e) {
+                    $mailRoute = null;
+                }
+                try {
+                    $settingsRoute = route('settings.index');
+                } catch (\Exception $e) {
+                    $settingsRoute = null;
+                }
+            @endphp
+            @if($emailRoute)
             <flux:navbar.item icon="envelope" 
-                            href="{{ route('email.inbox.index') }}" 
+                            href="{{ $emailRoute }}" 
                             class="max-lg:hidden"
                             aria-label="Email" />
+            @endif
+            @if($mailRoute)
             <flux:navbar.item icon="paper-airplane" 
-                            href="{{ route('mail.index') }}" 
+                            href="{{ $mailRoute }}" 
                             class="max-lg:hidden"
                             aria-label="Physical Mail" />
+            @endif
+            @if($settingsRoute)
             <flux:navbar.item icon="cog-6-tooth" 
-                            href="{{ route('settings.index') }}" 
+                            href="{{ $settingsRoute }}" 
                             class="max-lg:hidden"
                             aria-label="Settings" />
+            @endif
             <flux:navbar.item icon="information-circle" 
                             href="#" 
                             class="max-lg:hidden"
@@ -198,8 +228,19 @@
                     
                     <flux:navmenu.separator />
                     
-                    <flux:navmenu.item href="{{ route('users.profile') }}" icon="user" class="text-zinc-800 dark:text-white">Profile</flux:navmenu.item>
-                    <flux:navmenu.item href="{{ route('settings.index') }}" icon="cog-6-tooth" class="text-zinc-800 dark:text-white">Settings</flux:navmenu.item>
+                    @php
+                        try {
+                            $profileRoute = route('users.profile');
+                        } catch (\Exception $e) {
+                            $profileRoute = null;
+                        }
+                    @endphp
+                    @if($profileRoute)
+                    <flux:navmenu.item href="{{ $profileRoute }}" icon="user" class="text-zinc-800 dark:text-white">Profile</flux:navmenu.item>
+                    @endif
+                    @if($settingsRoute)
+                    <flux:navmenu.item href="{{ $settingsRoute }}" icon="cog-6-tooth" class="text-zinc-800 dark:text-white">Settings</flux:navmenu.item>
+                    @endif
                     
                     <flux:navmenu.separator />
                     

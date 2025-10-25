@@ -109,7 +109,7 @@ class CategoryManager extends Component
     {
         $this->validate([
             'form.name' => 'required|string|max:255',
-            'form.type' => 'required|array',
+            'form.type' => 'required|array|min:1',
             'form.type.*' => 'required|in:'.implode(',', array_keys(Category::TYPE_LABELS)),
             'form.parent_id' => 'nullable|exists:categories,id',
             'form.description' => 'nullable|string',

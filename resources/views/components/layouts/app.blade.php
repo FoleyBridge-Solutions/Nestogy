@@ -241,33 +241,28 @@
     @endphp
     
     @if($sidebarContext)
-        <flux:sidebar collapsible="mobile" sticky class="lg:hidden bg-white dark:bg-zinc-900">
-            <flux:sidebar.toggle class="lg:hidden" icon="x-mark" />
-            <flux:brand href="{{ route('dashboard') }}"
-                        logo="{{ $logoLight }}"
-                        name="{{ $companyName }}"
-                        class="px-2 py-2 dark:hidden" />
-            <flux:brand href="{{ route('dashboard') }}" 
-                        logo="{{ $logoDark }}" 
-                        name="{{ $companyName }}"
-                        class="px-2 py-2 hidden dark:flex" />
+        <flux:sidebar collapsible="mobile" sticky class="lg:hidden bg-white dark:bg-zinc-900 z-40">
+            <div class="flex items-center justify-between p-4 border-b border-zinc-200 dark:border-zinc-700">
+                <flux:heading size="sm">Menu</flux:heading>
+                <flux:sidebar.toggle class="lg:hidden" icon="x-mark" />
+            </div>
             
-            <x-flux-sidebar
-                :sidebar-context="$sidebarContext"
-                :active-section="$activeSection"
-                :mobile="true"
-            />
+            @livewire('sidebar', [
+                'context' => $sidebarContext,
+                'activeSection' => $activeSection,
+                'mobile' => true
+            ], key('sidebar-mobile'))
         </flux:sidebar>
     @endif
 
     <!-- Desktop Sidebar (only render when there's sidebar content) -->
     @if($sidebarContext)
-        <flux:sidebar collapsible sticky class="hidden lg:block bg-white dark:bg-zinc-900">
-            <x-flux-sidebar
-                :sidebar-context="$sidebarContext"
-                :active-section="$activeSection"
-                :mobile="false"
-            />
+        <flux:sidebar collapsible sticky class="hidden lg:block bg-white dark:bg-zinc-900 h-[calc(100vh-64px)]">
+            @livewire('sidebar', [
+                'context' => $sidebarContext,
+                'activeSection' => $activeSection,
+                'mobile' => false
+            ], key('sidebar-desktop'))
         </flux:sidebar>
     @endif
 

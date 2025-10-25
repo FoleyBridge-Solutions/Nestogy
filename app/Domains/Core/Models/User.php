@@ -41,6 +41,11 @@ class User extends Authenticatable
 {
     use HasEnhancedPermissions, HasFactory, HasRolesAndAbilities, Notifiable, SoftDeletes;
 
+    protected static function newFactory()
+    {
+        return \Database\Factories\Domains\Company\Models\UserFactory::new();
+    }
+
     /**
      * The table associated with the model.
      */
@@ -60,6 +65,10 @@ class User extends Authenticatable
         'specific_encryption_ciphertext',
         'php_session',
         'extension_key',
+        'employment_type',
+        'is_overtime_exempt',
+        'hourly_rate',
+        'annual_salary',
     ];
 
     /**
@@ -80,6 +89,9 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
         'status' => 'boolean',
+        'is_overtime_exempt' => 'boolean',
+        'hourly_rate' => 'decimal:2',
+        'annual_salary' => 'decimal:2',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'archived_at' => 'datetime',
@@ -107,6 +119,14 @@ class User extends Authenticatable
     public function userSetting(): HasOne
     {
         return $this->hasOne(UserSetting::class);
+    }
+
+    /**
+     * Alias for userSetting relationship
+     */
+    public function settings(): HasOne
+    {
+        return $this->userSetting();
     }
 
     /**

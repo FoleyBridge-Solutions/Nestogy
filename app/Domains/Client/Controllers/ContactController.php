@@ -47,19 +47,19 @@ class ContactController extends Controller
             abort(403, 'Insufficient permissions to view contacts');
         }
 
-        $query = Contact::where('client_id', $client->id);
-        $query = $this->applyContactFilters($query, $request);
-
-        $contacts = $query->orderBy('primary', 'desc')
-            ->orderBy('name')
-            ->paginate(20)
-            ->appends($request->query());
-
         if ($request->wantsJson() || $request->ajax()) {
+            $query = Contact::where('client_id', $client->id);
+            $query = $this->applyContactFilters($query, $request);
+
+            $contacts = $query->orderBy('primary', 'desc')
+                ->orderBy('name')
+                ->paginate(20)
+                ->appends($request->query());
+
             return response()->json($contacts->items());
         }
 
-        return view('clients.contacts.index', compact('contacts', 'client'));
+        return view('clients.contacts.index-livewire', compact('client'));
     }
 
     /**

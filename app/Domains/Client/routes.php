@@ -24,6 +24,7 @@ Route::middleware(['web', 'auth', 'verified'])->group(function () {
     Route::post('clients/import', [\App\Domains\Client\Controllers\ClientController::class, 'import'])->name('clients.import');
     Route::get('clients/import/template', [\App\Domains\Client\Controllers\ClientController::class, 'downloadTemplate'])->name('clients.import.template');
     Route::get('clients/export/csv', [\App\Domains\Client\Controllers\ClientController::class, 'exportCsv'])->name('clients.export.csv');
+    Route::post('clients/validate-batch', [\App\Domains\Client\Controllers\ClientController::class, 'validateBatch'])->name('clients.validate-batch');
     
     // Leads routes
     Route::get('clients/leads/import', [\App\Domains\Client\Controllers\ClientController::class, 'leadsImportForm'])->name('clients.leads.import.form');
@@ -50,11 +51,11 @@ Route::middleware(['web', 'auth', 'verified'])->group(function () {
     Route::prefix('clients')->name('clients.')->middleware('require-client')->group(function () {
         Route::get('switch', [\App\Domains\Client\Controllers\ClientController::class, 'switch'])->name('switch');
         Route::match(['get', 'post'], 'tags', [\App\Domains\Client\Controllers\ClientController::class, 'tags'])->name('tags');
-        Route::patch('notes', [\App\Domains\Client\Controllers\ClientController::class, 'updateNotes'])->name('update-notes');
+        Route::match(['patch', 'post'], '{client}/notes', [\App\Domains\Client\Controllers\ClientController::class, 'updateNotes'])->name('update-notes')->where('client', '[0-9]+');
         Route::post('archive', [\App\Domains\Client\Controllers\ClientController::class, 'archive'])->name('archive');
 
         // Contacts routes (using session-based client context)
-        Route::get('contacts', \App\Livewire\Client\ContactIndex::class)->name('contacts.index');
+        Route::get('contacts', [\App\Domains\Client\Controllers\ContactController::class, 'index'])->name('contacts.index');
         Route::get('contacts/create', [\App\Domains\Client\Controllers\ContactController::class, 'create'])->name('contacts.create');
         Route::post('contacts', [\App\Domains\Client\Controllers\ContactController::class, 'store'])->name('contacts.store');
         Route::get('contacts/export', [\App\Domains\Client\Controllers\ContactController::class, 'export'])->name('contacts.export');
@@ -125,4 +126,48 @@ Route::middleware(['web', 'auth', 'verified'])->group(function () {
     // This MUST come AFTER all other client routes to avoid catching specific routes
     // Use regex constraint to only match numeric IDs, preventing conflict with literal routes like 'active'
     Route::get('clients/{client}', [\App\Domains\Client\Controllers\ClientController::class, 'show'])->name('clients.show')->where('client', '[0-9]+');
+
+    // IT Documentation routes (global)
+    Route::prefix('it-documentation')->name('clients.it-documentation.')->group(function () {
+        Route::get('/export', [\App\Domains\Client\Controllers\ITDocumentationController::class, 'export'])->name('export');
+        Route::get('/overdue-reviews', [\App\Domains\Client\Controllers\ITDocumentationController::class, 'overdueReviews'])->name('overdue-reviews');
+        Route::post('/bulk-update-access', [\App\Domains\Client\Controllers\ITDocumentationController::class, 'bulkUpdateAccess'])->name('bulk-update-access');
+
+        Route::get('/', [\App\Domains\Client\Controllers\ITDocumentationController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Domains\Client\Controllers\ITDocumentationController::class, 'create'])->name('create');
+        Route::post('/', [\App\Domains\Client\Controllers\ITDocumentationController::class, 'store'])->name('store');
+        Route::get('/{itDocumentation}', [\App\Domains\Client\Controllers\ITDocumentationController::class, 'show'])->name('show');
+        Route::get('/{itDocumentation}/edit', [\App\Domains\Client\Controllers\ITDocumentationController::class, 'edit'])->name('edit');
+        Route::put('/{itDocumentation}', [\App\Domains\Client\Controllers\ITDocumentationController::class, 'update'])->name('update');
+        Route::delete('/{itDocumentation}', [\App\Domains\Client\Controllers\ITDocumentationController::class, 'destroy'])->name('destroy');
+        Route::get('/{itDocumentation}/download', [\App\Domains\Client\Controllers\ITDocumentationController::class, 'download'])->name('download');
+        Route::post('/{itDocumentation}/version', [\App\Domains\Client\Controllers\ITDocumentationController::class, 'createVersion'])->name('create-version');
+        Route::post('/{itDocumentation}/duplicate', [\App\Domains\Client\Controllers\ITDocumentationController::class, 'duplicate'])->name('duplicate');
+        Route::post('/{itDocumentation}/complete-review', [\App\Domains\Client\Controllers\ITDocumentationController::class, 'completeReview'])->name('complete-review');
+    });
+
+    // Subsidiary Management Routes
+    Route::prefix('subsidiaries')->name('subsidiaries.')->middleware('subsidiary.access')->group(function () {
+        // Main subsidiary management
+        Route::get('/', [\App\Domains\Client\Controllers\SubsidiaryManagementController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Domains\Client\Controllers\SubsidiaryManagementController::class, 'create'])->name('create');
+        Route::post('/', [\App\Domains\Client\Controllers\SubsidiaryManagementController::class, 'store'])->name('store');
+        Route::get('/{subsidiary}', [\App\Domains\Client\Controllers\SubsidiaryManagementController::class, 'show'])->name('show');
+        Route::get('/{subsidiary}/edit', [\App\Domains\Client\Controllers\SubsidiaryManagementController::class, 'edit'])->name('edit');
+        Route::put('/{subsidiary}', [\App\Domains\Client\Controllers\SubsidiaryManagementController::class, 'update'])->name('update');
+        Route::delete('/{subsidiary}', [\App\Domains\Client\Controllers\SubsidiaryManagementController::class, 'destroy'])->name('destroy');
+
+        // Hierarchy visualization
+        Route::get('/hierarchy/tree', [\App\Domains\Client\Controllers\SubsidiaryManagementController::class, 'hierarchyTree'])->name('hierarchy.tree');
+
+        // Permission management
+        Route::get('/{subsidiary}/permissions', [\App\Domains\Client\Controllers\SubsidiaryManagementController::class, 'permissions'])->name('permissions');
+        Route::post('/permissions/grant', [\App\Domains\Client\Controllers\SubsidiaryManagementController::class, 'grantPermission'])->name('grant-permission');
+        Route::delete('/permissions/{permission}/revoke', [\App\Domains\Client\Controllers\SubsidiaryManagementController::class, 'revokePermission'])->name('revoke-permission');
+
+        // User management
+        Route::get('/{subsidiary}/users', [\App\Domains\Client\Controllers\SubsidiaryManagementController::class, 'users'])->name('users');
+        Route::post('/users/grant-access', [\App\Domains\Client\Controllers\SubsidiaryManagementController::class, 'grantUserAccess'])->name('grant-user-access');
+        Route::delete('/users/{crossCompanyUser}/revoke', [\App\Domains\Client\Controllers\SubsidiaryManagementController::class, 'revokeUserAccess'])->name('revoke-user-access');
+    });
 });

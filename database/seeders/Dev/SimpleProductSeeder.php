@@ -18,7 +18,7 @@ class SimpleProductSeeder extends Seeder
         foreach ($companies as $company) {
             // Get or create a category
             $category = Category::firstOrCreate(
-                ['company_id' => $company->id, 'type' => 'income', 'name' => 'Services'],
+                ['company_id' => $company->id, 'type' => ['income'], 'name' => 'Services'],
                 ['color' => '#4A90E2']
             );
 

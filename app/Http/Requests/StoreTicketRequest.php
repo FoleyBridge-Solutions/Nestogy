@@ -26,6 +26,7 @@ class StoreTicketRequest extends FormRequest
             'subject' => 'required|string|max:255',
             'details' => 'required|string|max:65535',
             'priority' => 'required|in:Low,Medium,High,Critical',
+            'status' => 'required|in:new,open,in_progress,pending,resolved,closed',
 
             // Optional fields
             'contact_id' => 'nullable|exists:contacts,id',
@@ -147,7 +148,7 @@ class StoreTicketRequest extends FormRequest
     public function withValidator($validator): void
     {
         $validator->after(function ($validator) {
-            $user = Auth::user();
+            $user = $this->user();
 
             // Validate client belongs to user's company
             if ($this->filled('client_id')) {

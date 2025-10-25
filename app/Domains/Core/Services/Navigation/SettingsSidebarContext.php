@@ -362,6 +362,14 @@ class SettingsSidebarContext
                     'key' => 'categories',
                     'description' => 'Manage system categories',
                 ],
+                [
+                    'name' => 'HR & Time Tracking',
+                    'route' => 'settings.hr',
+                    'icon' => 'clock',
+                    'key' => 'hr',
+                    'description' => 'Employee time tracking and break policies',
+                    'permission' => 'manage-hr',
+                ],
             ],
         ];
     }

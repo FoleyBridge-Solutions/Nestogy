@@ -35,16 +35,7 @@ class CredentialController extends Controller
      */
     public function create(Request $request)
     {
-        $clients = Client::where('company_id', auth()->user()->company_id)
-            ->orderBy('name')
-            ->get();
-
-        $selectedClientId = $request->get('client_id');
-        $credentialTypes = ClientCredential::getCredentialTypes();
-        $environments = ClientCredential::getEnvironments();
-        $accessLevels = ClientCredential::getAccessLevels();
-
-        return view('clients.credentials.create', compact('clients', 'selectedClientId', 'credentialTypes', 'environments', 'accessLevels'));
+        return view('clients.credentials.create');
     }
 
     /**
@@ -119,15 +110,7 @@ class CredentialController extends Controller
     {
         $this->authorize('update', $credential);
 
-        $clients = Client::where('company_id', auth()->user()->company_id)
-            ->orderBy('name')
-            ->get();
-
-        $credentialTypes = ClientCredential::getCredentialTypes();
-        $environments = ClientCredential::getEnvironments();
-        $accessLevels = ClientCredential::getAccessLevels();
-
-        return view('clients.credentials.edit', compact('credential', 'clients', 'credentialTypes', 'environments', 'accessLevels'));
+        return view('clients.credentials.edit', compact('credential'));
     }
 
     /**

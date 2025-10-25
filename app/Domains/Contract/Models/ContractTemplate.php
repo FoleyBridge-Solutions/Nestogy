@@ -94,6 +94,7 @@ class ContractTemplate extends Model
         'name',
         'slug',
         'description',
+        'template_content',
         'template_type',
         'category',
         'tags',

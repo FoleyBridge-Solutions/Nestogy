@@ -48,7 +48,7 @@ class ExpenseSeeder extends Seeder
                     $categories->push(Category::create([
                         'company_id' => $company->id,
                         'name' => $catName,
-                        'type' => 'expense',
+                        'type' => ['expense'],
                         'color' => fake()->hexColor(),
                     ]));
                 }

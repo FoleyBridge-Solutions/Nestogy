@@ -139,7 +139,8 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('financial')->name('finan
     Route::resource('recurring-invoices', \App\Domains\Client\Controllers\RecurringInvoiceController::class);
 
     // Recurring billing routes (for VoIP and usage-based billing)
-    Route::resource('recurring', \App\Domains\Financial\Controllers\RecurringController::class);
+    // TODO: Create RecurringController
+    // Route::resource('recurring', \App\Domains\Financial\Controllers\RecurringController::class);
 
     // Contract Analytics routes - TODO: Create ContractAnalyticsController
     // Route::prefix('analytics')->name('analytics.')->group(function () {

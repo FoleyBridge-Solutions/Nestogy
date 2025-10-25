@@ -1,8 +1,10 @@
 <?php
 
 return [
+    App\Providers\ExceptionHandlerServiceProvider::class,
     App\Providers\AppServiceProvider::class,
     App\Providers\AuthServiceProvider::class,
+    App\Providers\RouteServiceProvider::class,
     App\Providers\FortifyServiceProvider::class,
     App\Providers\EmailServiceProvider::class,
     App\Providers\PdfServiceProvider::class,

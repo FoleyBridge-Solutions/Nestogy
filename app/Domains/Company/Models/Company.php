@@ -2,7 +2,9 @@
 
 namespace App\Domains\Company\Models;
 
+use App\Domains\Client\Models\Client;
 use App\Domains\Core\Models\Setting;
+use App\Domains\Core\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -33,6 +35,14 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class Company extends Model
 {
     use HasFactory;
+
+    /**
+     * Create a new factory instance for the model.
+     */
+    protected static function newFactory()
+    {
+        return \Database\Factories\Domains\Company\Models\CompanyFactory::new();
+    }
 
     /**
      * The table associated with the model.

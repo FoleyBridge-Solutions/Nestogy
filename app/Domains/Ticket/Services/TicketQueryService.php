@@ -61,6 +61,24 @@ class TicketQueryService
 
     public function applyAdvancedFilters(Builder $query, Request $request): Builder
     {
+        if ($request->boolean('overdue')) {
+            $query->where('scheduled_at', '<', now())
+                  ->where('status', '!=', 'closed')
+                  ->where('status', '!=', 'resolved')
+                  ->whereNotNull('scheduled_at');
+        }
+
+        if ($request->boolean('unassigned')) {
+            $query->whereNull('assigned_to');
+        }
+
+        if ($request->boolean('watching')) {
+            $userId = auth()->id();
+            $query->whereHas('watchers', function ($q) use ($userId) {
+                $q->where('user_id', $userId);
+            });
+        }
+
         if ($hasAttachments = $request->get('has_attachments')) {
             $query->has('attachments');
         }

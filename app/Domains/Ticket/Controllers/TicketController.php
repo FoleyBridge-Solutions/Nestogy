@@ -193,16 +193,37 @@ class TicketController extends Controller
             'reopener',
         ]);
 
+        $user = auth()->user();
+        $cacheKey = "ticket_viewer_{$ticket->id}_{$user->id}";
+        \Illuminate\Support\Facades\Cache::put($cacheKey, [
+            'user_id' => $user->id,
+            'user_name' => $user->name,
+            'viewed_at' => now()->toISOString(),
+        ], 300);
+
         $availableTransitions = $ticket->workflow ?
             $ticket->getAvailableTransitions() : collect();
 
         $recentActivity = $ticket->getRecentActivity(20);
+
+        $otherViewers = [];
+        $allUsers = \App\Domains\Core\Models\User::where('company_id', $user->company_id)->pluck('id');
+        foreach ($allUsers as $userId) {
+            if ($userId !== $user->id) {
+                $viewerKey = "ticket_viewer_{$ticket->id}_{$userId}";
+                if (\Illuminate\Support\Facades\Cache::has($viewerKey)) {
+                    $viewerData = \Illuminate\Support\Facades\Cache::get($viewerKey);
+                    $otherViewers[] = $viewerData;
+                }
+            }
+        }
 
         if ($request->wantsJson()) {
             return response()->json([
                 'ticket' => $ticket,
                 'available_transitions' => $availableTransitions,
                 'recent_activity' => $recentActivity,
+                'other_viewers' => $otherViewers,
             ]);
         }
 

@@ -185,7 +185,7 @@ class InvoiceSeeder extends Seeder
                 $category = \App\Domains\Financial\Models\Category::create([
                     'company_id' => $company->id,
                     'name' => 'Services',
-                    'type' => 'income',
+                    'type' => ['income'],
                 ]);
             }
 

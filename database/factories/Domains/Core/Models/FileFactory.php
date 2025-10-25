@@ -1,0 +1,32 @@
+<?php
+
+namespace Database\Factories\Domains\Core\Models;
+
+use App\Domains\Core\Models\File;
+use Illuminate\Database\Eloquent\Factories\Factory;
+
+class FileFactory extends Factory
+{
+    protected $model = File::class;
+
+    public function definition(): array
+    {
+        $extension = $this->faker->fileExtension;
+        return [
+            'company_id' => \App\Domains\Company\Models\Company::factory(),
+            'fileable_id' => 1,
+            'fileable_type' => $this->faker->randomElement([\App\Domains\Client\Models\Client::class, \App\Domains\Ticket\Models\Ticket::class, \App\Domains\Project\Models\Project::class]),
+            'name' => $this->faker->words(3, true),
+            'description' => $this->faker->optional()->sentence,
+            'file_path' => 'files/'.$this->faker->uuid.'.'.$extension,
+            'file_name' => $this->faker->word.'.'.$extension,
+            'original_name' => $this->faker->words(2, true).'.'.$extension,
+            'file_size' => $this->faker->numberBetween(1024, 5242880),
+            'mime_type' => $this->faker->randomElement(['application/pdf', 'image/jpeg', 'image/png', 'text/plain']),
+            'file_type' => $this->faker->randomElement(['document', 'image', 'spreadsheet', 'other']),
+            'is_public' => $this->faker->boolean(30),
+            'uploaded_by' => \App\Domains\Core\Models\User::factory(),
+            'metadata' => json_encode([]),
+        ];
+    }
+}

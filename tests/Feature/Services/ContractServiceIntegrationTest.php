@@ -347,6 +347,7 @@ class ContractServiceIntegrationTest extends TestCase
             'company_id' => $this->company->id,
             'name' => 'Test Template',
             'slug' => 'test-template',
+            'template_content' => 'Test template content',
             'template_type' => 'managed_services',
             'status' => 'active',
             'version' => '1.0',

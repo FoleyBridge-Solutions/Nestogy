@@ -5,6 +5,7 @@ namespace Tests\Unit\Models;
 use App\Domains\Financial\Models\Invoice;
 use App\Domains\Financial\Models\InvoiceItem;
 use App\Domains\Product\Models\Product;
+use Database\Factories\Domains\Product\Models\ProductFactory;
 
 class InvoiceItemTest extends ModelTestCase
 {
@@ -119,6 +120,8 @@ class InvoiceItemTest extends ModelTestCase
             'order' => 1,
         ]);
 
+        $item->calculateAndSaveTotals();
+        
         $this->assertEquals(100.00, $item->subtotal);
     }
 
@@ -138,6 +141,8 @@ class InvoiceItemTest extends ModelTestCase
             'discount' => 10.00,
             'order' => 1,
         ]);
+
+        $item->calculateAndSaveTotals();
 
         $this->assertEquals(100.00, $item->subtotal);
         $this->assertEquals(90.00, $item->total);
@@ -190,6 +195,8 @@ class InvoiceItemTest extends ModelTestCase
             'discount' => 25.00,
             'order' => 1,
         ]);
+
+        $item->calculateAndSaveTotals();
 
         $this->assertEquals(25.00, $item->getDiscountPercentage());
     }
@@ -250,6 +257,8 @@ class InvoiceItemTest extends ModelTestCase
             'discount' => 0,
             'order' => 1,
         ]);
+
+        $item->calculateAndSaveTotals();
 
         $this->assertEquals('$100.00', $item->getFormattedTotal());
     }

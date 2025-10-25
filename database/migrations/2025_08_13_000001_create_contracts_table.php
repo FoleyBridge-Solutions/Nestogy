@@ -53,6 +53,7 @@ return new class extends Migration
             $table->boolean('auto_renew')->default(false);
             $table->unsignedInteger('renewal_notice_days')->nullable();
             $table->date('renewal_date')->nullable();
+            $table->string('renewal_type')->nullable();
 
             // References to other entities
             $table->unsignedBigInteger('quote_id')->nullable()->index();

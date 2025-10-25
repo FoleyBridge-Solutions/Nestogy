@@ -19,7 +19,7 @@ class TicketWatcher extends Model
 
     protected static function newFactory()
     {
-        return \Database\Factories\TicketWatcherFactory::new();
+        return \Database\Factories\Domains\Ticket\Models\TicketWatcherFactory::new();
     }
 
     protected $fillable = [

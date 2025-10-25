@@ -178,6 +178,12 @@ class SidebarBuilder
         return \App\Domains\Core\Services\Navigation\SettingsSidebarContext::getConfiguration();
     }
 
+    protected function buildHrSidebar(): array
+    {
+        $provider = new \App\Domains\Core\Services\SidebarConfigProvider();
+        return $provider->getConfiguration('hr');
+    }
+
     protected function buildGenericSidebar(): array
     {
         return [

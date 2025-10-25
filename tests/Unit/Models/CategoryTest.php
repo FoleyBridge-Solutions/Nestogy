@@ -59,13 +59,13 @@ class CategoryTest extends TestCase
     {
         Category::factory()->create([
             'company_id' => $this->company->id,
-            'type' => Category::TYPE_EXPENSE_CATEGORY,
+            'type' => [Category::TYPE_EXPENSE_CATEGORY],
             'name' => 'Expense Cat',
         ]);
 
         Category::factory()->create([
             'company_id' => $this->company->id,
-            'type' => Category::TYPE_PRODUCT,
+            'type' => [Category::TYPE_PRODUCT],
             'name' => 'Product Cat',
         ]);
 
@@ -101,12 +101,12 @@ class CategoryTest extends TestCase
     {
         Category::factory()->create([
             'company_id' => $this->company->id,
-            'type' => Category::TYPE_PRODUCT,
+            'type' => [Category::TYPE_PRODUCT],
         ]);
 
         Category::factory()->create([
             'company_id' => $this->company->id,
-            'type' => Category::TYPE_EXPENSE,
+            'type' => [Category::TYPE_EXPENSE],
         ]);
 
         $productCategories = Category::byType(Category::TYPE_PRODUCT)->get();
@@ -119,7 +119,7 @@ class CategoryTest extends TestCase
     {
         $category = Category::factory()->create([
             'company_id' => $this->company->id,
-            'type' => Category::TYPE_EXPENSE_CATEGORY,
+            'type' => [Category::TYPE_EXPENSE_CATEGORY],
             'metadata' => [
                 'requires_approval' => true,
                 'approval_limit' => 500.00,
@@ -142,7 +142,7 @@ class CategoryTest extends TestCase
     {
         $category = Category::factory()->create([
             'company_id' => $this->company->id,
-            'type' => Category::TYPE_PRODUCT,
+            'type' => [Category::TYPE_PRODUCT],
         ]);
 
         $settings = $category->getExpenseSettings();
@@ -155,7 +155,7 @@ class CategoryTest extends TestCase
     {
         $category = Category::factory()->create([
             'company_id' => $this->company->id,
-            'type' => Category::TYPE_EXPENSE_CATEGORY,
+            'type' => [Category::TYPE_EXPENSE_CATEGORY],
             'metadata' => [
                 'requires_approval' => true,
                 'approval_limit' => 500.00,
@@ -171,7 +171,7 @@ class CategoryTest extends TestCase
     {
         $category = Category::factory()->create([
             'company_id' => $this->company->id,
-            'type' => Category::TYPE_EXPENSE_CATEGORY,
+            'type' => [Category::TYPE_EXPENSE_CATEGORY],
             'metadata' => [
                 'requires_approval' => false,
             ],
@@ -185,7 +185,7 @@ class CategoryTest extends TestCase
     {
         $category = Category::factory()->create([
             'company_id' => $this->company->id,
-            'type' => Category::TYPE_PRODUCT,
+            'type' => [Category::TYPE_PRODUCT],
         ]);
 
         $this->assertFalse($category->requiresApprovalForAmount(1000.00));
@@ -196,7 +196,7 @@ class CategoryTest extends TestCase
     {
         $category = Category::factory()->create([
             'company_id' => $this->company->id,
-            'type' => Category::TYPE_PRODUCT,
+            'type' => [Category::TYPE_PRODUCT],
         ]);
 
         $this->assertEquals('Product', $category->getTypeLabel());
@@ -207,7 +207,7 @@ class CategoryTest extends TestCase
     {
         $category = Category::factory()->create([
             'company_id' => $this->company->id,
-            'type' => Category::TYPE_PRODUCT,
+            'type' => [Category::TYPE_PRODUCT],
             'color' => null,
         ]);
 
@@ -316,18 +316,18 @@ class CategoryTest extends TestCase
     {
         Category::factory()->create([
             'company_id' => $this->company->id,
-            'type' => Category::TYPE_REPORT,
+            'type' => [Category::TYPE_REPORT],
         ]);
 
         Category::factory()->create([
             'company_id' => $this->company->id,
-            'type' => Category::TYPE_PRODUCT,
+            'type' => [Category::TYPE_PRODUCT],
         ]);
 
         $reportCategories = Category::reportCategories()->get();
 
         $this->assertCount(1, $reportCategories);
-        $this->assertEquals(Category::TYPE_REPORT, $reportCategories->first()->type);
+        $this->assertContains(Category::TYPE_REPORT, $reportCategories->first()->type);
     }
 
     /** @test */
@@ -335,17 +335,17 @@ class CategoryTest extends TestCase
     {
         Category::factory()->create([
             'company_id' => $this->company->id,
-            'type' => Category::TYPE_KB,
+            'type' => [Category::TYPE_KB],
         ]);
 
         Category::factory()->create([
             'company_id' => $this->company->id,
-            'type' => Category::TYPE_PRODUCT,
+            'type' => [Category::TYPE_PRODUCT],
         ]);
 
         $kbCategories = Category::kbCategories()->get();
 
         $this->assertCount(1, $kbCategories);
-        $this->assertEquals(Category::TYPE_KB, $kbCategories->first()->type);
+        $this->assertContains(Category::TYPE_KB, $kbCategories->first()->type);
     }
 }

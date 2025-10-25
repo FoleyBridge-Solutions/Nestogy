@@ -373,22 +373,6 @@ class LocalTaxRateService
             }
         });
     }
-                        if (isset($jurisdiction['tax_code'])) {
-                            $q->orWhere('tax_code', 'LIKE', '%'.$jurisdiction['tax_code'].'%');
-                        }
-                        if (isset($jurisdiction['external_id'])) {
-                            $q->orWhere('external_id', $jurisdiction['external_id']);
-                        }
-                    });
-                }
-            });
-        } else {
-            // Fallback: generic city matching
-            $query->orWhere('authority_name', 'LIKE', "%{$city}%");
-        }
-
-        return $query;
-    }
 
     /**
      * Add ZIP code-based filtering (future enhancement)

@@ -26,7 +26,7 @@ abstract class ModelTestCase extends TestCase
         $this->testClient = Client::factory()->create(['company_id' => $this->testCompany->id]);
         $this->testCategory = Category::create([
             'name' => 'Income',
-            'type' => 'income',
+            'type' => ['income'],
             'company_id' => $this->testCompany->id,
             'color' => '#28a745',
         ]);

@@ -210,6 +210,11 @@ class CommandPaletteService
 
         // Add special/workflow commands that aren't in registry
         $staticCommands = array_merge($staticCommands, [
+            'clock in' => ['icon' => '⏰', 'description' => 'Clock in to start work', 'route' => 'hr.time-clock.index'],
+            'clock out' => ['icon' => '⏹️', 'description' => 'Clock out to end work', 'route' => 'hr.time-clock.index'],
+            'view time' => ['icon' => '📊', 'description' => 'View your time entries', 'route' => 'hr.time-clock.history'],
+            'request time off' => ['icon' => '🏖️', 'description' => 'Request time off', 'route' => 'hr.time-off.index'],
+            'approve time' => ['icon' => '✅', 'description' => 'Approve time entries', 'route' => 'hr.time-entries.index'],
             'show urgent' => ['icon' => '🔥', 'description' => 'View urgent items', 'route' => 'dashboard.urgent'],
             'show today' => ['icon' => '📅', 'description' => "Today's schedule", 'route' => 'dashboard.today'],
             'show overdue invoices' => ['icon' => '⚠️', 'description' => 'View overdue invoices', 'route' => 'financial.invoices.overdue'],

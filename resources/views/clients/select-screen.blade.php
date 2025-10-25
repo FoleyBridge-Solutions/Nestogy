@@ -8,13 +8,13 @@ $pageSubtitle = 'Choose a client to work with. You can access their contacts, lo
 $pageActions = [
     [
         'label' => 'Add Client',
-        'href' => {{ route('clients.create') }},
+        'href' => route('clients.create'),
         'icon' => 'plus',
         'variant' => 'primary',
     ],
     [
         'label' => 'Add First Client',
-        'href' => {{ route('clients.create') }},
+        'href' => route('clients.create'),
         'icon' => 'plus',
         'variant' => 'primary',
     ],

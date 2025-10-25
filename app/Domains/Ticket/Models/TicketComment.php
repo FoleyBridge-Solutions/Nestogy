@@ -540,6 +540,6 @@ class TicketComment extends Model
      */
     protected static function newFactory()
     {
-        return \Database\Factories\TicketCommentFactory::new();
+        return \Database\Factories\Domains\Ticket\Models\TicketCommentFactory::new();
     }
 }

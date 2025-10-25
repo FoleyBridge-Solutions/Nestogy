@@ -114,12 +114,21 @@ class DomainRouteManager
     protected function isValidRouteFile(string $routeFile, string $domainName): bool
     {
         if (! File::exists($routeFile) || filesize($routeFile) <= 10) {
-            if (app()->environment('local')) {
-                logger()->info("Skipping domain '{$domainName}': route file missing or empty", [
+            if (app()->environment(['local', 'testing'])) {
+                $message = "Skipping domain '{$domainName}': route file missing or empty";
+                $context = [
                     'file' => $routeFile,
                     'exists' => File::exists($routeFile),
                     'size' => File::exists($routeFile) ? filesize($routeFile) : 0,
-                ]);
+                ];
+                
+                if (app()->environment('testing')) {
+                    throw new \RuntimeException(
+                        $message . ' - ' . json_encode($context)
+                    );
+                }
+                
+                logger()->info($message, $context);
             }
 
             return false;
@@ -156,7 +165,7 @@ class DomainRouteManager
     {
         $this->executeRouteRegistration($domainName, $config, $routeFile, function () use ($routeFile) {
             Route::group([], function () use ($routeFile) {
-                require_once $routeFile;
+                require $routeFile;
             });
         });
     }
@@ -173,7 +182,7 @@ class DomainRouteManager
 
     protected function handleRegistrationError(string $domainName, string $routeFile, \Exception $e): void
     {
-        if (app()->environment('local')) {
+        if (app()->environment(['local', 'testing'])) {
             throw new \RuntimeException(
                 "Failed to register routes for domain '{$domainName}': {$e->getMessage()}",
                 previous: $e

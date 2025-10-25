@@ -411,7 +411,7 @@ class InvoiceTest extends ModelTestCase
             'category_id' => $this->testCategory->id,
         ]);
 
-        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Relations\HasMany::class, $invoice->payments());
+        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Relations\HasManyThrough::class, $invoice->payments());
     }
 
     public function test_tickets_relationship_exists(): void

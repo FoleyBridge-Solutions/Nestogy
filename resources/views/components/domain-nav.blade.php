@@ -49,6 +49,12 @@ $domains = [
         'icon' => 'briefcase',
         'permission' => 'view-manager-tools'
     ],
+    'hr' => [
+        'name' => 'HR',
+        'route' => 'hr.time-clock.index',
+        'params' => [],
+        'icon' => 'clock'
+    ],
     'products' => [
         'name' => 'Products',
         'route' => 'products.index',

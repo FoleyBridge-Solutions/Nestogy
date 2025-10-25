@@ -28,10 +28,14 @@ return new class extends Migration
             $table->timestamps();
             $table->boolean('auto_invoice_generation')->default(true);
             $table->timestamp('archived_at')->nullable();
-            $table->unsignedBigInteger('category_id');
-            $table->unsignedBigInteger('client_id');
+             $table->unsignedBigInteger('category_id');
+             $table->unsignedBigInteger('client_id');
+             $table->integer('invoice_terms_days')->default(30);
+             $table->boolean('email_invoice')->default(true);
+             $table->string('email_template')->nullable();
+             $table->json('overage_rates')->nullable();
 
-            // Indexes
+             // Indexes
             $table->index('number');
             $table->index('status');
             $table->index('client_id');

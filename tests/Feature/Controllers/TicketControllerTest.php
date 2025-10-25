@@ -46,6 +46,18 @@ class TicketControllerTest extends TestCase
             'status' => true,
         ]);
         
+        \App\Domains\Core\Models\UserSetting::create([
+            'user_id' => $this->user->id,
+            'company_id' => $this->company->id,
+            'role' => \App\Domains\Core\Models\UserSetting::ROLE_ADMIN,
+        ]);
+        
+        \App\Domains\Core\Models\UserSetting::create([
+            'user_id' => $this->admin->id,
+            'company_id' => $this->company->id,
+            'role' => \App\Domains\Core\Models\UserSetting::ROLE_ADMIN,
+        ]);
+        
         \Silber\Bouncer\BouncerFacade::scope()->to($this->company->id);
         \Silber\Bouncer\BouncerFacade::assign('admin')->to($this->user);
         \Silber\Bouncer\BouncerFacade::assign('admin')->to($this->admin);
@@ -508,7 +520,7 @@ class TicketControllerTest extends TestCase
         $assignee = User::factory()->create(['company_id' => $this->user->company_id]);
 
         $response = $this->actingAs($this->user)
-            ->postJson(route('tickets.assign', $ticket), [
+            ->patchJson(route('tickets.assign', $ticket), [
                 'assigned_to' => $assignee->id,
             ]);
 
@@ -528,7 +540,7 @@ class TicketControllerTest extends TestCase
 
         $assignee = User::factory()->create(['company_id' => $this->user->company_id]);
 
-        $this->actingAs($this->user)->postJson(route('tickets.assign', $ticket), [
+        $this->actingAs($this->user)->patchJson(route('tickets.assign', $ticket), [
             'assigned_to' => $assignee->id,
         ]);
 
@@ -549,7 +561,7 @@ class TicketControllerTest extends TestCase
         $otherUser = User::factory()->create(['company_id' => $otherCompany->id]);
 
         $response = $this->actingAs($this->user)
-            ->postJson(route('tickets.assign', $ticket), [
+            ->patchJson(route('tickets.assign', $ticket), [
                 'assigned_to' => $otherUser->id,
             ]);
 
@@ -565,7 +577,7 @@ class TicketControllerTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->user)
-            ->postJson(route('tickets.update-status', $ticket), [
+            ->patchJson(route('tickets.status.update', $ticket), [
                 'status' => 'in_progress',
             ]);
 
@@ -584,7 +596,7 @@ class TicketControllerTest extends TestCase
             'status' => 'open',
         ]);
 
-        $this->actingAs($this->user)->postJson(route('tickets.update-status', $ticket), [
+        $this->actingAs($this->user)->patchJson(route('tickets.status.update', $ticket), [
             'status' => 'closed',
         ]);
 
@@ -602,7 +614,7 @@ class TicketControllerTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->user)
-            ->postJson(route('tickets.update-priority', $ticket), [
+            ->patchJson(route('tickets.priority.update', $ticket), [
                 'priority' => 'Critical',
             ]);
 
@@ -623,7 +635,7 @@ class TicketControllerTest extends TestCase
         $scheduledTime = now()->addDay();
 
         $response = $this->actingAs($this->user)
-            ->postJson(route('tickets.schedule', $ticket), [
+            ->patchJson(route('tickets.schedule', $ticket), [
                 'scheduled_at' => $scheduledTime->toDateTimeString(),
                 'duration' => 120,
                 'location' => 'Client Office',
@@ -644,7 +656,7 @@ class TicketControllerTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->user)
-            ->postJson(route('tickets.schedule', $ticket), [
+            ->patchJson(route('tickets.schedule', $ticket), [
                 'scheduled_at' => now()->subDay()->toDateTimeString(),
             ]);
 
@@ -667,7 +679,7 @@ class TicketControllerTest extends TestCase
 
         $response = $this->actingAs($this->user)
             ->postJson(route('tickets.merge', $sourceTicket), [
-                'merge_into_number' => $targetTicket->number,
+                'target_ticket_id' => $targetTicket->id,
             ]);
 
         $response->assertStatus(200);
@@ -684,10 +696,10 @@ class TicketControllerTest extends TestCase
 
         $response = $this->actingAs($this->user)
             ->postJson(route('tickets.merge', $ticket), [
-                'merge_into_number' => 999999,
+                'target_ticket_id' => 999999,
             ]);
 
-        $response->assertStatus(404);
+        $response->assertStatus(422);
     }
 
     public function test_merge_prevents_self_merge(): void

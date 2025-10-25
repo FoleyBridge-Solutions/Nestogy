@@ -47,7 +47,6 @@ class ProjectIndex extends BaseIndexComponent
                     'completed' => 'Completed',
                     'cancelled' => 'Cancelled',
                 ],
-                'component' => 'project.cells.status',
             ],
             'priority' => [
                 'label' => 'Priority',
@@ -60,14 +59,12 @@ class ProjectIndex extends BaseIndexComponent
                     'high' => 'High',
                     'critical' => 'Critical',
                 ],
-                'component' => 'project.cells.priority',
             ],
             'progress' => [
                 'label' => 'Progress',
                 'sortable' => true,
                 'filterable' => false,
                 'type' => 'badge',
-                'component' => 'project.cells.progress',
             ],
             'start_date' => [
                 'label' => 'Start Date',
@@ -78,7 +75,6 @@ class ProjectIndex extends BaseIndexComponent
                 'label' => 'Due Date',
                 'sortable' => true,
                 'type' => 'date',
-                'component' => 'project.cells.due-date',
             ],
             'manager.name' => [
                 'label' => 'Manager',
@@ -118,13 +114,10 @@ class ProjectIndex extends BaseIndexComponent
     protected function getEmptyState(): array
     {
         return [
+            'icon' => 'briefcase',
             'title' => 'No Projects',
             'message' => 'No projects found. Create your first project to get started.',
-            'icon' => 'briefcase',
-            'action' => [
-                'label' => 'Create Project',
-                'href' => route('projects.create'),
-            ],
+            'action' => route('projects.create'),
             'actionLabel' => 'Create Project',
         ];
     }
@@ -150,9 +143,6 @@ class ProjectIndex extends BaseIndexComponent
         ];
     }
 
-    /**
-     * Get client options for filtering
-     */
     private function getClientOptions(): array
     {
         $clients = Client::where('company_id', $this->companyId)
@@ -162,9 +152,6 @@ class ProjectIndex extends BaseIndexComponent
         return $clients;
     }
 
-    /**
-     * Get manager options for filtering
-     */
     private function getManagerOptions(): array
     {
         $managers = User::where('company_id', $this->companyId)

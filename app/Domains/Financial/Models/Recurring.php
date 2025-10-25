@@ -44,7 +44,6 @@ use Illuminate\Support\Facades\Log;
  * @property array|null $pricing_model
  * @property array|null $service_tiers
  * @property array|null $usage_allowances
- * @property array|null $overage_rates
  * @property bool $auto_invoice_generation
  * @property int $invoice_terms_days
  * @property bool $email_invoice
@@ -97,7 +96,7 @@ class Recurring extends Model
         'note',
         'service_tiers',
         'usage_allowances',
-        'overage_rates',
+        // 'overage_rates', // Column not in database schema yet
         'auto_invoice_generation',
         'invoice_terms_days',
         'email_invoice',
@@ -123,7 +122,7 @@ class Recurring extends Model
         'pricing_model' => 'array',
         'service_tiers' => 'array',
         'usage_allowances' => 'array',
-        'overage_rates' => 'array',
+        // 'overage_rates' => 'array', // Column not in database schema yet
         'auto_invoice_generation' => 'boolean',
         'invoice_terms_days' => 'integer',
         'email_invoice' => 'boolean',
@@ -834,7 +833,7 @@ class Recurring extends Model
             'pricing_model' => 'nullable|array',
             'service_tiers' => 'nullable|array',
             'usage_allowances' => 'nullable|array',
-            'overage_rates' => 'nullable|array',
+            // 'overage_rates' => 'nullable|array', // Column not in database schema yet
             'auto_invoice_generation' => 'boolean',
             'invoice_terms_days' => 'integer|min:0|max:365',
             'email_invoice' => 'boolean',

@@ -40,7 +40,7 @@ class CategoryManagerTest extends TestCase
         $category = Category::factory()->create([
             'company_id' => $this->company->id,
             'name' => 'Test Category',
-            'type' => Category::TYPE_PRODUCT,
+            'type' => [Category::TYPE_PRODUCT],
         ]);
 
         Livewire::test(CategoryManager::class)
@@ -54,13 +54,13 @@ class CategoryManagerTest extends TestCase
         $productCategory = Category::factory()->create([
             'company_id' => $this->company->id,
             'name' => 'UniqueProductName12345',
-            'type' => Category::TYPE_PRODUCT,
+            'type' => [Category::TYPE_PRODUCT],
         ]);
 
         $expenseCategory = Category::factory()->create([
             'company_id' => $this->company->id,
             'name' => 'UniqueExpenseName67890',
-            'type' => Category::TYPE_EXPENSE,
+            'type' => [Category::TYPE_EXPENSE],
         ]);
 
         $component = Livewire::test(CategoryManager::class)
@@ -125,7 +125,7 @@ class CategoryManagerTest extends TestCase
         Livewire::test(CategoryManager::class)
             ->call('create')
             ->set('form.name', 'New Category')
-            ->set('form.type', Category::TYPE_PRODUCT)
+            ->set('form.type', [Category::TYPE_PRODUCT])
             ->set('form.description', 'Test description')
             ->set('form.is_active', true)
             ->call('save')
@@ -134,7 +134,6 @@ class CategoryManagerTest extends TestCase
         $this->assertDatabaseHas('categories', [
             'company_id' => $this->company->id,
             'name' => 'New Category',
-            'type' => Category::TYPE_PRODUCT,
             'description' => 'Test description',
             'is_active' => true,
         ]);
@@ -146,7 +145,7 @@ class CategoryManagerTest extends TestCase
         Livewire::test(CategoryManager::class)
             ->call('create')
             ->set('form.name', '')
-            ->set('form.type', '')
+            ->set('form.type', [])
             ->call('save')
             ->assertHasErrors(['form.name', 'form.type']);
     }
@@ -157,7 +156,7 @@ class CategoryManagerTest extends TestCase
         $category = Category::factory()->create([
             'company_id' => $this->company->id,
             'name' => 'Original Name',
-            'type' => Category::TYPE_PRODUCT,
+            'type' => [Category::TYPE_PRODUCT],
         ]);
 
         Livewire::test(CategoryManager::class)
@@ -173,7 +172,7 @@ class CategoryManagerTest extends TestCase
         $category = Category::factory()->create([
             'company_id' => $this->company->id,
             'name' => 'Original Name',
-            'type' => Category::TYPE_PRODUCT,
+            'type' => [Category::TYPE_PRODUCT],
         ]);
 
         Livewire::test(CategoryManager::class)
@@ -212,7 +211,7 @@ class CategoryManagerTest extends TestCase
     {
         $category = Category::factory()->create([
             'company_id' => $this->company->id,
-            'type' => Category::TYPE_KB, // Use a type that won't have associated records
+            'type' => [Category::TYPE_KB], // Use a type that won't have associated records
         ]);
 
         Livewire::test(CategoryManager::class)
@@ -251,7 +250,7 @@ class CategoryManagerTest extends TestCase
         Livewire::test(CategoryManager::class)
             ->call('create')
             ->set('form.name', 'Travel Expenses')
-            ->set('form.type', Category::TYPE_EXPENSE_CATEGORY)
+            ->set('form.type', [Category::TYPE_EXPENSE_CATEGORY])
             ->set('form.metadata', [
                 'requires_approval' => true,
                 'approval_limit' => 500.00,
@@ -275,7 +274,7 @@ class CategoryManagerTest extends TestCase
         Livewire::test(CategoryManager::class)
             ->call('create')
             ->set('form.name', 'Test Category')
-            ->set('form.type', Category::TYPE_PRODUCT)
+            ->set('form.type', [Category::TYPE_PRODUCT])
             ->call('save')
             ->assertSet('showModal', false);
     }
@@ -286,10 +285,10 @@ class CategoryManagerTest extends TestCase
         Livewire::test(CategoryManager::class)
             ->call('create')
             ->set('form.name', 'Test Category')
-            ->set('form.type', Category::TYPE_PRODUCT)
+            ->set('form.type', [Category::TYPE_PRODUCT])
             ->call('save')
             ->assertSet('form.name', '')
-            ->assertSet('form.type', '')
+            ->assertSet('form.type', [])
             ->assertSet('editing', null);
     }
 
@@ -343,7 +342,7 @@ class CategoryManagerTest extends TestCase
         Livewire::test(CategoryManager::class)
             ->call('create')
             ->set('form.name', 'Colored Category')
-            ->set('form.type', Category::TYPE_PRODUCT)
+            ->set('form.type', [Category::TYPE_PRODUCT])
             ->set('form.color', '#FF5733')
             ->call('save');
 

@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\ParallelTesting;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Silber\Bouncer\BouncerFacade as Bouncer;
@@ -69,9 +70,13 @@ class AppServiceProvider extends ServiceProvider
     {
         // Register model observers
         Company::observe(CompanyObserver::class);
+        \App\Domains\HR\Models\EmployeeTimeEntry::observe(\App\Observers\EmployeeTimeEntryObserver::class);
 
-        // Force HTTPS in production
-        if ($this->app->environment('production')) {
+        // Force HTTPS in production, when behind SSL proxy, or when FORCE_HTTPS is set
+        if ($this->app->environment('production') 
+            || request()->server('HTTPS') === 'on' 
+            || request()->server('HTTP_X_FORWARDED_PROTO') === 'https'
+            || env('FORCE_HTTPS', false)) {
             \Illuminate\Support\Facades\URL::forceScheme('https');
         }
 
@@ -96,6 +101,26 @@ class AppServiceProvider extends ServiceProvider
 
         // Configure Bouncer
         $this->configureBouncer();
+
+        // Configure parallel testing
+        $this->configureParallelTesting();
+    }
+
+    /**
+     * Configure parallel testing
+     */
+    protected function configureParallelTesting(): void
+    {
+        ParallelTesting::setUpProcess(function (int $token) {
+            // Set a unique database for this process
+        });
+
+        ParallelTesting::setUpTestDatabase(function (string $database, int $token) {
+            \Illuminate\Support\Facades\Artisan::call('migrate:fresh', [
+                '--database' => $database,
+                '--quiet' => true,
+            ]);
+        });
     }
 
     /**

@@ -18,7 +18,7 @@ $pageActions = [
     ],
     [
         'label' => 'Cancel',
-        'href' => {{ route('tickets.show', $ticket) }},
+        'href' => route('tickets.show', $ticket),
     ],
 ];
 @endphp

@@ -51,6 +51,7 @@ class NavigationRegistry
         static::registerAssetsDomain();
         static::registerProjectsDomain();
         static::registerMarketingDomain();
+        static::registerHRDomain();
     }
 
     protected static function registerFinancialDomain(): void
@@ -200,7 +201,7 @@ class NavigationRegistry
         static::register('clients', 'details', [
             'label' => 'Client Details',
             'icon' => 'building-office',
-            'route' => 'clients.show',
+            'route' => 'clients.index',
             'params' => ['client' => '{client_id}'],
             'requires_client' => true,
             'permission' => 'clients.view',
@@ -637,6 +638,63 @@ class NavigationRegistry
             'permission' => 'view-analytics',
             'section' => 'analytics',
             'order' => 40,
+        ]);
+    }
+
+    protected static function registerHRDomain(): void
+    {
+        static::register('hr', 'time-clock', [
+            'label' => 'Time Clock',
+            'icon' => 'clock',
+            'route' => 'hr.time-clock.index',
+            'permission' => null,
+            'section' => 'employee',
+            'order' => 10,
+        ]);
+
+        static::register('hr', 'time-entries', [
+            'label' => 'Time Entries',
+            'icon' => 'calendar',
+            'route' => 'hr.time-entries.index',
+            'permission' => 'manage-hr',
+            'section' => 'admin',
+            'order' => 20,
+        ]);
+
+        static::register('hr', 'my-history', [
+            'label' => 'My Time History',
+            'icon' => 'clock',
+            'route' => 'hr.time-clock.history',
+            'permission' => null,
+            'section' => 'employee',
+            'order' => 20,
+        ]);
+
+        static::register('hr', 'schedules', [
+            'label' => 'Schedules',
+            'icon' => 'calendar-days',
+            'route' => 'hr.schedules.index',
+            'permission' => 'manage-hr',
+            'section' => 'admin',
+            'order' => 30,
+        ]);
+
+        static::register('hr', 'pay-periods', [
+            'label' => 'Pay Periods',
+            'icon' => 'currency-dollar',
+            'route' => 'hr.pay-periods.index',
+            'permission' => 'manage-hr',
+            'section' => 'admin',
+            'order' => 40,
+        ]);
+
+        static::register('hr', 'time-off', [
+            'label' => 'Time Off Requests',
+            'icon' => 'calendar-x',
+            'route' => 'hr.time-off.index',
+            'permission' => 'manage-hr',
+            'section' => 'admin',
+            'order' => 50,
         ]);
     }
 }

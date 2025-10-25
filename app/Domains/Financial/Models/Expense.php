@@ -5,13 +5,14 @@ namespace App\Domains\Financial\Models;
 use App\Domains\Client\Models\Client;
 use App\Domains\Project\Models\Project;
 use App\Domains\Core\Models\User;
+use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Expense extends Model
 {
-    use HasFactory, SoftDeletes;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -25,6 +26,7 @@ class Expense extends Model
         'description',
         'amount',
         'currency',
+        'date',
         'expense_date',
         'vendor',
         'receipt_path',

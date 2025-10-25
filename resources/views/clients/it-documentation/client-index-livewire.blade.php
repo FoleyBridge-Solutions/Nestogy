@@ -10,6 +10,6 @@ $pageActions = [
 
 @section('content')
     <div class="container-fluid">
-        @livewire('client.client-i-t-documentation-index')
+        @livewire('clients.client-i-t-documentation-index')
     </div>
 @endsection

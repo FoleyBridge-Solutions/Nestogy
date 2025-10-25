@@ -104,6 +104,8 @@ Route::prefix('settings')->name('settings.')->middleware(['auth', 'verified'])->
 
     Route::get('/notification-preferences', \App\Livewire\Settings\NotificationPreferences::class)->name('notification-preferences');
 
+    Route::get('/hr', \App\Livewire\Settings\HRSettings::class)->name('hr')->middleware('can:manage-hr');
+
     Route::get('/notifications', function () {
         return redirect()->route('settings.category.show', ['domain' => 'communication', 'category' => 'notifications']);
     })->name('notifications');

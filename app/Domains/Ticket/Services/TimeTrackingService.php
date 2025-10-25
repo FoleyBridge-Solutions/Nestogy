@@ -66,6 +66,11 @@ class TimeTrackingService
      */
     public function startTracking(Ticket $ticket, User $technician, array $options = []): TicketTimeEntry
     {
+        // Ensure ticket has client relationship loaded
+        if (!$ticket->relationLoaded('client')) {
+            $ticket->load('client');
+        }
+        
         // Check if there's already an active timer FOR THIS SPECIFIC TICKET
         $activeEntry = $this->getActiveTimerForTicket($technician, $ticket);
         if ($activeEntry) {
@@ -77,7 +82,7 @@ class TimeTrackingService
         $entry->company_id = $ticket->company_id;
         $entry->user_id = $technician->id;
         $entry->started_at = $options['start_time'] ?? now();
-        $entry->entry_type = TicketTimeEntry::TYPE_TIMER; // Set as timer type for active tracking
+        $entry->entry_type = TicketTimeEntry::TYPE_TIMER;
         $entry->status = self::STATUS_DRAFT;
         $entry->billable = $this->determineBillability($ticket, $options);
         $entry->rate_type = $this->determineRateType($entry->started_at);

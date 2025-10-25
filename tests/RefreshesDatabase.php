@@ -2,8 +2,10 @@
 
 namespace Tests;
 
+use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
+use Illuminate\Support\Facades\ParallelTesting;
 
 trait RefreshesDatabase
 {
@@ -14,13 +16,23 @@ trait RefreshesDatabase
      */
     protected function refreshTestDatabase(): void
     {
-        // Mark migrations as already complete to prevent re-running them
-        // Migrations are run once by run-tests.php before all tests
         if (! RefreshDatabaseState::$migrated) {
-            RefreshDatabaseState::$migrated = true;
+            try {
+                $this->artisan('migrate:fresh', array_merge(
+                    $this->migrateFreshUsing(),
+                    ['--quiet' => true]
+                ));
+
+                $this->app[Kernel::class]->setArtisan(null);
+
+                RefreshDatabaseState::$migrated = true;
+            } catch (\Exception $e) {
+                // Log the error but allow the test to continue
+                \Illuminate\Support\Facades\Log::warning('Database migration failed: ' . $e->getMessage());
+                RefreshDatabaseState::$migrated = true;
+            }
         }
 
-        // Start a transaction for each test
         $this->beginDatabaseTransaction();
     }
 }

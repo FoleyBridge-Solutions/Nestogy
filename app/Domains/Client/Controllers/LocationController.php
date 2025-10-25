@@ -31,80 +31,56 @@ class LocationController extends Controller
      */
     public function index(Request $request)
     {
-        // Get client from session
         $client = \App\Domains\Core\Services\NavigationService::getSelectedClient();
 
-        // If no client selected, redirect to client selection
         if (! $client) {
             return redirect()->route('clients.index')
                 ->with('info', 'Please select a client to view locations.');
         }
 
-        // Authorize using policies
         $this->authorize('view', $client);
         $this->authorize('viewAny', Location::class);
 
-        // Query locations for the selected client with optimized column selection
-        $query = Location::select([
-            'id', 'name', 'address', 'city', 'state', 'zip', 'country',
-            'phone', 'primary', 'client_id', 'contact_id', 'description', 'hours',
-        ])
-            ->with(['contact:id,name,email,phone'])
-            ->where('client_id', $client->id);
+        if ($request->wantsJson()) {
+            $query = Location::select([
+                'id', 'name', 'address', 'city', 'state', 'zip', 'country',
+                'phone', 'primary', 'client_id', 'contact_id', 'description', 'hours',
+            ])
+                ->with(['contact:id,name,email,phone'])
+                ->where('client_id', $client->id);
 
-        // Apply search filters with correct column names
-        if ($search = $request->get('search')) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('address', 'like', "%{$search}%")
-                    ->orWhere('city', 'like', "%{$search}%")
-                    ->orWhere('state', 'like', "%{$search}%")
-                    ->orWhere('zip', 'like', "%{$search}%")
-                    ->orWhere('country', 'like', "%{$search}%");
-            });
+            if ($search = $request->get('search')) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('address', 'like', "%{$search}%")
+                        ->orWhere('city', 'like', "%{$search}%")
+                        ->orWhere('state', 'like', "%{$search}%")
+                        ->orWhere('zip', 'like', "%{$search}%")
+                        ->orWhere('country', 'like', "%{$search}%");
+                });
+            }
+
+            if ($request->get('primary_only')) {
+                $query->where('primary', true);
+            }
+
+            if ($state = $request->get('state')) {
+                $query->where('state', $state);
+            }
+
+            if ($country = $request->get('country')) {
+                $query->where('country', $country);
+            }
+
+            $locations = $query->orderBy('primary', 'desc')
+                ->orderBy('name')
+                ->paginate(20)
+                ->appends($request->query());
+
+            return response()->json($locations);
         }
 
-        // Apply primary filter
-        if ($request->get('primary_only')) {
-            $query->where('primary', true);
-        }
-
-        // Apply state filter
-        if ($state = $request->get('state')) {
-            $query->where('state', $state);
-        }
-
-        // Apply country filter
-        if ($country = $request->get('country')) {
-            $query->where('country', $country);
-        }
-
-        $locations = $query->orderBy('primary', 'desc')
-            ->orderBy('name')
-            ->paginate(20)
-            ->appends($request->query());
-
-        // Get unique states and countries for filters with caching
-        $cacheKey = "location_filters_client_{$client->id}";
-        $filters = \Illuminate\Support\Facades\Cache::remember($cacheKey, 3600, function () use ($client) {
-            return [
-                'states' => Location::where('client_id', $client->id)
-                    ->whereNotNull('state')
-                    ->distinct()
-                    ->orderBy('state')
-                    ->pluck('state'),
-                'countries' => Location::where('client_id', $client->id)
-                    ->whereNotNull('country')
-                    ->distinct()
-                    ->orderBy('country')
-                    ->pluck('country'),
-            ];
-        });
-
-        $states = $filters['states'];
-        $countries = $filters['countries'];
-
-        return view('clients.locations.index', compact('locations', 'client', 'states', 'countries'));
+        return view('clients.locations.index-livewire', compact('client'));
     }
 
     /**

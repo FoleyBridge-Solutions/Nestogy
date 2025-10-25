@@ -39,6 +39,7 @@ class AuthServiceProvider extends ServiceProvider
         \App\Domains\Product\Models\PricingRule::class => \App\Policies\PricingRulePolicy::class,
         \App\Domains\Contract\Models\ContractTemplate::class => \App\Policies\ContractTemplatePolicy::class,
         \App\Domains\Email\Models\EmailAccount::class => \App\Policies\EmailAccountPolicy::class,
+        \App\Domains\HR\Models\EmployeeTimeEntry::class => \App\Policies\EmployeeTimeEntryPolicy::class,
     ];
 
     /**

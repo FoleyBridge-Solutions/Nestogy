@@ -3,5 +3,5 @@
 @section('title', 'Dashboard')
 
 @section('content')
-@livewire('client.dashboard')
+@livewire('clients.dashboard')
 @endsection

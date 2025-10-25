@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
@@ -167,6 +168,21 @@ class Invoice extends Model
     public function activePaymentApplications()
     {
         return $this->paymentApplications()->where('is_active', true);
+    }
+
+    /**
+     * Get all payments applied to this invoice through PaymentApplication.
+     */
+    public function payments(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            Payment::class,
+            PaymentApplication::class,
+            'applicable_id',
+            'id',
+            'id',
+            'payment_id'
+        )->where('payment_applications.applicable_type', self::class);
     }
 
     public function creditApplications()

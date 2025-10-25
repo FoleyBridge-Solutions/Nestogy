@@ -22,7 +22,7 @@ class TicketTimeEntry extends Model
 
     protected static function newFactory()
     {
-        return \Database\Factories\TicketTimeEntryFactory::new();
+        return \Database\Factories\Domains\Ticket\Models\TicketTimeEntryFactory::new();
     }
 
     protected $fillable = [

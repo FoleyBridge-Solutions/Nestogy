@@ -7,6 +7,8 @@ use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Session\TokenMismatchException;
@@ -117,7 +119,7 @@ class Handler extends ExceptionHandler
     /**
      * Render an exception into an HTTP response
      */
-    protected function renderException(Throwable $exception, Request $request): ?Response
+    protected function renderException(Throwable $exception, Request $request): Response|JsonResponse|RedirectResponse|null
     {
         // Let custom exceptions handle themselves
         if (method_exists($exception, 'render')) {
@@ -171,7 +173,7 @@ class Handler extends ExceptionHandler
     /**
      * Handle validation exceptions
      */
-    protected function handleValidationException(ValidationException $exception, Request $request): Response
+    protected function handleValidationException(ValidationException $exception, Request $request): Response|RedirectResponse|JsonResponse
     {
         if ($request->expectsJson()) {
             return response()->json([
@@ -190,13 +192,20 @@ class Handler extends ExceptionHandler
     /**
      * Handle authentication exceptions
      */
-    protected function handleAuthenticationException(AuthenticationException $exception, Request $request): Response
+    protected function handleAuthenticationException(AuthenticationException $exception, Request $request): Response|RedirectResponse|JsonResponse
     {
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Authentication required.',
             ], 401);
+        }
+
+        $guards = $exception->guards();
+        
+        if (in_array('client', $guards) || request()->is('client-portal/*')) {
+            return redirect()->route('client.login')
+                ->with('error', 'Please log in to access this page.');
         }
 
         return redirect()->route('login')
@@ -206,7 +215,7 @@ class Handler extends ExceptionHandler
     /**
      * Handle authorization exceptions
      */
-    protected function handleAuthorizationException(AuthorizationException $exception, Request $request): Response
+    protected function handleAuthorizationException(AuthorizationException $exception, Request $request): Response|RedirectResponse|JsonResponse
     {
         if ($request->expectsJson()) {
             return response()->json([
@@ -221,7 +230,7 @@ class Handler extends ExceptionHandler
     /**
      * Handle model not found exceptions
      */
-    protected function handleModelNotFoundException(ModelNotFoundException $exception, Request $request): Response
+    protected function handleModelNotFoundException(ModelNotFoundException $exception, Request $request): Response|JsonResponse
     {
         $model = class_basename($exception->getModel());
 
@@ -240,7 +249,7 @@ class Handler extends ExceptionHandler
     /**
      * Handle 404 not found exceptions
      */
-    protected function handleNotFoundHttpException(NotFoundHttpException $exception, Request $request): Response
+    protected function handleNotFoundHttpException(NotFoundHttpException $exception, Request $request): Response|JsonResponse
     {
         if ($request->expectsJson()) {
             return response()->json([
@@ -257,7 +266,7 @@ class Handler extends ExceptionHandler
     /**
      * Handle method not allowed exceptions
      */
-    protected function handleMethodNotAllowedException(MethodNotAllowedHttpException $exception, Request $request): Response
+    protected function handleMethodNotAllowedException(MethodNotAllowedHttpException $exception, Request $request): Response|JsonResponse
     {
         if ($request->expectsJson()) {
             return response()->json([
@@ -274,7 +283,7 @@ class Handler extends ExceptionHandler
     /**
      * Handle CSRF token mismatch exceptions
      */
-    protected function handleTokenMismatchException(TokenMismatchException $exception, Request $request): Response
+    protected function handleTokenMismatchException(TokenMismatchException $exception, Request $request): Response|RedirectResponse
     {
         if ($request->expectsJson()) {
             return response()->json([
@@ -290,7 +299,7 @@ class Handler extends ExceptionHandler
     /**
      * Handle database exceptions
      */
-    protected function handleDatabaseException(QueryException $exception, Request $request): Response
+    protected function handleDatabaseException(QueryException $exception, Request $request): Response|RedirectResponse|JsonResponse
     {
         $message = $this->getDatabaseErrorMessage($exception);
 
@@ -312,7 +321,7 @@ class Handler extends ExceptionHandler
     /**
      * Handle HTTP exceptions
      */
-    protected function handleHttpException(HttpException $exception, Request $request): Response
+    protected function handleHttpException(HttpException $exception, Request $request): Response|JsonResponse
     {
         $statusCode = $exception->getStatusCode();
         $message = $this->getHttpErrorMessage($statusCode);
@@ -332,7 +341,7 @@ class Handler extends ExceptionHandler
     /**
      * Handle generic exceptions
      */
-    protected function handleGenericException(Throwable $exception, Request $request): Response
+    protected function handleGenericException(Throwable $exception, Request $request): Response|JsonResponse|RedirectResponse
     {
         $message = config('app.debug')
             ? $exception->getMessage()

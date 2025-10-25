@@ -27,11 +27,12 @@ return new class extends Migration
                         $table->boolean('is_onsite')->default(false);
                         $table->boolean('is_all_day')->default(false);
                         $table->enum('status', ['scheduled', 'in_progress', 'completed', 'cancelled', 'rescheduled'])->default('scheduled');
-                        $table->text('notes')->nullable();
-                        $table->json('reminders')->nullable();
+                         $table->text('notes')->nullable();
+                         $table->json('reminders')->nullable();
+                         $table->softDeletes();
 
-                        $table->index(['company_id', 'ticket_id']);
-                        $table->index(['company_id', 'start_time']);
+                         $table->index(['company_id', 'ticket_id']);
+                         $table->index(['company_id', 'start_time']);
         });
     }
 

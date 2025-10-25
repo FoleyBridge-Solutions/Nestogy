@@ -90,93 +90,93 @@
         </flux:card>
     @endif
 
-    <flux:card>
-        <flux:table>
-            <flux:columns>
-                <flux:column>
-                    <flux:checkbox wire:model.live="selectAll" />
-                </flux:column>
-                <flux:column>Date</flux:column>
-                <flux:column>Client</flux:column>
-                <flux:column>Ticket</flux:column>
-                <flux:column>Technician</flux:column>
-                <flux:column>Description</flux:column>
-                <flux:column>Hours</flux:column>
-                <flux:column>Status</flux:column>
-                <flux:column>Actions</flux:column>
-            </flux:columns>
+     <flux:card>
+         <flux:table>
+             <flux:table.columns>
+                 <flux:table.column>
+                     <flux:checkbox wire:model.live="selectAll" />
+                 </flux:table.column>
+                 <flux:table.column>Date</flux:table.column>
+                 <flux:table.column>Client</flux:table.column>
+                 <flux:table.column>Ticket</flux:table.column>
+                 <flux:table.column>Technician</flux:table.column>
+                 <flux:table.column>Description</flux:table.column>
+                 <flux:table.column>Hours</flux:table.column>
+                 <flux:table.column>Status</flux:table.column>
+                 <flux:table.column>Actions</flux:table.column>
+             </flux:table.columns>
 
-            <flux:rows>
-                @forelse($timeEntries as $entry)
-                    <flux:row :key="$entry->id">
-                        <flux:cell>
-                            <flux:checkbox wire:model.live="selectedEntries" value="{{ $entry->id }}" />
-                        </flux:cell>
-                        <flux:cell>
-                            {{ $entry->work_date->format('M d, Y') }}
-                        </flux:cell>
-                        <flux:cell>
-                            @if($entry->ticket && $entry->ticket->client)
-                                {{ $entry->ticket->client->name }}
-                            @else
-                                <span class="text-zinc-400">N/A</span>
-                            @endif
-                        </flux:cell>
-                        <flux:cell>
-                            @if($entry->ticket)
-                                <a href="{{ route('tickets.show', $entry->ticket) }}" class="text-blue-600 hover:text-blue-800">
-                                    #{{ $entry->ticket->number }}
-                                </a>
-                            @else
-                                <span class="text-zinc-400">N/A</span>
-                            @endif
-                        </flux:cell>
-                        <flux:cell>
-                            {{ $entry->user->name ?? 'Unknown' }}
-                        </flux:cell>
-                        <flux:cell>
-                            <div class="max-w-xs truncate" title="{{ $entry->description }}">
-                                {{ $entry->description ?? 'No description' }}
-                            </div>
-                        </flux:cell>
-                        <flux:cell>
-                            {{ number_format($entry->hours_worked, 2) }}
-                            @if($entry->billable)
-                                <flux:badge color="green" size="sm">Billable</flux:badge>
-                            @else
-                                <flux:badge color="zinc" size="sm">Non-billable</flux:badge>
-                            @endif
-                        </flux:cell>
-                        <flux:cell>
-                            @if($entry->approved_at)
-                                <flux:badge color="green">Approved</flux:badge>
-                            @elseif($entry->rejected_at)
-                                <flux:badge color="red">Rejected</flux:badge>
-                            @else
-                                <flux:badge color="amber">Pending</flux:badge>
-                            @endif
-                        </flux:cell>
-                        <flux:cell>
-                            <div class="flex gap-2">
-                                @if(!$entry->approved_at && !$entry->rejected_at)
-                                    <flux:button size="xs" variant="ghost" wire:click="$set('selectedEntries', [{{ $entry->id }}])">
-                                        Select
-                                    </flux:button>
-                                @endif
-                            </div>
-                        </flux:cell>
-                    </flux:row>
-                @empty
-                    <flux:row>
-                        <flux:cell colspan="9">
-                            <div class="py-8 text-center text-zinc-500">
-                                No uninvoiced time entries found matching your filters.
-                            </div>
-                        </flux:cell>
-                    </flux:row>
-                @endforelse
-            </flux:rows>
-        </flux:table>
+             <flux:table.rows>
+                 @forelse($timeEntries as $entry)
+                     <flux:table.row :key="$entry->id">
+                         <flux:table.cell>
+                             <flux:checkbox wire:model.live="selectedEntries" value="{{ $entry->id }}" />
+                         </flux:table.cell>
+                         <flux:table.cell>
+                             {{ $entry->work_date->format('M d, Y') }}
+                         </flux:table.cell>
+                         <flux:table.cell>
+                             @if($entry->ticket && $entry->ticket->client)
+                                 {{ $entry->ticket->client->name }}
+                             @else
+                                 <span class="text-zinc-400">N/A</span>
+                             @endif
+                         </flux:table.cell>
+                         <flux:table.cell>
+                             @if($entry->ticket)
+                                 <a href="{{ route('tickets.show', $entry->ticket) }}" class="text-blue-600 hover:text-blue-800">
+                                     #{{ $entry->ticket->number }}
+                                 </a>
+                             @else
+                                 <span class="text-zinc-400">N/A</span>
+                             @endif
+                         </flux:table.cell>
+                         <flux:table.cell>
+                             {{ $entry->user->name ?? 'Unknown' }}
+                         </flux:table.cell>
+                         <flux:table.cell>
+                             <div class="max-w-xs truncate" title="{{ $entry->description }}">
+                                 {{ $entry->description ?? 'No description' }}
+                             </div>
+                         </flux:table.cell>
+                         <flux:table.cell>
+                             {{ number_format($entry->hours_worked, 2) }}
+                             @if($entry->billable)
+                                 <flux:badge color="green" size="sm">Billable</flux:badge>
+                             @else
+                                 <flux:badge color="zinc" size="sm">Non-billable</flux:badge>
+                             @endif
+                         </flux:table.cell>
+                         <flux:table.cell>
+                             @if($entry->approved_at)
+                                 <flux:badge color="green">Approved</flux:badge>
+                             @elseif($entry->rejected_at)
+                                 <flux:badge color="red">Rejected</flux:badge>
+                             @else
+                                 <flux:badge color="amber">Pending</flux:badge>
+                             @endif
+                         </flux:table.cell>
+                         <flux:table.cell>
+                             <div class="flex gap-2">
+                                 @if(!$entry->approved_at && !$entry->rejected_at)
+                                     <flux:button size="xs" variant="ghost" wire:click="$set('selectedEntries', [{{ $entry->id }}])">
+                                         Select
+                                     </flux:button>
+                                 @endif
+                             </div>
+                         </flux:table.cell>
+                     </flux:table.row>
+                 @empty
+                     <flux:table.row>
+                         <flux:table.cell colspan="9">
+                             <div class="py-8 text-center text-zinc-500">
+                                 No uninvoiced time entries found matching your filters.
+                             </div>
+                         </flux:table.cell>
+                     </flux:table.row>
+                 @endforelse
+             </flux:table.rows>
+         </flux:table>
 
         <div class="mt-4">
             {{ $timeEntries->links() }}

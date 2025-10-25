@@ -17,6 +17,7 @@ class ContractTemplateFactory extends Factory
             'name' => $this->faker->words(3, true),
             'slug' => $this->faker->slug,
             'description' => $this->faker->optional()->sentence,
+            'template_content' => $this->faker->paragraph(5),
             'template_type' => $this->faker->randomElement(['standard', 'custom', 'compliance']),
             'category' => $this->faker->optional()->word,
             'tags' => $this->faker->optional()->words(3),

@@ -2,6 +2,8 @@
 
 namespace App\Domains\Financial\Models;
 
+use App\Domains\Product\Models\Product;
+use App\Domains\Tax\Models\Tax;
 use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -345,6 +347,22 @@ class InvoiceItem extends Model
 
 
         /**
+     * Check if this item is a VoIP service.
+     */
+    public function isVoIPService(): bool
+    {
+        return $this->service_type && str_contains($this->service_type, 'voip');
+    }
+
+    /**
+     * Scope to get VoIP service items.
+     */
+    public function scopeVoipServices($query)
+    {
+        return $query->whereNotNull('service_type')->where('service_type', 'like', '%voip%');
+    }
+
+    /**
      * Scope to get items by service type.
      */
     public function scopeByServiceType($query, string $serviceType)

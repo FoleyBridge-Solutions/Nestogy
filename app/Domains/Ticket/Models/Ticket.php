@@ -35,7 +35,7 @@ class Ticket extends Model
      */
     protected static function newFactory()
     {
-        return \Database\Factories\TicketFactory::new();
+        return \Database\Factories\Domains\Ticket\Models\TicketFactory::new();
     }
 
     protected $fillable = [

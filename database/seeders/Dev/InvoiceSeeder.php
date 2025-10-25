@@ -38,7 +38,7 @@ class InvoiceSeeder extends Seeder
                     Category::create([
                         'company_id' => $company->id,
                         'name' => $cat['name'],
-                        'type' => 'income',
+                        'type' => ['income'],
                         'color' => $cat['color'],
                     ]);
                 }

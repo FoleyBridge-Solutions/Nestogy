@@ -47,4 +47,26 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('email')->name('email.')-
     // Signature management routes
     Route::resource('signatures', \App\Domains\Email\Controllers\SignatureController::class);
     Route::post('signatures/{signature}/set-default', [\App\Domains\Email\Controllers\SignatureController::class, 'setDefault'])->name('signatures.set-default');
+
+    // Email Tracking Routes (public)
+    Route::get('/track/open/{token}', [\App\Domains\Email\Controllers\EmailTrackingController::class, 'trackOpen'])->name('track.open');
+    Route::get('/track/click/{token}', [\App\Domains\Email\Controllers\EmailTrackingController::class, 'trackClick'])->name('track.click');
+    Route::get('/view/{uuid}', [\App\Domains\Email\Controllers\EmailTrackingController::class, 'viewEmail'])->name('view');
+    Route::get('/unsubscribe/{token}', [\App\Domains\Email\Controllers\EmailTrackingController::class, 'unsubscribe'])->name('unsubscribe');
 });
+
+// Mail Queue Management
+Route::middleware(['web', 'auth', 'verified'])->prefix('mail-queue')->name('mail-queue.')->group(function () {
+    Route::get('/export/csv', [\App\Domains\Email\Controllers\MailQueueController::class, 'export'])->name('export');
+    
+    Route::get('/', [\App\Domains\Email\Controllers\MailQueueController::class, 'index'])->name('index');
+    Route::get('/{mailQueue}', [\App\Domains\Email\Controllers\MailQueueController::class, 'show'])->name('show');
+    Route::post('/{mailQueue}/retry', [\App\Domains\Email\Controllers\MailQueueController::class, 'retry'])->name('retry');
+    Route::delete('/{mailQueue}/cancel', [\App\Domains\Email\Controllers\MailQueueController::class, 'cancel'])->name('cancel');
+    Route::post('/process', [\App\Domains\Email\Controllers\MailQueueController::class, 'process'])->name('process');
+});
+
+// Mail route
+Route::middleware(['web', 'auth', 'verified'])->get('/mail', function() { 
+    return view('mail.index'); 
+})->name('mail.index');

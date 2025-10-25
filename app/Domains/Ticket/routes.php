@@ -55,6 +55,7 @@ Route::middleware(['web', 'auth', 'verified'])->group(function () {
         // EXPORT ROUTES - TicketExportController
         Route::get('{ticket}/pdf', [\App\Domains\Ticket\Controllers\TicketExportController::class, 'generatePdf'])->name('pdf');
         Route::get('export/csv', [\App\Domains\Ticket\Controllers\TicketExportController::class, 'export'])->name('export.csv');
+        Route::get('export', [\App\Domains\Ticket\Controllers\TicketExportController::class, 'export'])->name('export');
 
         // STATUS ROUTES - TicketStatusController
         Route::patch('{ticket}/status', [\App\Domains\Ticket\Controllers\TicketStatusController::class, 'updateStatus'])->name('status.update');
@@ -73,6 +74,7 @@ Route::middleware(['web', 'auth', 'verified'])->group(function () {
 
         // TIME TRACKING ROUTES - TicketTimeTrackingController
         Route::get('{ticket}/smart-tracking-info', [\App\Domains\Ticket\Controllers\TicketTimeTrackingController::class, 'getSmartTrackingInfo'])->name('smart-tracking-info');
+        Route::post('{ticket}/start-timer', [\App\Domains\Ticket\Controllers\TicketTimeTrackingController::class, 'startSmartTimer'])->name('start-timer');
         Route::post('{ticket}/start-smart-timer', [\App\Domains\Ticket\Controllers\TicketTimeTrackingController::class, 'startSmartTimer'])->name('start-smart-timer');
         Route::post('{ticket}/pause-timer', [\App\Domains\Ticket\Controllers\TicketTimeTrackingController::class, 'pauseTimer'])->name('pause-timer');
         Route::post('{ticket}/stop-timer', [\App\Domains\Ticket\Controllers\TicketTimeTrackingController::class, 'stopTimer'])->name('stop-timer');

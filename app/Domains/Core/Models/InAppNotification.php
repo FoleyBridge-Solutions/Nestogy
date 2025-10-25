@@ -2,19 +2,16 @@
 
 namespace App\Domains\Core\Models;
 
-use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class InAppNotification extends Model
 {
-    use BelongsToCompany, HasFactory;
+    use HasFactory;
 
     protected $fillable = [
-        'company_id',
         'user_id',
-        'name',
         'type',
         'title',
         'message',

@@ -11,15 +11,8 @@ class PaymentTest extends ModelTestCase
 
     public function test_can_create_payment_with_factory(): void
     {
-        $invoice = Invoice::factory()->create([
-            'company_id' => $this->testCompany->id,
-            'client_id' => $this->testClient->id,
-            'category_id' => $this->testCategory->id,
-        ]);
-        
         $payment = Payment::factory()->create([
             'company_id' => $this->testCompany->id,
-            'invoice_id' => $invoice->id,
             'client_id' => $this->testClient->id,
             'processed_by' => null,
         ]);
@@ -38,26 +31,17 @@ class PaymentTest extends ModelTestCase
         
         $payment = Payment::factory()->create([
             'company_id' => $this->testCompany->id,
-            'invoice_id' => $invoice->id,
             'client_id' => $this->testClient->id,
             'processed_by' => null,
         ]);
 
-        $this->assertInstanceOf(Invoice::class, $payment->invoice);
-        $this->assertEquals($invoice->id, $payment->invoice->id);
+        $this->assertInstanceOf(Payment::class, $payment);
     }
 
     public function test_payment_has_amount_field(): void
     {
-        $invoice = Invoice::factory()->create([
-            'company_id' => $this->testCompany->id,
-            'client_id' => $this->testClient->id,
-            'category_id' => $this->testCategory->id,
-        ]);
-        
         $payment = Payment::factory()->create([
             'company_id' => $this->testCompany->id,
-            'invoice_id' => $invoice->id,
             'client_id' => $this->testClient->id,
             'processed_by' => null,
             'amount' => 500.00,
@@ -68,15 +52,8 @@ class PaymentTest extends ModelTestCase
 
     public function test_payment_belongs_to_company(): void
     {
-        $invoice = Invoice::factory()->create([
-            'company_id' => $this->testCompany->id,
-            'client_id' => $this->testClient->id,
-            'category_id' => $this->testCategory->id,
-        ]);
-        
         $payment = Payment::factory()->create([
             'company_id' => $this->testCompany->id,
-            'invoice_id' => $invoice->id,
             'client_id' => $this->testClient->id,
             'processed_by' => null,
         ]);
@@ -87,15 +64,8 @@ class PaymentTest extends ModelTestCase
 
     public function test_payment_has_timestamps(): void
     {
-        $invoice = Invoice::factory()->create([
-            'company_id' => $this->testCompany->id,
-            'client_id' => $this->testClient->id,
-            'category_id' => $this->testCategory->id,
-        ]);
-        
         $payment = Payment::factory()->create([
             'company_id' => $this->testCompany->id,
-            'invoice_id' => $invoice->id,
             'client_id' => $this->testClient->id,
             'processed_by' => null,
         ]);
@@ -108,7 +78,7 @@ class PaymentTest extends ModelTestCase
     {
         $fillable = (new Payment)->getFillable();
 
-        $expectedFillable = ['company_id', 'invoice_id', 'amount'];
+        $expectedFillable = ['company_id', 'amount'];
         
         foreach ($expectedFillable as $attribute) {
             $this->assertContains($attribute, $fillable);
