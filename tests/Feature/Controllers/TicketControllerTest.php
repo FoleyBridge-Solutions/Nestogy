@@ -33,6 +33,11 @@ class TicketControllerTest extends TestCase
         parent::setUp();
 
         Queue::fake();
+        
+        // Clear session state for test isolation
+        if (session()->isStarted()) {
+            session()->flush();
+        }
 
         $this->company = Company::factory()->create();
 
@@ -342,6 +347,16 @@ class TicketControllerTest extends TestCase
 
         $response = $this->actingAs($this->user)->post(route('tickets.store'), $data);
 
+        // If validation passed, the ticket would be created and we'd get a redirect
+        // If validation failed, we'd have session errors
+        if ($response->status() === 302 || $response->status() === 201) {
+            // Check if ticket was actually created (shouldn't happen)
+            $createdTicket = \App\Domains\Ticket\Models\Ticket::where('client_id', $otherClient->id)->first();
+            if ($createdTicket) {
+                $this->fail('Ticket was created with client from different company - validation bypassed!');
+            }
+        }
+        
         $response->assertSessionHasErrors('client_id');
     }
 
@@ -736,6 +751,7 @@ class TicketControllerTest extends TestCase
             'company_id' => $this->user->company_id,
             'client_id' => $this->client->id,
             'number' => 12345,
+            'status' => 'open',
         ]);
 
         $response = $this->actingAs($this->user)
@@ -751,6 +767,7 @@ class TicketControllerTest extends TestCase
             'company_id' => $this->user->company_id,
             'client_id' => $this->client->id,
             'subject' => 'Email server is down',
+            'status' => 'open',
         ]);
 
         $response = $this->actingAs($this->user)
@@ -766,12 +783,14 @@ class TicketControllerTest extends TestCase
             'company_id' => $this->user->company_id,
             'client_id' => $this->client->id,
             'subject' => 'Server Issue',
+            'status' => 'open',
         ]);
 
         $ticket2 = Ticket::factory()->create([
             'company_id' => $this->user->company_id,
             'client_id' => $this->client->id,
             'subject' => 'Server Problem',
+            'status' => 'open',
         ]);
 
         $response = $this->actingAs($this->user)
