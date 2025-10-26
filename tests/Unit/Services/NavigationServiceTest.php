@@ -899,7 +899,7 @@ class NavigationServiceTest extends TestCase
     public function test_breadcrumbs_show_client_name_on_clients_index_with_selection(): void
     {
         NavigationService::setSelectedClient($this->client->id);
-        Route::shouldReceive('currentRouteName')->andReturn('clients.index');
+        Route::shouldReceive('currentRouteName')->andReturn('clients.index')->byDefault();
         
         $breadcrumbs = NavigationService::getBreadcrumbs();
         
@@ -911,7 +911,7 @@ class NavigationServiceTest extends TestCase
     public function test_breadcrumbs_show_client_and_domain_for_tickets(): void
     {
         NavigationService::setSelectedClient($this->client->id);
-        Route::shouldReceive('currentRouteName')->andReturn('tickets.index');
+        Route::shouldReceive('currentRouteName')->andReturn('tickets.index')->byDefault();
         
         $breadcrumbs = NavigationService::getBreadcrumbs();
         
