@@ -18,7 +18,9 @@ $tickets = Ticket::all();
         foreach ($tickets as $ticket) {
             $users = User::where('company_id', $ticket->company_id)->get();
             
-            if ($users->isEmpty()) continue;
+            if ($users->isEmpty()) {
+                continue;
+            }
             
             $watcherCount = rand(1, 3);
             $selectedUsers = $users->random(min($watcherCount, $users->count()));
