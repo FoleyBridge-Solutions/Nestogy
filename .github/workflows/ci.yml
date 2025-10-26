@@ -88,15 +88,8 @@ jobs:
           echo "REDIS_HOST=127.0.0.1" >> .env
           echo "REDIS_PORT=6379" >> .env
 
-      - name: Configure PostgreSQL for many tables
-        run: |
-          PGPASSWORD=nestogy_dev_pass psql -h 127.0.0.1 -U nestogy -d postgres -c "ALTER SYSTEM SET max_locks_per_transaction = 1024;"
-          PGPASSWORD=nestogy_dev_pass psql -h 127.0.0.1 -U nestogy -d postgres -c "ALTER SYSTEM SET shared_buffers = '256MB';"
-          docker restart $(docker ps -q --filter ancestor=postgres:15)
-          sleep 10
-
       - name: Run tests with coverage
-        run: php artisan test --parallel --coverage-clover=coverage.xml
+        run: php artisan test --parallel --processes=2 --coverage-clover=coverage.xml
 
       - name: Verify coverage file
         run: |
