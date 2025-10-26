@@ -17,10 +17,7 @@ trait RefreshesDatabase
     protected function refreshTestDatabase(): void
     {
         if (! RefreshDatabaseState::$migrated) {
-            $this->artisan('migrate:fresh', array_merge(
-                $this->migrateFreshUsing(),
-                ['--quiet' => true]
-            ));
+            $this->artisan('migrate', ['--quiet' => true]);
 
             $this->app[Kernel::class]->setArtisan(null);
 
