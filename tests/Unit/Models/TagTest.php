@@ -13,10 +13,6 @@ class TagTest extends TestCase
 
     public function test_can_create_tag_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\TagFactory')) {
-            $this->markTestSkipped('TagFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = Tag::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class TagTest extends TestCase
 
     public function test_tag_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\TagFactory')) {
-            $this->markTestSkipped('TagFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = Tag::factory()->create(['company_id' => $company->id]);
 

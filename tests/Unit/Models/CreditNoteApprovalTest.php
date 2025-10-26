@@ -13,10 +13,6 @@ class CreditNoteApprovalTest extends TestCase
 
     public function test_can_create_credit_note_approval_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\CreditNoteApprovalFactory')) {
-            $this->markTestSkipped('CreditNoteApprovalFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = CreditNoteApproval::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class CreditNoteApprovalTest extends TestCase
 
     public function test_credit_note_approval_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\CreditNoteApprovalFactory')) {
-            $this->markTestSkipped('CreditNoteApprovalFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = CreditNoteApproval::factory()->create(['company_id' => $company->id]);
 

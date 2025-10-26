@@ -13,10 +13,6 @@ class AssetTest extends TestCase
 
     public function test_can_create_asset_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\AssetFactory')) {
-            $this->markTestSkipped('AssetFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = Asset::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class AssetTest extends TestCase
 
     public function test_asset_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\AssetFactory')) {
-            $this->markTestSkipped('AssetFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = Asset::factory()->create(['company_id' => $company->id]);
 

@@ -13,10 +13,6 @@ class CompanyCustomizationTest extends TestCase
 
     public function test_can_create_company_customization_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\CompanyCustomizationFactory')) {
-            $this->markTestSkipped('CompanyCustomizationFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = CompanyCustomization::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class CompanyCustomizationTest extends TestCase
 
     public function test_company_customization_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\CompanyCustomizationFactory')) {
-            $this->markTestSkipped('CompanyCustomizationFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = CompanyCustomization::factory()->create(['company_id' => $company->id]);
 

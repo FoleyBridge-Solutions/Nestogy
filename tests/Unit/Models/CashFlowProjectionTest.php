@@ -13,10 +13,6 @@ class CashFlowProjectionTest extends TestCase
 
     public function test_can_create_cash_flow_projection_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\CashFlowProjectionFactory')) {
-            $this->markTestSkipped('CashFlowProjectionFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = CashFlowProjection::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class CashFlowProjectionTest extends TestCase
 
     public function test_cash_flow_projection_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\CashFlowProjectionFactory')) {
-            $this->markTestSkipped('CashFlowProjectionFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = CashFlowProjection::factory()->create(['company_id' => $company->id]);
 

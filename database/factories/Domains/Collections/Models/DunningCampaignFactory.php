@@ -15,8 +15,8 @@ class DunningCampaignFactory extends Factory
             'company_id' => \App\Domains\Company\Models\Company::factory(),
             'name' => $this->faker->words(3, true),
             'status' => 'active',
+            'campaign_type' => 'automatic',
             'created_by' => \App\Domains\Core\Models\User::factory(),
-            'updated_by' => \App\Domains\Core\Models\User::factory(),
         ];
     }
 }

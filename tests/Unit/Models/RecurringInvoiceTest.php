@@ -13,10 +13,6 @@ class RecurringInvoiceTest extends TestCase
 
     public function test_can_create_recurring_invoice_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\RecurringInvoiceFactory')) {
-            $this->markTestSkipped('RecurringInvoiceFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = RecurringInvoice::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class RecurringInvoiceTest extends TestCase
 
     public function test_recurring_invoice_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\RecurringInvoiceFactory')) {
-            $this->markTestSkipped('RecurringInvoiceFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = RecurringInvoice::factory()->create(['company_id' => $company->id]);
 

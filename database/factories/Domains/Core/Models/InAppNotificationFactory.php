@@ -18,7 +18,8 @@ class InAppNotificationFactory extends Factory
             'message' => $this->faker->sentence(),
             'link' => $this->faker->optional()->url(),
             'icon' => $this->faker->optional()->randomElement(['fas fa-check', 'fas fa-exclamation', 'fas fa-times']),
-            'color' => $this->faker->randomElement(['blue', 'green', 'red', 'yellow']),
+            'color' => 'blue',
+            'is_read' => false,
         ];
     }
 }

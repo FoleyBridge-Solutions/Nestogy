@@ -13,10 +13,6 @@ class AccountHoldTest extends TestCase
 
     public function test_can_create_account_hold_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\AccountHoldFactory')) {
-            $this->markTestSkipped('AccountHoldFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = AccountHold::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class AccountHoldTest extends TestCase
 
     public function test_account_hold_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\AccountHoldFactory')) {
-            $this->markTestSkipped('AccountHoldFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = AccountHold::factory()->create(['company_id' => $company->id]);
 

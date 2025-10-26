@@ -80,6 +80,10 @@ class TimeClockService
         $entry->clock_out_longitude = $options['longitude'] ?? null;
         $entry->notes = $options['notes'] ?? $entry->notes;
 
+        if (isset($options['break_minutes'])) {
+            $entry->break_minutes = (int) $options['break_minutes'];
+        }
+
         if (isset($options['is_break']) && $options['is_break']) {
             $metadata = $entry->metadata ?? [];
             $metadata['is_break'] = true;
@@ -89,10 +93,10 @@ class TimeClockService
 
         $breakdown = $this->overtimeService->calculateOvertimeMinutes($entry, $hrSettings);
 
-        $entry->total_minutes = $breakdown['total_minutes'];
-        $entry->regular_minutes = $breakdown['regular_minutes'];
-        $entry->overtime_minutes = $breakdown['overtime_minutes'];
-        $entry->break_minutes = $breakdown['break_minutes'];
+         $entry->total_minutes = $breakdown['total_minutes'];
+         $entry->regular_minutes = $breakdown['regular_minutes'];
+         $entry->overtime_minutes = $breakdown['overtime_minutes'];
+         $entry->break_minutes = (int) $breakdown['break_minutes'];
 
         if ($hrSettings->requireApproval() && $entry->total_minutes > ($hrSettings->getApprovalThresholdHours() * 60)) {
             $entry->status = EmployeeTimeEntry::STATUS_COMPLETED;

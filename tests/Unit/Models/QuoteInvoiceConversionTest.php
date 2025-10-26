@@ -13,10 +13,6 @@ class QuoteInvoiceConversionTest extends TestCase
 
     public function test_can_create_quote_invoice_conversion_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\QuoteInvoiceConversionFactory')) {
-            $this->markTestSkipped('QuoteInvoiceConversionFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = QuoteInvoiceConversion::factory()->create(['company_id' => $company->id]);
 

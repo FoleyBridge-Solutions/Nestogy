@@ -13,14 +13,12 @@ class ComplianceCheckFactory extends Factory
     {
         return [
             'company_id' => \App\Domains\Company\Models\Company::factory(),
-            'name' => $this->faker->words(3, true),
-            'evidence_documents' => json_encode([]),
-            'checked_by' => \App\Domains\Core\Models\User::factory(),
-            'checked_at' => $this->faker->dateTimeBetween('-30 days', 'now'),
-            'next_check_date' => $this->faker->optional()->dateTimeBetween('now', '+180 days'),
-            'compliance_score' => $this->faker->optional()->numberBetween(0, 100),
-            'risk_level' => $this->faker->optional()->randomElement(['low', 'medium', 'high', 'critical']),
-            'metadata' => json_encode([]),
+            'compliance_requirement_id' => \App\Domains\Tax\Models\ComplianceRequirement::factory(),
+            'check_type' => 'manual',
+            'status' => 'compliant',
+            'checked_at' => now(),
+            'compliance_score' => 95.0,
+            'risk_level' => 'low',
         ];
     }
 }

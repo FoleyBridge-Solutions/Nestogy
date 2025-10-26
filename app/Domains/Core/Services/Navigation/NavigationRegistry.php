@@ -43,6 +43,11 @@ class NavigationRegistry
         return static::$registry;
     }
 
+    public static function clear(): void
+    {
+        static::$registry = [];
+    }
+
     public static function boot(): void
     {
         static::registerFinancialDomain();

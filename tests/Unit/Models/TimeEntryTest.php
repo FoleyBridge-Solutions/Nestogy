@@ -13,10 +13,6 @@ class TimeEntryTest extends TestCase
 
     public function test_can_create_time_entry_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\TimeEntryFactory')) {
-            $this->markTestSkipped('TimeEntryFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = TimeEntry::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class TimeEntryTest extends TestCase
 
     public function test_time_entry_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\TimeEntryFactory')) {
-            $this->markTestSkipped('TimeEntryFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = TimeEntry::factory()->create(['company_id' => $company->id]);
 

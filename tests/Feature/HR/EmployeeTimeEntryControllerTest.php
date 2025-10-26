@@ -137,8 +137,7 @@ class EmployeeTimeEntryControllerTest extends TestCase
                 'break_minutes' => 30,
             ]);
 
-        $response->assertRedirect();
-        $response->assertSessionHas('error');
+        $response->assertForbidden();
     }
 
     public function test_destroy_deletes_time_entry(): void
@@ -162,8 +161,7 @@ class EmployeeTimeEntryControllerTest extends TestCase
         $response = $this->actingAs($this->manager)
             ->delete(route('hr.time-entries.destroy', $this->timeEntry));
 
-        $response->assertRedirect();
-        $response->assertSessionHas('error');
+        $response->assertForbidden();
 
         $this->assertDatabaseHas('employee_time_entries', [
             'id' => $this->timeEntry->id,

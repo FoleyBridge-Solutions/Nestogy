@@ -13,10 +13,6 @@ class QuoteApprovalTest extends TestCase
 
     public function test_can_create_quote_approval_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\QuoteApprovalFactory')) {
-            $this->markTestSkipped('QuoteApprovalFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = QuoteApproval::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class QuoteApprovalTest extends TestCase
 
     public function test_quote_approval_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\QuoteApprovalFactory')) {
-            $this->markTestSkipped('QuoteApprovalFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = QuoteApproval::factory()->create(['company_id' => $company->id]);
 

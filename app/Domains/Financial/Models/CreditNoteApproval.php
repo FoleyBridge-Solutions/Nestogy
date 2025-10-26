@@ -1,6 +1,8 @@
 <?php
 
 namespace App\Domains\Financial\Models;
+use App\Domains\Financial\Models\CreditNote;
+use App\Domains\Company\Models\Company;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

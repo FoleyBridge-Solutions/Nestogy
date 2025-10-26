@@ -11,7 +11,7 @@ class DashboardWidgetFactory extends Factory
 
     public function definition(): array
     {
-        return ['company_id' => \App\Domains\Company\Models\Company::factory(),
+        return [
             'widget_id' => 'widget-' . $this->faker->unique()->uuid,
             'name' => $this->faker->words(3, true),
             'category' => $this->faker->randomElement(['statistics', 'charts', 'tables', 'alerts']),
@@ -23,8 +23,6 @@ class DashboardWidgetFactory extends Factory
             'min_refresh_interval' => $this->faker->numberBetween(30, 300),
             'required_permissions' => json_encode([]),
             'is_active' => $this->faker->boolean(70),
-            'widget_type' => $this->faker->randomElement(['chart', 'stat', 'table']),
-            'widget_name' => $this->faker->words(3, true),
         ];
     }
 }

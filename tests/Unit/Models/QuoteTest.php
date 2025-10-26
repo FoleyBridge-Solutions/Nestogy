@@ -13,10 +13,6 @@ class QuoteTest extends TestCase
 
     public function test_can_create_quote_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\QuoteFactory')) {
-            $this->markTestSkipped('QuoteFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = Quote::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class QuoteTest extends TestCase
 
     public function test_quote_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\QuoteFactory')) {
-            $this->markTestSkipped('QuoteFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = Quote::factory()->create(['company_id' => $company->id]);
 

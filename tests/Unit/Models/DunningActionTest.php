@@ -13,10 +13,6 @@ class DunningActionTest extends TestCase
 
     public function test_can_create_dunning_action_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\DunningActionFactory')) {
-            $this->markTestSkipped('DunningActionFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = DunningAction::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class DunningActionTest extends TestCase
 
     public function test_dunning_action_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\DunningActionFactory')) {
-            $this->markTestSkipped('DunningActionFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = DunningAction::factory()->create(['company_id' => $company->id]);
 

@@ -643,24 +643,25 @@ class CollectionNote extends Model
         parent::boot();
 
         static::creating(function ($note) {
-            if (! $note->created_by) {
-                $note->created_by = auth()->id() ?? 1;
-            }
+            // Comment out fields that don't exist in simplified schema
+            // if (! $note->created_by) {
+            //     $note->created_by = auth()->id() ?? 1;
+            // }
 
             // Auto-populate financial context if not provided
-            if ($note->invoice_id && ! $note->invoice_balance_at_time) {
-                $invoice = Invoice::find($note->invoice_id);
-                if ($invoice) {
-                    $note->invoice_balance_at_time = $invoice->getBalance();
-                    $note->days_overdue_at_time = $invoice->isOverdue() ?
-                        Carbon::now()->diffInDays($invoice->due_date) : 0;
-                    $note->total_account_balance = $invoice->client->getBalance();
-                }
+            if (isset($note->invoice_id) && ! isset($note->invoice_balance_at_time)) {
+                // $invoice = Invoice::find($note->invoice_id);
+                // if ($invoice) {
+                //     $note->invoice_balance_at_time = $invoice->getBalance();
+                //     $note->days_overdue_at_time = $invoice->isOverdue() ?
+                //         Carbon::now()->diffInDays($invoice->due_date) : 0;
+                //     $note->total_account_balance = $invoice->client->getBalance();
+                // }
             }
 
             // Calculate billable amount
-            if ($note->billable_time) {
-                $note->billable_amount = $note->calculateBillableAmount();
+            if (isset($note->billable_time) && $note->billable_time) {
+                // $note->billable_amount = $note->calculateBillableAmount();
             }
         });
 

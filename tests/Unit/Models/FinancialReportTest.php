@@ -13,10 +13,6 @@ class FinancialReportTest extends TestCase
 
     public function test_can_create_financial_report_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\FinancialReportFactory')) {
-            $this->markTestSkipped('FinancialReportFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = FinancialReport::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class FinancialReportTest extends TestCase
 
     public function test_financial_report_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\FinancialReportFactory')) {
-            $this->markTestSkipped('FinancialReportFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = FinancialReport::factory()->create(['company_id' => $company->id]);
 

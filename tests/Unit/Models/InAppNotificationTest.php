@@ -13,10 +13,6 @@ class InAppNotificationTest extends TestCase
 
     public function test_can_create_in_app_notification_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\InAppNotificationFactory')) {
-            $this->markTestSkipped('InAppNotificationFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = InAppNotification::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class InAppNotificationTest extends TestCase
 
     public function test_in_app_notification_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\InAppNotificationFactory')) {
-            $this->markTestSkipped('InAppNotificationFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = InAppNotification::factory()->create(['company_id' => $company->id]);
 

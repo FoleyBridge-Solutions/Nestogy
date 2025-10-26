@@ -13,10 +13,6 @@ class ServiceTaxRateTest extends TestCase
 
     public function test_can_create_service_tax_rate_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\ServiceTaxRateFactory')) {
-            $this->markTestSkipped('ServiceTaxRateFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = ServiceTaxRate::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class ServiceTaxRateTest extends TestCase
 
     public function test_service_tax_rate_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\ServiceTaxRateFactory')) {
-            $this->markTestSkipped('ServiceTaxRateFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = ServiceTaxRate::factory()->create(['company_id' => $company->id]);
 

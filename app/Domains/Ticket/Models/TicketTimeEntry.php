@@ -1,8 +1,8 @@
 <?php
 
 namespace App\Domains\Ticket\Models;
-
 use App\Domains\Core\Models\User;
+
 use App\Traits\BelongsToCompany;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

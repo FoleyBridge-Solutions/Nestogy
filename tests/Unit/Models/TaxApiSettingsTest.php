@@ -13,10 +13,6 @@ class TaxApiSettingsTest extends TestCase
 
     public function test_can_create_tax_api_settings_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\TaxApiSettingsFactory')) {
-            $this->markTestSkipped('TaxApiSettingsFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = TaxApiSettings::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class TaxApiSettingsTest extends TestCase
 
     public function test_tax_api_settings_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\TaxApiSettingsFactory')) {
-            $this->markTestSkipped('TaxApiSettingsFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = TaxApiSettings::factory()->create(['company_id' => $company->id]);
 

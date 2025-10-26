@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Domains\Financial\Models;
+use App\Domains\Core\Models\User;
 
 use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

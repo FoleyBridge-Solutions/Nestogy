@@ -13,9 +13,11 @@ class CreditNoteFactory extends Factory
     {
         return [
             'company_id' => \App\Domains\Company\Models\Company::factory(),
-            'name' => $this->faker->words(3, true),
-            'number' => $this->faker->unique()->numerify('CN-######'),
+            'client_id' => \App\Domains\Client\Models\Client::factory(),
             'created_by' => \App\Domains\Core\Models\User::factory(),
+            'number' => $this->faker->unique()->numerify('CN-######'),
+            'type' => 'manual',
+            'status' => 'draft',
             'credit_date' => $this->faker->date(),
             'total_amount' => $this->faker->randomFloat(2, 10, 1000),
         ];

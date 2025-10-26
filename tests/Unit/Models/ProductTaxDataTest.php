@@ -13,10 +13,6 @@ class ProductTaxDataTest extends TestCase
 
     public function test_can_create_product_tax_data_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\ProductTaxDataFactory')) {
-            $this->markTestSkipped('ProductTaxDataFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = ProductTaxData::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class ProductTaxDataTest extends TestCase
 
     public function test_product_tax_data_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\ProductTaxDataFactory')) {
-            $this->markTestSkipped('ProductTaxDataFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = ProductTaxData::factory()->create(['company_id' => $company->id]);
 

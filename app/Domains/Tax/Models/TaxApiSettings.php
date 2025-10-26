@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Domains\Tax\Models;
+use App\Domains\Company\Models\Company;
 
 use App\Traits\BelongsToCompany;
 use Carbon\Carbon;

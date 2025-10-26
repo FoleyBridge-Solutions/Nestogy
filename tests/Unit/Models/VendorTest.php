@@ -13,10 +13,6 @@ class VendorTest extends TestCase
 
     public function test_can_create_vendor_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\VendorFactory')) {
-            $this->markTestSkipped('VendorFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = Vendor::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class VendorTest extends TestCase
 
     public function test_vendor_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\VendorFactory')) {
-            $this->markTestSkipped('VendorFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = Vendor::factory()->create(['company_id' => $company->id]);
 

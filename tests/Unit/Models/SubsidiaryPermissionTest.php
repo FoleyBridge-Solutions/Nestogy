@@ -13,10 +13,6 @@ class SubsidiaryPermissionTest extends TestCase
 
     public function test_can_create_subsidiary_permission_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\SubsidiaryPermissionFactory')) {
-            $this->markTestSkipped('SubsidiaryPermissionFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = SubsidiaryPermission::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class SubsidiaryPermissionTest extends TestCase
 
     public function test_subsidiary_permission_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\SubsidiaryPermissionFactory')) {
-            $this->markTestSkipped('SubsidiaryPermissionFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = SubsidiaryPermission::factory()->create(['company_id' => $company->id]);
 

@@ -24,19 +24,19 @@ class OvertimeCalculationService
 
         // Check if employee is exempt from overtime
         if ($entry->user && $entry->user->is_overtime_exempt) {
-            $totalMinutes = $entry->clock_in->diffInMinutes($entry->clock_out);
-            $breakMinutes = $entry->break_minutes ?? 0;
+            $totalMinutes = (int) $entry->clock_in->diffInMinutes($entry->clock_out);
+            $breakMinutes = (int) ($entry->break_minutes ?? 0);
             $workMinutes = $totalMinutes - $breakMinutes;
 
             return [
-                'total_minutes' => $workMinutes,
-                'regular_minutes' => $workMinutes,
+                'total_minutes' => (int) $workMinutes,
+                'regular_minutes' => (int) $workMinutes,
                 'overtime_minutes' => 0,
-                'break_minutes' => $breakMinutes,
+                'break_minutes' => (int) $breakMinutes,
             ];
         }
 
-        $totalMinutes = $entry->clock_in->diffInMinutes($entry->clock_out);
+        $totalMinutes = (int) $entry->clock_in->diffInMinutes($entry->clock_out);
 
         $breakMinutes = 0;
         if ($hrSettings->autoDeductBreaks()) {
@@ -45,17 +45,17 @@ class OvertimeCalculationService
                 $breakMinutes = $hrSettings->getRequiredBreakMinutes();
             }
         } else {
-            $breakMinutes = $entry->break_minutes ?? 0;
+            $breakMinutes = (int) ($entry->break_minutes ?? 0);
         }
 
         $workMinutes = $totalMinutes - $breakMinutes;
 
         // Store total work minutes - overtime will be calculated at week level
         return [
-            'total_minutes' => $workMinutes,
-            'regular_minutes' => $workMinutes,
+            'total_minutes' => (int) $workMinutes,
+            'regular_minutes' => (int) $workMinutes,
             'overtime_minutes' => 0,
-            'break_minutes' => $breakMinutes,
+            'break_minutes' => (int) $breakMinutes,
         ];
     }
 

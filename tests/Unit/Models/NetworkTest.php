@@ -13,10 +13,6 @@ class NetworkTest extends TestCase
 
     public function test_can_create_network_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\NetworkFactory')) {
-            $this->markTestSkipped('NetworkFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = Network::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class NetworkTest extends TestCase
 
     public function test_network_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\NetworkFactory')) {
-            $this->markTestSkipped('NetworkFactory does not exist');
-        }
-
         $model = Network::factory()->create();
 
         $this->assertInstanceOf(\App\Domains\Client\Models\Client::class, $model->client);

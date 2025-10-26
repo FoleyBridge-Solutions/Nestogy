@@ -13,8 +13,16 @@ class UsageAlertFactory extends Factory
     {
         return [
             'company_id' => \App\Domains\Company\Models\Company::factory(),
-            'name' => $this->faker->words(3, true),
-            'alert_created_date' => $this->faker->dateTimeBetween('-30 days', 'now'),
+            'client_id' => \App\Domains\Client\Models\Client::factory(),
+            'alert_name' => $this->faker->words(3, true),
+            'alert_code' => 'ALERT-'.strtoupper(uniqid()),
+            'alert_type' => 'threshold',
+            'usage_type' => 'voice',
+            'threshold_type' => 'percentage',
+            'threshold_value' => 80.0,
+            'threshold_unit' => 'percent',
+            'is_active' => true,
+            'alert_status' => 'normal',
         ];
     }
 }

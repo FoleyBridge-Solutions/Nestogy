@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Domains\Client\Models;
+use App\Domains\Core\Models\User;
 
 use App\Domains\Client\Models\Client;
 

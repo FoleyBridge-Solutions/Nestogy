@@ -13,10 +13,6 @@ class PaymentPlanTest extends TestCase
 
     public function test_can_create_payment_plan_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\PaymentPlanFactory')) {
-            $this->markTestSkipped('PaymentPlanFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = PaymentPlan::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class PaymentPlanTest extends TestCase
 
     public function test_payment_plan_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\PaymentPlanFactory')) {
-            $this->markTestSkipped('PaymentPlanFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = PaymentPlan::factory()->create(['company_id' => $company->id]);
 

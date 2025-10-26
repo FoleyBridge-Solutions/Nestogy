@@ -13,10 +13,6 @@ class LocationTest extends TestCase
 
     public function test_can_create_location_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\LocationFactory')) {
-            $this->markTestSkipped('LocationFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = Location::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class LocationTest extends TestCase
 
     public function test_location_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\LocationFactory')) {
-            $this->markTestSkipped('LocationFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = Location::factory()->create(['company_id' => $company->id]);
 

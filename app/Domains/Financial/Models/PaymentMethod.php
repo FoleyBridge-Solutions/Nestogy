@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Domains\Financial\Models;
+use App\Domains\Company\Models\Company;
 
 use App\Domains\Client\Models\Client;
 

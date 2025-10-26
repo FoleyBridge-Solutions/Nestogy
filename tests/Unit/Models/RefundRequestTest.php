@@ -13,10 +13,6 @@ class RefundRequestTest extends TestCase
 
     public function test_can_create_refund_request_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\RefundRequestFactory')) {
-            $this->markTestSkipped('RefundRequestFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = RefundRequest::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class RefundRequestTest extends TestCase
 
     public function test_refund_request_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\RefundRequestFactory')) {
-            $this->markTestSkipped('RefundRequestFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = RefundRequest::factory()->create(['company_id' => $company->id]);
 

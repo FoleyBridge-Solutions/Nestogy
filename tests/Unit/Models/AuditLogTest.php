@@ -13,10 +13,6 @@ class AuditLogTest extends TestCase
 
     public function test_can_create_audit_log_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\AuditLogFactory')) {
-            $this->markTestSkipped('AuditLogFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = AuditLog::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class AuditLogTest extends TestCase
 
     public function test_audit_log_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\AuditLogFactory')) {
-            $this->markTestSkipped('AuditLogFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = AuditLog::factory()->create(['company_id' => $company->id]);
 

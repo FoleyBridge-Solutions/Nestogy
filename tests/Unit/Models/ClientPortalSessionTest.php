@@ -13,10 +13,6 @@ class ClientPortalSessionTest extends TestCase
 
     public function test_can_create_client_portal_session_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\ClientPortalSessionFactory')) {
-            $this->markTestSkipped('ClientPortalSessionFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = ClientPortalSession::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class ClientPortalSessionTest extends TestCase
 
     public function test_client_portal_session_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\ClientPortalSessionFactory')) {
-            $this->markTestSkipped('ClientPortalSessionFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = ClientPortalSession::factory()->create(['company_id' => $company->id]);
 

@@ -13,9 +13,13 @@ class RefundRequestFactory extends Factory
     {
         return [
             'company_id' => \App\Domains\Company\Models\Company::factory(),
-            'name' => $this->faker->words(3, true),
+            'client_id' => \App\Domains\Client\Models\Client::factory(),
             'requested_by' => \App\Domains\Core\Models\User::factory(),
-            'requested_at' => $this->faker->dateTimeBetween('-30 days', 'now'),
+            'request_number' => $this->faker->unique()->numerify('RR-######'),
+            'refund_type' => 'credit_refund',
+            'refund_method' => 'bank_transfer',
+            'status' => 'pending',
+            'requested_amount' => $this->faker->randomFloat(2, 10, 1000),
         ];
     }
 }

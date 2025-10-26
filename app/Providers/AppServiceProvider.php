@@ -121,6 +121,9 @@ class AppServiceProvider extends ServiceProvider
                 '--quiet' => true,
             ]);
         });
+
+        // ParallelTesting::setUpTestCase is causing timeouts when tests run in isolation
+        // The registry clearing is handled in individual tests that need it
     }
 
     /**

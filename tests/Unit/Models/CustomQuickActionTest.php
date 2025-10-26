@@ -13,10 +13,6 @@ class CustomQuickActionTest extends TestCase
 
     public function test_can_create_custom_quick_action_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\CustomQuickActionFactory')) {
-            $this->markTestSkipped('CustomQuickActionFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = CustomQuickAction::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class CustomQuickActionTest extends TestCase
 
     public function test_custom_quick_action_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\CustomQuickActionFactory')) {
-            $this->markTestSkipped('CustomQuickActionFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = CustomQuickAction::factory()->create(['company_id' => $company->id]);
 

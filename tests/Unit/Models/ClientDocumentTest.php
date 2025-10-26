@@ -13,10 +13,6 @@ class ClientDocumentTest extends TestCase
 
     public function test_can_create_client_document_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\ClientDocumentFactory')) {
-            $this->markTestSkipped('ClientDocumentFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = ClientDocument::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class ClientDocumentTest extends TestCase
 
     public function test_client_document_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\ClientDocumentFactory')) {
-            $this->markTestSkipped('ClientDocumentFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = ClientDocument::factory()->create(['company_id' => $company->id]);
 

@@ -6,6 +6,7 @@ use App\Domains\Financial\Models\Category;
 use App\Domains\Company\Models\Company;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use PHPUnit\Framework\Attributes\Test;
 
 class CategoryTest extends TestCase
 {
@@ -19,7 +20,7 @@ class CategoryTest extends TestCase
         $this->company = Company::factory()->create();
     }
 
-    /** @test */
+    #[Test]
     public function category_has_correct_fillable_fields()
     {
         $fillable = [
@@ -42,7 +43,7 @@ class CategoryTest extends TestCase
         $this->assertEquals($fillable, $category->getFillable());
     }
 
-    /** @test */
+    #[Test]
     public function metadata_cast_to_array()
     {
         $category = Category::factory()->create([
@@ -54,7 +55,7 @@ class CategoryTest extends TestCase
         $this->assertEquals('value', $category->metadata['key']);
     }
 
-    /** @test */
+    #[Test]
     public function scope_expense_categories_filters_correctly()
     {
         Category::factory()->create([
@@ -75,7 +76,7 @@ class CategoryTest extends TestCase
         $this->assertEquals('Expense Cat', $expenseCategories->first()->name);
     }
 
-    /** @test */
+    #[Test]
     public function scope_active_filters_correctly()
     {
         Category::factory()->create([
@@ -96,7 +97,7 @@ class CategoryTest extends TestCase
         $this->assertEquals('Active', $activeCategories->first()->name);
     }
 
-    /** @test */
+    #[Test]
     public function scope_by_type_filters_correctly()
     {
         Category::factory()->create([
@@ -114,7 +115,7 @@ class CategoryTest extends TestCase
         $this->assertCount(1, $productCategories);
     }
 
-    /** @test */
+    #[Test]
     public function get_expense_settings_returns_correct_structure()
     {
         $category = Category::factory()->create([
@@ -137,7 +138,7 @@ class CategoryTest extends TestCase
         $this->assertEquals(15.00, $settings->markup_percentage_default);
     }
 
-    /** @test */
+    #[Test]
     public function get_expense_settings_returns_null_for_non_expense_type()
     {
         $category = Category::factory()->create([
@@ -150,7 +151,7 @@ class CategoryTest extends TestCase
         $this->assertNull($settings);
     }
 
-    /** @test */
+    #[Test]
     public function requires_approval_for_amount_works_correctly()
     {
         $category = Category::factory()->create([
@@ -166,7 +167,7 @@ class CategoryTest extends TestCase
         $this->assertFalse($category->requiresApprovalForAmount(400.00));
     }
 
-    /** @test */
+    #[Test]
     public function requires_approval_returns_false_when_not_required()
     {
         $category = Category::factory()->create([
@@ -180,7 +181,7 @@ class CategoryTest extends TestCase
         $this->assertFalse($category->requiresApprovalForAmount(1000.00));
     }
 
-    /** @test */
+    #[Test]
     public function requires_approval_returns_false_for_non_expense_type()
     {
         $category = Category::factory()->create([
@@ -191,7 +192,7 @@ class CategoryTest extends TestCase
         $this->assertFalse($category->requiresApprovalForAmount(1000.00));
     }
 
-    /** @test */
+    #[Test]
     public function get_type_label_returns_correct_label()
     {
         $category = Category::factory()->create([
@@ -202,7 +203,7 @@ class CategoryTest extends TestCase
         $this->assertEquals('Product', $category->getTypeLabel());
     }
 
-    /** @test */
+    #[Test]
     public function get_color_returns_default_when_not_set()
     {
         $category = Category::factory()->create([
@@ -215,7 +216,7 @@ class CategoryTest extends TestCase
         $this->assertEquals($defaultColor, $category->getColor());
     }
 
-    /** @test */
+    #[Test]
     public function get_color_returns_custom_color_when_set()
     {
         $category = Category::factory()->create([
@@ -226,7 +227,7 @@ class CategoryTest extends TestCase
         $this->assertEquals('#FF5733', $category->getColor());
     }
 
-    /** @test */
+    #[Test]
     public function parent_relationship_works()
     {
         $parent = Category::factory()->create([
@@ -244,7 +245,7 @@ class CategoryTest extends TestCase
         $this->assertTrue($child->parent->is($parent));
     }
 
-    /** @test */
+    #[Test]
     public function children_relationship_works()
     {
         $parent = Category::factory()->create([
@@ -260,7 +261,7 @@ class CategoryTest extends TestCase
         $this->assertTrue($parent->children->first()->is($child));
     }
 
-    /** @test */
+    #[Test]
     public function scope_ordered_sorts_by_sort_order()
     {
         Category::factory()->create([
@@ -286,7 +287,7 @@ class CategoryTest extends TestCase
         $this->assertEquals(['A', 'B', 'C'], $categories);
     }
 
-    /** @test */
+    #[Test]
     public function has_children_returns_true_when_category_has_children()
     {
         $parent = Category::factory()->create([
@@ -301,7 +302,7 @@ class CategoryTest extends TestCase
         $this->assertTrue($parent->hasChildren());
     }
 
-    /** @test */
+    #[Test]
     public function has_children_returns_false_when_category_has_no_children()
     {
         $category = Category::factory()->create([
@@ -311,7 +312,7 @@ class CategoryTest extends TestCase
         $this->assertFalse($category->hasChildren());
     }
 
-    /** @test */
+    #[Test]
     public function scope_report_categories_filters_correctly()
     {
         Category::factory()->create([
@@ -330,7 +331,7 @@ class CategoryTest extends TestCase
         $this->assertContains(Category::TYPE_REPORT, $reportCategories->first()->type);
     }
 
-    /** @test */
+    #[Test]
     public function scope_kb_categories_filters_correctly()
     {
         Category::factory()->create([

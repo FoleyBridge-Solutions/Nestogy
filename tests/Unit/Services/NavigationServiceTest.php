@@ -562,7 +562,7 @@ class NavigationServiceTest extends TestCase
     public function test_can_access_navigation_item_for_clients(): void
     {
         $mockUser = \Mockery::mock($this->user)->makePartial();
-        $mockUser->shouldReceive('hasPermission')->with('clients.view')->andReturn(true);
+        $mockUser->shouldReceive('can')->with('clients.view')->andReturn(true);
         
         $canAccess = NavigationService::canAccessNavigationItem($mockUser, 'clients', 'index');
         
@@ -572,7 +572,7 @@ class NavigationServiceTest extends TestCase
     public function test_cannot_access_navigation_item_without_permission(): void
     {
         $mockUser = \Mockery::mock($this->user)->makePartial();
-        $mockUser->shouldReceive('hasPermission')->with('clients.create')->andReturn(false);
+        $mockUser->shouldReceive('can')->with('clients.view')->andReturn(false);
         
         $canAccess = NavigationService::canAccessNavigationItem($mockUser, 'clients', 'create');
         
@@ -581,10 +581,14 @@ class NavigationServiceTest extends TestCase
 
     public function test_get_filtered_navigation_items_returns_empty_without_permission(): void
     {
-        $mockUser = \Mockery::mock($this->user)->makePartial();
-        $mockUser->shouldReceive('hasPermission')->with('tickets.view')->andReturn(false);
+        // Clear and reinitialize navigation registry for clean state
+        \App\Domains\Core\Services\Navigation\NavigationRegistry::clear();
+        \App\Domains\Core\Services\Navigation\NavigationRegistry::boot();
         
-        $items = NavigationService::getFilteredNavigationItems('tickets');
+        $mockUser = \Mockery::mock($this->user)->makePartial();
+        $mockUser->shouldReceive('can')->andReturn(false);
+        
+        $items = NavigationService::getFilteredNavigationItems($mockUser);
         
         $this->assertEmpty($items);
     }
@@ -592,10 +596,10 @@ class NavigationServiceTest extends TestCase
     public function test_get_filtered_navigation_items_for_clients(): void
     {
         $mockUser = \Mockery::mock($this->user)->makePartial();
-        $mockUser->shouldReceive('hasPermission')->andReturn(true);
+        $mockUser->shouldReceive('can')->andReturn(true);
         
         $this->actingAs($mockUser);
-        $items = NavigationService::getFilteredNavigationItems('clients');
+        $items = NavigationService::getFilteredNavigationItems($mockUser);
         
         $this->assertIsArray($items);
     }
@@ -1041,18 +1045,17 @@ class NavigationServiceTest extends TestCase
     public function test_can_access_navigation_item_for_multiple_domains(): void
     {
         $mockUser = \Mockery::mock($this->user)->makePartial();
-        $mockUser->shouldReceive('hasPermission')->andReturn(true);
         
         $tests = [
             ['clients', 'index', 'clients.view'],
             ['tickets', 'index', 'tickets.view'],
             ['assets', 'index', 'assets.view'],
-            ['financial', 'invoices', 'financial.invoices.view'],
+            ['financial', 'invoices', 'financial.view'],
             ['projects', 'index', 'projects.view'],
         ];
         
         foreach ($tests as [$domain, $item, $permission]) {
-            $mockUser->shouldReceive('hasPermission')->with($permission)->andReturn(true);
+            $mockUser->shouldReceive('can')->with($permission)->andReturn(true);
             $canAccess = NavigationService::canAccessNavigationItem($mockUser, $domain, $item);
             $this->assertTrue($canAccess);
         }

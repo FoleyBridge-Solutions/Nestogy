@@ -13,10 +13,6 @@ class RevenueMetricTest extends TestCase
 
     public function test_can_create_revenue_metric_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\RevenueMetricFactory')) {
-            $this->markTestSkipped('RevenueMetricFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = RevenueMetric::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class RevenueMetricTest extends TestCase
 
     public function test_revenue_metric_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\RevenueMetricFactory')) {
-            $this->markTestSkipped('RevenueMetricFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = RevenueMetric::factory()->create(['company_id' => $company->id]);
 

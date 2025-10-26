@@ -13,10 +13,6 @@ class CreditApplicationTest extends TestCase
 
     public function test_can_create_credit_application_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\CreditApplicationFactory')) {
-            $this->markTestSkipped('CreditApplicationFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = CreditApplication::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class CreditApplicationTest extends TestCase
 
     public function test_credit_application_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\CreditApplicationFactory')) {
-            $this->markTestSkipped('CreditApplicationFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = CreditApplication::factory()->create(['company_id' => $company->id]);
 

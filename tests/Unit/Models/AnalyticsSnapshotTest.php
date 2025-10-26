@@ -13,10 +13,6 @@ class AnalyticsSnapshotTest extends TestCase
 
     public function test_can_create_analytics_snapshot_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\AnalyticsSnapshotFactory')) {
-            $this->markTestSkipped('AnalyticsSnapshotFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = AnalyticsSnapshot::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class AnalyticsSnapshotTest extends TestCase
 
     public function test_analytics_snapshot_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\AnalyticsSnapshotFactory')) {
-            $this->markTestSkipped('AnalyticsSnapshotFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = AnalyticsSnapshot::factory()->create(['company_id' => $company->id]);
 

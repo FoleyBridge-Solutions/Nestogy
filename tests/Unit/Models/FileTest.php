@@ -13,10 +13,6 @@ class FileTest extends TestCase
 
     public function test_can_create_file_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\FileFactory')) {
-            $this->markTestSkipped('FileFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = File::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class FileTest extends TestCase
 
     public function test_file_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\FileFactory')) {
-            $this->markTestSkipped('FileFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = File::factory()->create(['company_id' => $company->id]);
 

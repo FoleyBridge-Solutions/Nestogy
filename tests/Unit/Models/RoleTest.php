@@ -13,10 +13,6 @@ class RoleTest extends TestCase
 
     public function test_can_create_role_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\RoleFactory')) {
-            $this->markTestSkipped('RoleFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = Role::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class RoleTest extends TestCase
 
     public function test_role_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\RoleFactory')) {
-            $this->markTestSkipped('RoleFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = Role::factory()->create(['company_id' => $company->id]);
 

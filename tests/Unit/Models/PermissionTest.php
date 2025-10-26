@@ -13,10 +13,6 @@ class PermissionTest extends TestCase
 
     public function test_can_create_permission_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\PermissionFactory')) {
-            $this->markTestSkipped('PermissionFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = Permission::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class PermissionTest extends TestCase
 
     public function test_permission_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\PermissionFactory')) {
-            $this->markTestSkipped('PermissionFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = Permission::factory()->create(['company_id' => $company->id]);
 

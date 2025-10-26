@@ -13,8 +13,8 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Sanctum\HasApiTokens;
-use Spatie\Activitylog\LogOptions;
-use Spatie\Activitylog\Traits\LogsActivity;
+// use Spatie\Activitylog\LogOptions;
+// use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * Client Portal User Model
@@ -27,7 +27,7 @@ class ClientPortalUser extends Authenticatable
     use BelongsToCompany,
         HasApiTokens,
         HasFactory,
-        LogsActivity,
+        // LogsActivity,
         Notifiable,
         SoftDeletes,
         TwoFactorAuthenticatable;
@@ -198,19 +198,19 @@ class ClientPortalUser extends Authenticatable
     /**
      * Get activity log options
      */
-    public function getActivitylogOptions(): LogOptions
-    {
-        return LogOptions::defaults()
-            ->logOnly([
-                'name', 'email', 'role', 'is_active', 'is_primary',
-                'can_view_invoices', 'can_view_tickets', 'can_create_tickets',
-                'can_view_assets', 'can_view_projects', 'can_view_reports',
-                'can_approve_quotes', 'last_login_at',
-            ])
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->setDescriptionForEvent(fn (string $eventName) => "Portal user {$eventName}");
-    }
+    // public function getActivitylogOptions(): LogOptions
+    // {
+    //     return LogOptions::defaults()
+    //         ->logOnly([
+    //             'name', 'email', 'role', 'is_active', 'is_primary',
+    //             'can_view_invoices', 'can_view_tickets', 'can_create_tickets',
+    //             'can_view_assets', 'can_view_projects', 'can_view_reports',
+    //             'can_approve_quotes', 'last_login_at',
+    //         ])
+    //         ->logOnlyDirty()
+    //         ->dontSubmitEmptyLogs()
+    //         ->setDescriptionForEvent(fn (string $eventName) => "Portal user {$eventName}");
+    // }
 
     /**
      * Check if user has a specific role

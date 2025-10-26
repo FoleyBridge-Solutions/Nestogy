@@ -13,10 +13,6 @@ class PricingRuleTest extends TestCase
 
     public function test_can_create_pricing_rule_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\PricingRuleFactory')) {
-            $this->markTestSkipped('PricingRuleFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = PricingRule::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class PricingRuleTest extends TestCase
 
     public function test_pricing_rule_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\PricingRuleFactory')) {
-            $this->markTestSkipped('PricingRuleFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = PricingRule::factory()->create(['company_id' => $company->id]);
 

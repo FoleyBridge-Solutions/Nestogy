@@ -13,10 +13,6 @@ class KpiCalculationTest extends TestCase
 
     public function test_can_create_kpi_calculation_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\KpiCalculationFactory')) {
-            $this->markTestSkipped('KpiCalculationFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = KpiCalculation::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class KpiCalculationTest extends TestCase
 
     public function test_kpi_calculation_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\KpiCalculationFactory')) {
-            $this->markTestSkipped('KpiCalculationFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = KpiCalculation::factory()->create(['company_id' => $company->id]);
 

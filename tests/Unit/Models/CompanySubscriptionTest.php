@@ -13,10 +13,6 @@ class CompanySubscriptionTest extends TestCase
 
     public function test_can_create_company_subscription_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\CompanySubscriptionFactory')) {
-            $this->markTestSkipped('CompanySubscriptionFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = CompanySubscription::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class CompanySubscriptionTest extends TestCase
 
     public function test_company_subscription_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\CompanySubscriptionFactory')) {
-            $this->markTestSkipped('CompanySubscriptionFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = CompanySubscription::factory()->create(['company_id' => $company->id]);
 

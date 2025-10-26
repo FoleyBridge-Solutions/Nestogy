@@ -13,10 +13,6 @@ class ServiceTest extends TestCase
 
     public function test_can_create_service_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\ServiceFactory')) {
-            $this->markTestSkipped('ServiceFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = Service::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class ServiceTest extends TestCase
 
     public function test_service_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\ServiceFactory')) {
-            $this->markTestSkipped('ServiceFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = Service::factory()->create(['company_id' => $company->id]);
 

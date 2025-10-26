@@ -153,7 +153,9 @@ class StoreTicketRequest extends FormRequest
             // Validate client belongs to user's company
             if ($this->filled('client_id')) {
                 $client = \App\Domains\Client\Models\Client::find($this->client_id);
-                if ($client && $client->company_id !== $user->company_id) {
+                if (!$client) {
+                    $validator->errors()->add('client_id', 'The selected client does not exist.');
+                } elseif ($client->company_id !== $user->company_id) {
                     $validator->errors()->add('client_id', 'The selected client is invalid.');
                 }
             }

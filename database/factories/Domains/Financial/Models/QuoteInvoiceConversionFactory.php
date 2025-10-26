@@ -13,9 +13,10 @@ class QuoteInvoiceConversionFactory extends Factory
     {
         return [
             'company_id' => \App\Domains\Company\Models\Company::factory(),
-            'status' => 'pending',
-            'activation_status' => 'pending',
-            'current_step' => 1,
+            'quote_id' => \App\Domains\Financial\Models\Quote::factory(),
+            'invoice_id' => \App\Domains\Financial\Models\Invoice::factory(),
+            'conversion_type' => 'full',
+            'status' => 'completed',
         ];
     }
 }

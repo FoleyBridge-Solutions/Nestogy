@@ -11,8 +11,14 @@ class ClientPortalUserFactory extends Factory
 
     public function definition(): array
     {
-        return ['company_id' => \App\Domains\Company\Models\Company::factory(),
+        return [
+            'company_id' => \App\Domains\Company\Models\Company::factory(),
+            'client_id' => \App\Domains\Client\Models\Client::factory(),
             'name' => $this->faker->name(),
+            'email' => $this->faker->unique()->safeEmail,
+            'password' => \Illuminate\Support\Facades\Hash::make('password'),
+            'role' => 'viewer',
+            'session_timeout_minutes' => 30,
         ];
     }
 }

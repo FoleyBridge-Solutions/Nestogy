@@ -13,10 +13,6 @@ class UserSettingTest extends TestCase
 
     public function test_can_create_user_setting_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\UserSettingFactory')) {
-            $this->markTestSkipped('UserSettingFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = UserSetting::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class UserSettingTest extends TestCase
 
     public function test_user_setting_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\UserSettingFactory')) {
-            $this->markTestSkipped('UserSettingFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = UserSetting::factory()->create(['company_id' => $company->id]);
 

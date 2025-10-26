@@ -13,10 +13,6 @@ class ClientPortalUserTest extends TestCase
 
     public function test_can_create_client_portal_user_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\ClientPortalUserFactory')) {
-            $this->markTestSkipped('ClientPortalUserFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = ClientPortalUser::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class ClientPortalUserTest extends TestCase
 
     public function test_client_portal_user_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\ClientPortalUserFactory')) {
-            $this->markTestSkipped('ClientPortalUserFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = ClientPortalUser::factory()->create(['company_id' => $company->id]);
 

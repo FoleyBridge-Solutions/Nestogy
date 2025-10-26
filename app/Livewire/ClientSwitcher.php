@@ -99,9 +99,9 @@ class ClientSwitcher extends Component
     }
 
     /**
-     * Favorite clients - computed with short cache
+     * Favorite clients - computed property
      */
-    #[Computed(cache: true, key: 'client-switcher-favorites')]
+    #[Computed]
     public function favoriteClients()
     {
         if (! $this->getUser() || $this->getUser() instanceof \App\Domains\Client\Models\Contact) {
@@ -268,7 +268,6 @@ class ClientSwitcher extends Component
 
         // Bust the favorites cache
         unset($this->favoriteClients);
-        Cache::forget('client-switcher-favorites');
 
         // Flash message
         $action = $isFavorite ? 'added to' : 'removed from';

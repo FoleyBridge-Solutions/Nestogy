@@ -13,10 +13,6 @@ class PaymentMethodTest extends TestCase
 
     public function test_can_create_payment_method_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\PaymentMethodFactory')) {
-            $this->markTestSkipped('PaymentMethodFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = PaymentMethod::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class PaymentMethodTest extends TestCase
 
     public function test_payment_method_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\PaymentMethodFactory')) {
-            $this->markTestSkipped('PaymentMethodFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = PaymentMethod::factory()->create(['company_id' => $company->id]);
 

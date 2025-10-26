@@ -13,10 +13,6 @@ class SettingsConfigurationTest extends TestCase
 
     public function test_can_create_settings_configuration_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\SettingsConfigurationFactory')) {
-            $this->markTestSkipped('SettingsConfigurationFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = SettingsConfiguration::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class SettingsConfigurationTest extends TestCase
 
     public function test_settings_configuration_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\SettingsConfigurationFactory')) {
-            $this->markTestSkipped('SettingsConfigurationFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = SettingsConfiguration::factory()->create(['company_id' => $company->id]);
 

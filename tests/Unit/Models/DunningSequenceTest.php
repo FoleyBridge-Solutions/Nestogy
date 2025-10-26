@@ -13,10 +13,6 @@ class DunningSequenceTest extends TestCase
 
     public function test_can_create_dunning_sequence_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\DunningSequenceFactory')) {
-            $this->markTestSkipped('DunningSequenceFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = DunningSequence::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class DunningSequenceTest extends TestCase
 
     public function test_dunning_sequence_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\DunningSequenceFactory')) {
-            $this->markTestSkipped('DunningSequenceFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = DunningSequence::factory()->create(['company_id' => $company->id]);
 

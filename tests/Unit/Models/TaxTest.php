@@ -13,10 +13,6 @@ class TaxTest extends TestCase
 
     public function test_can_create_tax_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\TaxFactory')) {
-            $this->markTestSkipped('TaxFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = Tax::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class TaxTest extends TestCase
 
     public function test_tax_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\TaxFactory')) {
-            $this->markTestSkipped('TaxFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = Tax::factory()->create(['company_id' => $company->id]);
 

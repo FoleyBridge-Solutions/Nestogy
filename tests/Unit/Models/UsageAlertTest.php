@@ -13,10 +13,6 @@ class UsageAlertTest extends TestCase
 
     public function test_can_create_usage_alert_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\UsageAlertFactory')) {
-            $this->markTestSkipped('UsageAlertFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = UsageAlert::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class UsageAlertTest extends TestCase
 
     public function test_usage_alert_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\UsageAlertFactory')) {
-            $this->markTestSkipped('UsageAlertFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = UsageAlert::factory()->create(['company_id' => $company->id]);
 

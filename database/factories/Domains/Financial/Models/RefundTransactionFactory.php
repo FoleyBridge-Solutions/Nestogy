@@ -13,11 +13,11 @@ class RefundTransactionFactory extends Factory
     {
         return [
             'company_id' => \App\Domains\Company\Models\Company::factory(),
+            'refund_request_id' => \App\Domains\Financial\Models\RefundRequest::factory(),
+            'processed_by' => \App\Domains\Core\Models\User::factory(),
+            'status' => 'completed',
             'amount' => $this->faker->randomFloat(2, 10, 1000),
-            'transaction_id' => $this->faker->unique()->regexify('[A-Z0-9]{20}'),
-            'initiated_at' => $this->faker->dateTimeBetween('-30 days', 'now'),
-            'max_retries' => 3,
-            'processed_by' => null,
+            'currency_code' => 'USD',
         ];
     }
 }

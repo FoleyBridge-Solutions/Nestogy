@@ -13,10 +13,6 @@ class DocumentTest extends TestCase
 
     public function test_can_create_document_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\DocumentFactory')) {
-            $this->markTestSkipped('DocumentFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = Document::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class DocumentTest extends TestCase
 
     public function test_document_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\DocumentFactory')) {
-            $this->markTestSkipped('DocumentFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = Document::factory()->create(['company_id' => $company->id]);
 

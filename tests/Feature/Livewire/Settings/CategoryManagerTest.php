@@ -9,6 +9,7 @@ use App\Domains\Core\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
+use PHPUnit\Framework\Attributes\Test;
 
 class CategoryManagerTest extends TestCase
 {
@@ -26,7 +27,7 @@ class CategoryManagerTest extends TestCase
         $this->actingAs($this->user);
     }
 
-    /** @test */
+    #[Test]
     public function component_renders_successfully()
     {
         Livewire::test(CategoryManager::class)
@@ -34,7 +35,7 @@ class CategoryManagerTest extends TestCase
             ->assertSee('Categories');
     }
 
-    /** @test */
+    #[Test]
     public function displays_categories_table()
     {
         $category = Category::factory()->create([
@@ -48,7 +49,7 @@ class CategoryManagerTest extends TestCase
             ->assertSee(Category::TYPE_LABELS[Category::TYPE_PRODUCT]);
     }
 
-    /** @test */
+    #[Test]
     public function can_filter_by_type()
     {
         $productCategory = Category::factory()->create([
@@ -76,7 +77,7 @@ class CategoryManagerTest extends TestCase
         $component->assertSee('UniqueProductName12345');
     }
 
-    /** @test */
+    #[Test]
     public function search_filters_categories()
     {
         $hardwareCategory = Category::factory()->create([
@@ -102,14 +103,14 @@ class CategoryManagerTest extends TestCase
         $component->assertSee('Hardware Equipment');
     }
 
-    /** @test */
+    #[Test]
     public function search_is_debounced()
     {
         Livewire::test(CategoryManager::class)
             ->assertSet('search', '');
     }
 
-    /** @test */
+    #[Test]
     public function can_open_create_modal()
     {
         Livewire::test(CategoryManager::class)
@@ -119,7 +120,7 @@ class CategoryManagerTest extends TestCase
             ->assertSee('New Category');
     }
 
-    /** @test */
+    #[Test]
     public function can_create_category()
     {
         Livewire::test(CategoryManager::class)
@@ -139,7 +140,7 @@ class CategoryManagerTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function create_requires_name_and_type()
     {
         Livewire::test(CategoryManager::class)
@@ -150,7 +151,7 @@ class CategoryManagerTest extends TestCase
             ->assertHasErrors(['form.name', 'form.type']);
     }
 
-    /** @test */
+    #[Test]
     public function can_edit_category()
     {
         $category = Category::factory()->create([
@@ -166,7 +167,7 @@ class CategoryManagerTest extends TestCase
             ->assertSet('showModal', true);
     }
 
-    /** @test */
+    #[Test]
     public function can_update_category()
     {
         $category = Category::factory()->create([
@@ -189,7 +190,7 @@ class CategoryManagerTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function can_toggle_active_status()
     {
         $category = Category::factory()->create([
@@ -206,7 +207,7 @@ class CategoryManagerTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function can_delete_category()
     {
         $category = Category::factory()->create([
@@ -223,7 +224,7 @@ class CategoryManagerTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function cannot_delete_category_with_children()
     {
         $parent = Category::factory()->create([
@@ -244,7 +245,7 @@ class CategoryManagerTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function expense_metadata_saved_correctly()
     {
         Livewire::test(CategoryManager::class)
@@ -268,7 +269,7 @@ class CategoryManagerTest extends TestCase
         $this->assertEquals(15.00, $category->metadata['markup_percentage_default']);
     }
 
-    /** @test */
+    #[Test]
     public function modal_closes_after_save()
     {
         Livewire::test(CategoryManager::class)
@@ -279,7 +280,7 @@ class CategoryManagerTest extends TestCase
             ->assertSet('showModal', false);
     }
 
-    /** @test */
+    #[Test]
     public function form_resets_after_save()
     {
         Livewire::test(CategoryManager::class)
@@ -292,7 +293,7 @@ class CategoryManagerTest extends TestCase
             ->assertSet('editing', null);
     }
 
-    /** @test */
+    #[Test]
     public function categories_are_company_scoped()
     {
         $otherCompany = Company::factory()->create();
@@ -312,7 +313,7 @@ class CategoryManagerTest extends TestCase
             ->assertDontSee('Their Category');
     }
 
-    /** @test */
+    #[Test]
     public function parent_category_dropdown_excludes_current()
     {
         $category = Category::factory()->create([
@@ -336,7 +337,7 @@ class CategoryManagerTest extends TestCase
         $this->assertTrue($parentOptions->contains('id', $other->id));
     }
 
-    /** @test */
+    #[Test]
     public function color_picker_saves_valid_hex()
     {
         Livewire::test(CategoryManager::class)

@@ -13,10 +13,6 @@ class UsageTierTest extends TestCase
 
     public function test_can_create_usage_tier_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\UsageTierFactory')) {
-            $this->markTestSkipped('UsageTierFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = UsageTier::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class UsageTierTest extends TestCase
 
     public function test_usage_tier_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\UsageTierFactory')) {
-            $this->markTestSkipped('UsageTierFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = UsageTier::factory()->create(['company_id' => $company->id]);
 

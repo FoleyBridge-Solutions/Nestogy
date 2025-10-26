@@ -13,10 +13,6 @@ class CompanyHierarchyTest extends TestCase
 
     public function test_can_create_company_hierarchy_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\CompanyHierarchyFactory')) {
-            $this->markTestSkipped('CompanyHierarchyFactory does not exist');
-        }
-
         $model = CompanyHierarchy::factory()->create();
 
         $this->assertInstanceOf(CompanyHierarchy::class, $model);
@@ -24,10 +20,6 @@ class CompanyHierarchyTest extends TestCase
 
     public function test_company_hierarchy_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\CompanyHierarchyFactory')) {
-            $this->markTestSkipped('CompanyHierarchyFactory does not exist');
-        }
-
         $model = CompanyHierarchy::factory()->create();
 
         $this->assertInstanceOf(Company::class, $model->ancestor);

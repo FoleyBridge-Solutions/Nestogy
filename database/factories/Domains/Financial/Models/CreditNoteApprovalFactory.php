@@ -11,7 +11,13 @@ class CreditNoteApprovalFactory extends Factory
 
     public function definition(): array
     {
-        return ['company_id' => \App\Domains\Company\Models\Company::factory(),
+        return [
+            'company_id' => \App\Domains\Company\Models\Company::factory(),
+            'credit_note_id' => \App\Domains\Financial\Models\CreditNote::factory(),
+            'approver_id' => \App\Domains\Core\Models\User::factory(),
+            'requested_by' => \App\Domains\Core\Models\User::factory(),
+            'status' => 'pending',
+            'approval_type' => 'standard',
         ];
     }
 }

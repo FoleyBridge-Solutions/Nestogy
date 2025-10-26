@@ -13,10 +13,6 @@ class AddressTest extends TestCase
 
     public function test_can_create_address_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\AddressFactory')) {
-            $this->markTestSkipped('AddressFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = Address::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class AddressTest extends TestCase
 
     public function test_address_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\AddressFactory')) {
-            $this->markTestSkipped('AddressFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = Address::factory()->create(['company_id' => $company->id]);
 

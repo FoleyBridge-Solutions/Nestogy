@@ -13,10 +13,6 @@ class PortalNotificationTest extends TestCase
 
     public function test_can_create_portal_notification_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\PortalNotificationFactory')) {
-            $this->markTestSkipped('PortalNotificationFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = PortalNotification::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class PortalNotificationTest extends TestCase
 
     public function test_portal_notification_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\PortalNotificationFactory')) {
-            $this->markTestSkipped('PortalNotificationFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = PortalNotification::factory()->create(['company_id' => $company->id]);
 

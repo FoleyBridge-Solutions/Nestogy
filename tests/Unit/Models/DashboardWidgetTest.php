@@ -13,10 +13,6 @@ class DashboardWidgetTest extends TestCase
 
     public function test_can_create_dashboard_widget_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\DashboardWidgetFactory')) {
-            $this->markTestSkipped('DashboardWidgetFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = DashboardWidget::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class DashboardWidgetTest extends TestCase
 
     public function test_dashboard_widget_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\DashboardWidgetFactory')) {
-            $this->markTestSkipped('DashboardWidgetFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = DashboardWidget::factory()->create(['company_id' => $company->id]);
 

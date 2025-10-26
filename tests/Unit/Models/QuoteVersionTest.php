@@ -13,10 +13,6 @@ class QuoteVersionTest extends TestCase
 
     public function test_can_create_quote_version_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\QuoteVersionFactory')) {
-            $this->markTestSkipped('QuoteVersionFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = QuoteVersion::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class QuoteVersionTest extends TestCase
 
     public function test_quote_version_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\QuoteVersionFactory')) {
-            $this->markTestSkipped('QuoteVersionFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = QuoteVersion::factory()->create(['company_id' => $company->id]);
 

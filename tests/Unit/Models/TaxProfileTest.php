@@ -13,10 +13,6 @@ class TaxProfileTest extends TestCase
 
     public function test_can_create_tax_profile_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\TaxProfileFactory')) {
-            $this->markTestSkipped('TaxProfileFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = TaxProfile::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class TaxProfileTest extends TestCase
 
     public function test_tax_profile_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\TaxProfileFactory')) {
-            $this->markTestSkipped('TaxProfileFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = TaxProfile::factory()->create(['company_id' => $company->id]);
 

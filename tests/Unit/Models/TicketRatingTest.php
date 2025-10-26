@@ -13,10 +13,6 @@ class TicketRatingTest extends TestCase
 
     public function test_can_create_ticket_rating_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\TicketRatingFactory')) {
-            $this->markTestSkipped('TicketRatingFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = TicketRating::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class TicketRatingTest extends TestCase
 
     public function test_ticket_rating_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\TicketRatingFactory')) {
-            $this->markTestSkipped('TicketRatingFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = TicketRating::factory()->create(['company_id' => $company->id]);
 

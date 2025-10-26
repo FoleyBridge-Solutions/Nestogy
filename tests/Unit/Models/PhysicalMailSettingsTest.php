@@ -13,10 +13,6 @@ class PhysicalMailSettingsTest extends TestCase
 
     public function test_can_create_physical_mail_settings_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\PhysicalMailSettingsFactory')) {
-            $this->markTestSkipped('PhysicalMailSettingsFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = PhysicalMailSettings::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class PhysicalMailSettingsTest extends TestCase
 
     public function test_physical_mail_settings_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\PhysicalMailSettingsFactory')) {
-            $this->markTestSkipped('PhysicalMailSettingsFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = PhysicalMailSettings::factory()->create(['company_id' => $company->id]);
 

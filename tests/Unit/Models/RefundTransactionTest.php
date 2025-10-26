@@ -13,10 +13,6 @@ class RefundTransactionTest extends TestCase
 
     public function test_can_create_refund_transaction_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\RefundTransactionFactory')) {
-            $this->markTestSkipped('RefundTransactionFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = RefundTransaction::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class RefundTransactionTest extends TestCase
 
     public function test_refund_transaction_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\RefundTransactionFactory')) {
-            $this->markTestSkipped('RefundTransactionFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = RefundTransaction::factory()->create(['company_id' => $company->id]);
 

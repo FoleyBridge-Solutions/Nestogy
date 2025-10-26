@@ -13,10 +13,6 @@ class TaxExemptionTest extends TestCase
 
     public function test_can_create_tax_exemption_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\TaxExemptionFactory')) {
-            $this->markTestSkipped('TaxExemptionFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = TaxExemption::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class TaxExemptionTest extends TestCase
 
     public function test_tax_exemption_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\TaxExemptionFactory')) {
-            $this->markTestSkipped('TaxExemptionFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = TaxExemption::factory()->create(['company_id' => $company->id]);
 

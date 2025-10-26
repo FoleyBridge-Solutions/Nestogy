@@ -13,10 +13,6 @@ class AutoPaymentTest extends TestCase
 
     public function test_can_create_auto_payment_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\AutoPaymentFactory')) {
-            $this->markTestSkipped('AutoPaymentFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = AutoPayment::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class AutoPaymentTest extends TestCase
 
     public function test_auto_payment_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\AutoPaymentFactory')) {
-            $this->markTestSkipped('AutoPaymentFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = AutoPayment::factory()->create(['company_id' => $company->id]);
 

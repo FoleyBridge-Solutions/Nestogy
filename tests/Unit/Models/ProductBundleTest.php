@@ -13,10 +13,6 @@ class ProductBundleTest extends TestCase
 
     public function test_can_create_product_bundle_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\ProductBundleFactory')) {
-            $this->markTestSkipped('ProductBundleFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = ProductBundle::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class ProductBundleTest extends TestCase
 
     public function test_product_bundle_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\ProductBundleFactory')) {
-            $this->markTestSkipped('ProductBundleFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = ProductBundle::factory()->create(['company_id' => $company->id]);
 

@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Domains\Contract\Models;
+use App\Domains\Company\Models\Company;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

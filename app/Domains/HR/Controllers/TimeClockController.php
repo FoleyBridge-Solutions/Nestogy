@@ -76,14 +76,11 @@ class TimeClockController extends Controller
                 throw new \Exception('No active time entry found');
             }
 
-            if ($request->filled('break_minutes')) {
-                $activeEntry->break_minutes = (int) $request->input('break_minutes');
-            }
-
             $entry = $this->timeClockService->clockOut($activeEntry, [
                 'latitude' => $request->input('latitude'),
                 'longitude' => $request->input('longitude'),
                 'notes' => $request->input('notes'),
+                'break_minutes' => $request->filled('break_minutes') ? (int) $request->input('break_minutes') : null,
                 'ip' => $request->ip(),
             ]);
 

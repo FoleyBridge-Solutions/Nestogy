@@ -13,7 +13,17 @@ class UsageBucketFactory extends Factory
     {
         return [
             'company_id' => \App\Domains\Company\Models\Company::factory(),
-            'name' => $this->faker->words(3, true),
+            'client_id' => \App\Domains\Client\Models\Client::factory(),
+            'bucket_name' => $this->faker->words(3, true),
+            'bucket_code' => 'BUCKET-'.strtoupper(uniqid()),
+            'bucket_type' => 'included',
+            'usage_type' => 'voice',
+            'bucket_capacity' => 1000.0,
+            'allocated_amount' => 0,
+            'used_amount' => 0,
+            'capacity_unit' => 'minutes',
+            'is_active' => true,
+            'bucket_status' => 'active',
         ];
     }
 }

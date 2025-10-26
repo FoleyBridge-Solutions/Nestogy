@@ -13,10 +13,6 @@ class NotificationPreferenceTest extends TestCase
 
     public function test_can_create_notification_preference_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\NotificationPreferenceFactory')) {
-            $this->markTestSkipped('NotificationPreferenceFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = NotificationPreference::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class NotificationPreferenceTest extends TestCase
 
     public function test_notification_preference_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\NotificationPreferenceFactory')) {
-            $this->markTestSkipped('NotificationPreferenceFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = NotificationPreference::factory()->create(['company_id' => $company->id]);
 

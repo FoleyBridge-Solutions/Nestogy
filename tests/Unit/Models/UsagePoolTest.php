@@ -13,10 +13,6 @@ class UsagePoolTest extends TestCase
 
     public function test_can_create_usage_pool_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\UsagePoolFactory')) {
-            $this->markTestSkipped('UsagePoolFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = UsagePool::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class UsagePoolTest extends TestCase
 
     public function test_usage_pool_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\UsagePoolFactory')) {
-            $this->markTestSkipped('UsagePoolFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = UsagePool::factory()->create(['company_id' => $company->id]);
 

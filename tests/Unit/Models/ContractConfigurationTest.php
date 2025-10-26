@@ -13,10 +13,6 @@ class ContractConfigurationTest extends TestCase
 
     public function test_can_create_contract_configuration_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\ContractConfigurationFactory')) {
-            $this->markTestSkipped('ContractConfigurationFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = ContractConfiguration::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class ContractConfigurationTest extends TestCase
 
     public function test_contract_configuration_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\ContractConfigurationFactory')) {
-            $this->markTestSkipped('ContractConfigurationFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = ContractConfiguration::factory()->create(['company_id' => $company->id]);
 

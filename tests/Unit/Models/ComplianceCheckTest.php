@@ -13,10 +13,6 @@ class ComplianceCheckTest extends TestCase
 
     public function test_can_create_compliance_check_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\ComplianceCheckFactory')) {
-            $this->markTestSkipped('ComplianceCheckFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = ComplianceCheck::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class ComplianceCheckTest extends TestCase
 
     public function test_compliance_check_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\ComplianceCheckFactory')) {
-            $this->markTestSkipped('ComplianceCheckFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = ComplianceCheck::factory()->create(['company_id' => $company->id]);
 

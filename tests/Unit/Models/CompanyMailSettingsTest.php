@@ -13,10 +13,6 @@ class CompanyMailSettingsTest extends TestCase
 
     public function test_can_create_company_mail_settings_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\CompanyMailSettingsFactory')) {
-            $this->markTestSkipped('CompanyMailSettingsFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = CompanyMailSettings::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class CompanyMailSettingsTest extends TestCase
 
     public function test_company_mail_settings_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\CompanyMailSettingsFactory')) {
-            $this->markTestSkipped('CompanyMailSettingsFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = CompanyMailSettings::factory()->create(['company_id' => $company->id]);
 

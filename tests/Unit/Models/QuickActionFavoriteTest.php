@@ -13,10 +13,6 @@ class QuickActionFavoriteTest extends TestCase
 
     public function test_can_create_quick_action_favorite_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\QuickActionFavoriteFactory')) {
-            $this->markTestSkipped('QuickActionFavoriteFactory does not exist');
-        }
-
         $model = QuickActionFavorite::factory()->create();
 
         $this->assertInstanceOf(QuickActionFavorite::class, $model);
@@ -24,10 +20,6 @@ class QuickActionFavoriteTest extends TestCase
 
     public function test_quick_action_favorite_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\QuickActionFavoriteFactory')) {
-            $this->markTestSkipped('QuickActionFavoriteFactory does not exist');
-        }
-
         $model = QuickActionFavorite::factory()->create();
 
         $this->assertInstanceOf(\App\Domains\Core\Models\User::class, $model->user);

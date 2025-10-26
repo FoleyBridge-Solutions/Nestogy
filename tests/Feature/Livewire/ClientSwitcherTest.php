@@ -55,9 +55,6 @@ class ClientSwitcherTest extends TestCase
         ]);
 
         $this->actingAs($this->user);
-        
-        // Clear caches before each test to ensure fresh data
-        \Cache::forget('client-switcher-favorites');
     }
 
     public function test_component_renders_successfully()
@@ -126,8 +123,6 @@ class ClientSwitcherTest extends TestCase
     {
         $favoriteService = app(ClientFavoriteService::class);
         $favoriteService->toggle($this->user, $this->client1);
-
-        // Clear the cache so computed property fetches fresh data
 
         $component = Livewire::test(ClientSwitcher::class);
         

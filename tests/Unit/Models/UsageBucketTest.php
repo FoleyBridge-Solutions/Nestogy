@@ -13,10 +13,6 @@ class UsageBucketTest extends TestCase
 
     public function test_can_create_usage_bucket_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\UsageBucketFactory')) {
-            $this->markTestSkipped('UsageBucketFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = UsageBucket::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class UsageBucketTest extends TestCase
 
     public function test_usage_bucket_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\UsageBucketFactory')) {
-            $this->markTestSkipped('UsageBucketFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = UsageBucket::factory()->create(['company_id' => $company->id]);
 

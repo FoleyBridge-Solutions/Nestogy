@@ -17,20 +17,14 @@ trait RefreshesDatabase
     protected function refreshTestDatabase(): void
     {
         if (! RefreshDatabaseState::$migrated) {
-            try {
-                $this->artisan('migrate:fresh', array_merge(
-                    $this->migrateFreshUsing(),
-                    ['--quiet' => true]
-                ));
+            $this->artisan('migrate:fresh', array_merge(
+                $this->migrateFreshUsing(),
+                ['--quiet' => true]
+            ));
 
-                $this->app[Kernel::class]->setArtisan(null);
+            $this->app[Kernel::class]->setArtisan(null);
 
-                RefreshDatabaseState::$migrated = true;
-            } catch (\Exception $e) {
-                // Log the error but allow the test to continue
-                \Illuminate\Support\Facades\Log::warning('Database migration failed: ' . $e->getMessage());
-                RefreshDatabaseState::$migrated = true;
-            }
+            RefreshDatabaseState::$migrated = true;
         }
 
         $this->beginDatabaseTransaction();

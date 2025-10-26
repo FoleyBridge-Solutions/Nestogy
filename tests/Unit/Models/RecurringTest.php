@@ -13,10 +13,6 @@ class RecurringTest extends TestCase
 
     public function test_can_create_recurring_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\RecurringFactory')) {
-            $this->markTestSkipped('RecurringFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = Recurring::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class RecurringTest extends TestCase
 
     public function test_recurring_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\RecurringFactory')) {
-            $this->markTestSkipped('RecurringFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = Recurring::factory()->create(['company_id' => $company->id]);
 

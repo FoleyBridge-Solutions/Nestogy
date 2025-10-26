@@ -13,10 +13,6 @@ class CommunicationLogTest extends TestCase
 
     public function test_can_create_communication_log_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\CommunicationLogFactory')) {
-            $this->markTestSkipped('CommunicationLogFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = CommunicationLog::factory()->create(['company_id' => $company->id]);
 
@@ -25,10 +21,6 @@ class CommunicationLogTest extends TestCase
 
     public function test_communication_log_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\CommunicationLogFactory')) {
-            $this->markTestSkipped('CommunicationLogFactory does not exist');
-        }
-
         $company = Company::factory()->create();
         $model = CommunicationLog::factory()->create(['company_id' => $company->id]);
 

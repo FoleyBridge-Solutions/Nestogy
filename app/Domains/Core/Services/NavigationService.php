@@ -301,7 +301,7 @@ class NavigationService
         
         return array_filter($items, function ($item, $key) use ($user) {
             if (!isset($item['domain']) || !isset($item['name'])) {
-                return true;
+                return false;
             }
             
             return static::canAccessNavigationItem($user, $item['domain'], $key);
