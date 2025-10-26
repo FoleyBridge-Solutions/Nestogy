@@ -127,7 +127,7 @@ class AppServiceProvider extends ServiceProvider
                 // Silently fail - database might already exist
             }
             
-            \Illuminate\Support\Facades\Artisan::call('migrate:fresh', [
+            \Illuminate\Support\Facades\Artisan::call('migrate', [
                 '--quiet' => true,
             ]);
         });
