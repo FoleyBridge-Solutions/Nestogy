@@ -111,36 +111,20 @@ class AppServiceProvider extends ServiceProvider
      */
     protected function configureParallelTesting(): void
     {
-        ParallelTesting::setUpProcess(function (int $token) {
-            $baseDatabase = config('database.connections.pgsql.database', 'nestogy_test');
-            $testDatabase = $token > 0 ? "{$baseDatabase}_test_{$token}" : $baseDatabase;
-            
-            config(['database.connections.pgsql.database' => $testDatabase]);
-        });
-
         ParallelTesting::setUpTestDatabase(function (string $database, int $token) {
-            $baseDatabase = config('database.connections.pgsql.database', 'nestogy_test');
-            $originalDatabase = $token > 0 ? $baseDatabase : 'postgres';
+            $host = config('database.connections.pgsql.host');
+            $port = config('database.connections.pgsql.port');
+            $username = config('database.connections.pgsql.username');
+            $password = config('database.connections.pgsql.password');
             
-            if ($token > 0) {
-                $testDatabase = "{$baseDatabase}_test_{$token}";
-                
-                $host = config('database.connections.pgsql.host');
-                $port = config('database.connections.pgsql.port');
-                $username = config('database.connections.pgsql.username');
-                $password = config('database.connections.pgsql.password');
-                
-                $dsn = "pgsql:host={$host};port={$port};dbname=postgres";
-                
-                try {
-                    $pdo = new \PDO($dsn, $username, $password);
-                    $pdo->exec("DROP DATABASE IF EXISTS {$testDatabase}");
-                    $pdo->exec("CREATE DATABASE {$testDatabase}");
-                } catch (\PDOException $e) {
-                    // Database might already exist or couldn't be created
-                }
-                
-                config(['database.connections.pgsql.database' => $testDatabase]);
+            $dsn = "pgsql:host={$host};port={$port};dbname=postgres";
+            
+            try {
+                $pdo = new \PDO($dsn, $username, $password);
+                $pdo->exec("DROP DATABASE IF EXISTS {$database} WITH (FORCE)");
+                $pdo->exec("CREATE DATABASE {$database}");
+            } catch (\PDOException $e) {
+                // Silently fail - database might already exist
             }
             
             \Illuminate\Support\Facades\Artisan::call('migrate:fresh', [
