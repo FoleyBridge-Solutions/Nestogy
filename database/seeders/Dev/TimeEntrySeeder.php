@@ -22,7 +22,9 @@ $companies = Company::where('id', '>', 1)->get();
             $clients = Client::where('company_id', $company->id)->get();
             $projects = Project::where('company_id', $company->id)->get();
             
-            if ($users->isEmpty() || $clients->isEmpty()) continue;
+            if ($users->isEmpty() || $clients->isEmpty()) {
+                continue;
+            }
             
             foreach ($users as $user) {
                 $entryCount = rand(50, 200);
