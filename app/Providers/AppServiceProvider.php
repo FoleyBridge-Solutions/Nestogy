@@ -112,12 +112,38 @@ class AppServiceProvider extends ServiceProvider
     protected function configureParallelTesting(): void
     {
         ParallelTesting::setUpProcess(function (int $token) {
-            // Set a unique database for this process
+            $baseDatabase = config('database.connections.pgsql.database', 'nestogy_test');
+            $testDatabase = $token > 0 ? "{$baseDatabase}_test_{$token}" : $baseDatabase;
+            
+            config(['database.connections.pgsql.database' => $testDatabase]);
         });
 
         ParallelTesting::setUpTestDatabase(function (string $database, int $token) {
+            $baseDatabase = config('database.connections.pgsql.database', 'nestogy_test');
+            $originalDatabase = $token > 0 ? $baseDatabase : 'postgres';
+            
+            if ($token > 0) {
+                $testDatabase = "{$baseDatabase}_test_{$token}";
+                
+                $host = config('database.connections.pgsql.host');
+                $port = config('database.connections.pgsql.port');
+                $username = config('database.connections.pgsql.username');
+                $password = config('database.connections.pgsql.password');
+                
+                $dsn = "pgsql:host={$host};port={$port};dbname=postgres";
+                
+                try {
+                    $pdo = new \PDO($dsn, $username, $password);
+                    $pdo->exec("DROP DATABASE IF EXISTS {$testDatabase}");
+                    $pdo->exec("CREATE DATABASE {$testDatabase}");
+                } catch (\PDOException $e) {
+                    // Database might already exist or couldn't be created
+                }
+                
+                config(['database.connections.pgsql.database' => $testDatabase]);
+            }
+            
             \Illuminate\Support\Facades\Artisan::call('migrate:fresh', [
-                '--database' => $database,
                 '--quiet' => true,
             ]);
         });
