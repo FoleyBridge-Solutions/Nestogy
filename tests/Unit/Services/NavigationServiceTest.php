@@ -45,6 +45,7 @@ class NavigationServiceTest extends TestCase
     {
         NavigationService::clearSelectedClient();
         session()->flush();
+        \Mockery::close();
         parent::tearDown();
     }
 
