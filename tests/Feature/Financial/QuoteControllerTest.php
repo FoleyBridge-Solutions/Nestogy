@@ -167,7 +167,7 @@ class QuoteControllerTest extends TestCase
             'client_id' => $this->client->id,
             'scope' => 'VoIP Implementation',
             'date' => now()->format('Y-m-d'),
-            'expire_date' => now()->addDays(30)->format('Y-m-d'),
+            'expire' => now()->addDays(30)->format('Y-m-d'),
             'amount' => 2500,
             'status' => 'draft',
         ];
@@ -192,7 +192,7 @@ class QuoteControllerTest extends TestCase
             'client_id' => $this->client->id,
             'scope' => 'Test Quote',
             'date' => now()->format('Y-m-d'),
-            'expire_date' => now()->addDays(30)->format('Y-m-d'),
+            'expire' => now()->addDays(30)->format('Y-m-d'),
             'amount' => 1000,
         ];
 
@@ -215,7 +215,7 @@ class QuoteControllerTest extends TestCase
             'client_id' => 99999,
             'scope' => 'Test',
             'date' => now()->format('Y-m-d'),
-            'expire_date' => now()->addDays(30)->format('Y-m-d'),
+            'expire' => now()->addDays(30)->format('Y-m-d'),
             'amount' => 1000,
         ];
 
@@ -323,7 +323,7 @@ class QuoteControllerTest extends TestCase
             'scope' => 'Updated Scope',
             'amount' => 1500,
             'date' => now()->format('Y-m-d'),
-            'expire_date' => now()->addDays(30)->format('Y-m-d'),
+            'expire' => now()->addDays(30)->format('Y-m-d'),
         ]);
 
         $response->assertRedirect(route('financial.quotes.show', $quote));

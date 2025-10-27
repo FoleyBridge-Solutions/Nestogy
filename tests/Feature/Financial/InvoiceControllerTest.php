@@ -398,7 +398,7 @@ class InvoiceControllerTest extends TestCase
             'price' => 100,
         ]);
 
-        $response = $this->post(route('financial.invoices.update-item', [$invoice, $item]), [
+        $response = $this->put(route('financial.invoices.update-item', [$invoice, $item]), [
             'name' => 'Updated Item',
             'description' => 'Updated description',
             'quantity' => 3,
@@ -472,7 +472,7 @@ class InvoiceControllerTest extends TestCase
             'client_id' => $this->client->id,
         ]);
 
-        $response = $this->post(route('financial.invoices.update-status', $invoice), [
+        $response = $this->patch(route('financial.invoices.update-status', $invoice), [
             'status' => 'sent',
         ]);
 
@@ -490,7 +490,7 @@ class InvoiceControllerTest extends TestCase
             'client_id' => $this->client->id,
         ]);
 
-        $response = $this->post(route('financial.invoices.update-status', $invoice), [
+        $response = $this->patch(route('financial.invoices.update-status', $invoice), [
             'status' => 'Invalid',
         ]);
 

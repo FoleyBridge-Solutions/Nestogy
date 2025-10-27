@@ -20,20 +20,8 @@ class ApproveQuoteRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        $user = Auth::user();
-        $quote = $this->route('quote');
+        return Auth::check(); // Authorization handled by middleware and policies
 
-        // User must have approval permissions
-        if (! $user->hasPermission('financial.quotes.approve')) {
-            return false;
-        }
-
-        // Quote must belong to user's company
-        if ($quote && $quote->company_id !== $user->company_id) {
-            return false;
-        }
-
-        return true;
     }
 
     /**

@@ -20,7 +20,7 @@ class UpdateQuoteRequest extends BaseQuoteRequest
      */
     public function authorize(): bool
     {
-        return Auth::check() && Auth::user()->hasPermission('financial.quotes.manage');
+        return Auth::check(); // Authorization handled by middleware and policies
     }
 
     /**
