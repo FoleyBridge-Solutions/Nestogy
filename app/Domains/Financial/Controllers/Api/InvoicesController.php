@@ -47,11 +47,11 @@ class InvoicesController extends Controller
         }
 
         if ($request->has('date_from')) {
-            $query->where('invoice_date', '>=', $request->date_from);
+            $query->where('date', '>=', $request->date_from);
         }
 
         if ($request->has('date_to')) {
-            $query->where('invoice_date', '<=', $request->date_to);
+            $query->where('date', '<=', $request->date_to);
         }
 
         if ($request->has('overdue') && $request->overdue) {
@@ -71,7 +71,7 @@ class InvoicesController extends Controller
         }
 
         // Apply sorting
-        $sortBy = $request->get('sort_by', 'invoice_date');
+        $sortBy = $request->get('sort_by', 'date');
         $sortOrder = $request->get('sort_order', 'desc');
         $query->orderBy($sortBy, $sortOrder);
 
@@ -110,8 +110,8 @@ class InvoicesController extends Controller
     {
         $validated = $request->validate([
             'client_id' => 'required|exists:clients,id',
-            'invoice_date' => 'required|date',
-            'due_date' => 'required|date|after_or_equal:invoice_date',
+            'date' => 'required|date',
+            'due_date' => 'required|date|after_or_equal:date',
             'status' => ['sometimes', Rule::in(['draft', 'sent', 'paid', 'partial', 'overdue', 'cancelled'])],
             'po_number' => 'nullable|string|max:50',
             'terms' => self::NULLABLE_STRING_RULE,
@@ -167,7 +167,7 @@ class InvoicesController extends Controller
                 'company_id' => auth()->user()->company_id,
                 'client_id' => $validated['client_id'],
                 'invoice_number' => $invoiceNumber,
-                'invoice_date' => $validated['invoice_date'],
+                'date' => $validated['date'],
                 'due_date' => $validated['due_date'],
                 'status' => $validated['status'] ?? 'draft',
                 'po_number' => $validated['po_number'] ?? null,
@@ -275,8 +275,8 @@ class InvoicesController extends Controller
         }
 
         $validated = $request->validate([
-            'invoice_date' => 'sometimes|date',
-            'due_date' => 'sometimes|date|after_or_equal:invoice_date',
+            'date' => 'sometimes|date',
+            'due_date' => 'sometimes|date|after_or_equal:date',
             'status' => ['sometimes', Rule::in(['draft', 'sent', 'paid', 'partial', 'overdue', 'cancelled'])],
             'po_number' => 'nullable|string|max:50',
             'terms' => self::NULLABLE_STRING_RULE,
