@@ -683,7 +683,7 @@ class QuoteControllerTest extends TestCase
         $quote = Quote::factory()->create([
             'company_id' => $this->company->id,
             'client_id' => $this->client->id,
-            'status' => 'draft',
+            'status' => 'sent',
         ]);
 
         $response = $this->post(route('financial.quotes.cancel', $quote));
