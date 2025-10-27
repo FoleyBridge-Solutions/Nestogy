@@ -158,19 +158,21 @@ class BillingService
             $subscription->quantity ?? 1
         );
 
+        // Generate invoice number
+        $invoiceNumber = $this->generateInvoiceNumber();
+        [$prefix, $number] = $this->parseInvoiceNumber($invoiceNumber);
+
         // Create invoice
         $invoice = Invoice::create([
             'company_id' => $product->company_id,
             'client_id' => $client->id,
-            'invoice_number' => $this->generateInvoiceNumber(),
-            'invoice_date' => $billingDate,
+            'prefix' => $prefix,
+            'number' => $number,
+            'date' => $billingDate,
             'due_date' => $billingDate->copy()->addDays($product->payment_terms ?? 30),
-            'subtotal' => $pricing['subtotal'],
-            'tax' => $pricing['tax'],
-            'total' => $pricing['total'],
+            'amount' => $pricing['total'],
             'status' => 'draft',
-            'type' => 'subscription',
-            'notes' => 'Recurring billing for '.$product->name,
+            'note' => 'Recurring billing for '.$product->name,
         ]);
 
         // Add invoice items
@@ -308,13 +310,30 @@ class BillingService
     {
         $prefix = 'INV';
         $year = Carbon::now()->year;
-        $lastInvoice = Invoice::whereYear('created_at', $year)
-            ->orderBy('id', 'desc')
+        $lastInvoice = Invoice::where('prefix', $prefix)
+            ->orderBy('number', 'desc')
             ->first();
 
-        $sequence = $lastInvoice ? (intval(substr($lastInvoice->invoice_number, -4)) + 1) : 1;
+        $sequence = $lastInvoice ? ($lastInvoice->number + 1) : 1;
 
         return sprintf('%s-%d-%04d', $prefix, $year, $sequence);
+    }
+
+    /**
+     * Parse invoice number into prefix and number
+     */
+    protected function parseInvoiceNumber(string $invoiceNumber): array
+    {
+        // Format: INV-2024-0001
+        if (preg_match('/^([A-Z]+)-(\d+)-(\d+)$/', $invoiceNumber, $matches)) {
+            $prefix = $matches[1];
+            $number = (int) $matches[3];
+            return [$prefix, $number];
+        }
+
+        // Fallback: just use INV and extract last number
+        preg_match('/(\d+)$/', $invoiceNumber, $matches);
+        return ['INV', (int) ($matches[1] ?? 1)];
     }
 
     /**

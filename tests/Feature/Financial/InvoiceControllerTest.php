@@ -128,8 +128,9 @@ class InvoiceControllerTest extends TestCase
         $response = $this->getJson(route('financial.invoices.index'));
 
         $response->assertStatus(200);
-        $response->assertJsonPath('totals.paid', 1000);
-        $response->assertJsonPath('totals.sent', 500);
+        // Amounts are returned as decimal strings
+        $response->assertJsonPath('totals.paid', '1000.00');
+        $response->assertJsonPath('totals.sent', '500.00');
     }
 
     public function test_index_applies_client_filter_from_session(): void
@@ -255,7 +256,8 @@ class InvoiceControllerTest extends TestCase
 
         $response = $this->get(route('financial.invoices.show', $invoice));
 
-        $response->assertStatus(403);
+        // Returns 404 because global company scope prevents finding the invoice
+        $response->assertStatus(404);
     }
 
     public function test_show_calculates_invoice_totals(): void
@@ -268,7 +270,7 @@ class InvoiceControllerTest extends TestCase
         $response = $this->getJson(route('financial.invoices.show', $invoice));
 
         $response->assertStatus(200);
-        $response->assertJsonPath('totals.total', 1500);
+        $response->assertJsonPath('totals.total', '1500.00');
     }
 
     // ==================== Edit/Update Tests ====================
@@ -573,7 +575,7 @@ class InvoiceControllerTest extends TestCase
         $response->assertRedirect();
         $response->assertSessionHas('success');
 
-        $this->assertGreater(Invoice::count(), 1);
+        $this->assertGreaterThan(1, Invoice::count());
     }
 
     // ==================== Delete Tests ====================
@@ -588,7 +590,10 @@ class InvoiceControllerTest extends TestCase
         $response = $this->delete(route('financial.invoices.destroy', $invoice));
 
         $response->assertRedirect(route('financial.invoices.index'));
-        $this->assertDatabaseMissing('invoices', ['id' => $invoice->id]);
+        // Invoice uses archived_at for soft deletes
+        $this->assertDatabaseHas('invoices', ['id' => $invoice->id]);
+        $invoice->refresh();
+        $this->assertNotNull($invoice->archived_at);
     }
 
     public function test_destroy_denies_access_without_permission(): void
@@ -599,9 +604,8 @@ class InvoiceControllerTest extends TestCase
         ]);
 
         // Revoke permissions
-        \Silber\Bouncer\BouncerFacade::disallow($this->user)->toEverything();
+        \Silber\Bouncer\BouncerFacade::disallow($this->user)->everything();
         \Silber\Bouncer\BouncerFacade::refreshFor($this->user);
-
         $response = $this->delete(route('financial.invoices.destroy', $invoice));
 
         $response->assertStatus(403);
@@ -651,14 +655,14 @@ class InvoiceControllerTest extends TestCase
             'client_id' => $this->client->id,
         ]);
 
-        $response = $this->postJson(route('financial.invoices.update', $invoice), [
-            'notes' => 'Updated notes',
+        $response = $this->putJson(route('financial.invoices.update', $invoice), [
+            'note' => 'Updated notes',
         ]);
 
         $response->assertStatus(200);
         $this->assertDatabaseHas('invoices', [
             'id' => $invoice->id,
-            'notes' => 'Updated notes',
+            'note' => 'Updated notes',
         ]);
     }
 
@@ -710,7 +714,8 @@ class InvoiceControllerTest extends TestCase
 
         $response = $this->get(route('financial.invoices.show', $invoice));
 
-        $response->assertStatus(403);
+        // Returns 404 because global company scope prevents finding the invoice
+        $response->assertStatus(404);
     }
 
     public function test_index_only_shows_user_company_invoices(): void

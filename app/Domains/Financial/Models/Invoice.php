@@ -4,6 +4,7 @@ namespace App\Domains\Financial\Models;
 
 use App\Domains\Client\Models\Client;
 use App\Domains\PhysicalMail\Traits\HasPhysicalMail;
+use App\Domains\Tax\Models\TaxCalculation;
 use App\Domains\Ticket\Models\Ticket;
 use App\Traits\BelongsToCompany;
 use Carbon\Carbon;

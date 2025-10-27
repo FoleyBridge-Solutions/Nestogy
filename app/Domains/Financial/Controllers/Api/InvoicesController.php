@@ -62,8 +62,9 @@ class InvoicesController extends Controller
         if ($request->has('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('invoice_number', 'like', "%{$search}%")
-                    ->orWhere('po_number', 'like', "%{$search}%")
+                $q->where('number', 'like', "%{$search}%")
+                    ->orWhere('prefix', 'like', "%{$search}%")
+                    ->orWhere('note', 'like', "%{$search}%")
                     ->orWhereHas('client', function ($q) use ($search) {
                         $q->where('name', 'like', "%{$search}%");
                     });
@@ -80,7 +81,7 @@ class InvoicesController extends Controller
         // Calculate additional metrics
         $invoices->getCollection()->transform(function ($invoice) {
             $invoice->total_paid = $invoice->payments->sum('amount');
-            $invoice->balance_due = $invoice->total - $invoice->total_paid;
+            $invoice->balance_due = $invoice->amount - $invoice->total_paid;
             $invoice->is_overdue = $invoice->status !== 'paid' && $invoice->due_date < now();
             $invoice->days_overdue = $invoice->is_overdue
                 ? now()->diffInDays($invoice->due_date)
@@ -110,14 +111,17 @@ class InvoicesController extends Controller
     {
         $validated = $request->validate([
             'client_id' => 'required|exists:clients,id',
-            'date' => 'required|date',
-            'due_date' => 'required|date|after_or_equal:date',
+            'date' => 'sometimes|date',
+            'invoice_date' => 'sometimes|date',
+            'due_date' => 'sometimes|date|after_or_equal:' . ($request->has('date') ? 'date' : 'invoice_date'),
             'status' => ['sometimes', Rule::in(['draft', 'sent', 'paid', 'partial', 'overdue', 'cancelled'])],
+            'category_id' => 'nullable|exists:categories,id',
             'po_number' => 'nullable|string|max:50',
             'terms' => self::NULLABLE_STRING_RULE,
             'notes' => self::NULLABLE_STRING_RULE,
             'discount_type' => ['nullable', Rule::in(['fixed', 'percentage'])],
             'discount_value' => 'nullable|numeric|min:0',
+            'discount_amount' => 'nullable|numeric|min:0',
             'tax_rate' => 'nullable|numeric|min:0|max:100',
             'items' => 'required|array|min:1',
             'items.*.description' => 'required|string',
@@ -162,41 +166,48 @@ class InvoicesController extends Controller
 
             $total = $subtotal - $discountAmount + $taxTotal;
 
+            // Determine the invoice date
+            $invoiceDate = $validated['date'] ?? $validated['invoice_date'] ?? now();
+            $dueDate = $validated['due_date'] ?? now()->addDays(30);
+
+            // Get or create default category if not provided
+            $categoryId = $validated['category_id'] ?? $this->getDefaultCategoryId();
+
             // Create invoice
             $invoice = Invoice::create([
                 'company_id' => auth()->user()->company_id,
                 'client_id' => $validated['client_id'],
-                'invoice_number' => $invoiceNumber,
-                'date' => $validated['date'],
-                'due_date' => $validated['due_date'],
+                'prefix' => 'INV',
+                'number' => $this->getNextInvoiceNumber(),
+                'date' => $invoiceDate,
+                'due_date' => $dueDate,
                 'status' => $validated['status'] ?? 'draft',
-                'po_number' => $validated['po_number'] ?? null,
-                'terms' => $validated['terms'] ?? null,
-                'notes' => $validated['notes'] ?? null,
-                'subtotal' => $subtotal,
-                'discount_type' => $validated['discount_type'] ?? null,
-                'discount_value' => $validated['discount_value'] ?? 0,
-                'tax' => $taxTotal,
-                'total' => $total,
-                'created_by' => auth()->id(),
+                'category_id' => $categoryId,
+                'discount_amount' => $discountAmount,
+                'amount' => $total,
+                'currency_code' => 'USD',
+                'note' => $validated['notes'] ?? null,
             ]);
 
             // Create invoice items
             foreach ($validated['items'] as $item) {
-                $itemTotal = $item['quantity'] * $item['rate'];
+                $itemSubtotal = $item['quantity'] * $item['rate'];
                 $itemTax = isset($item['tax_rate'])
-                    ? $itemTotal * ($item['tax_rate'] / 100)
+                    ? $itemSubtotal * ($item['tax_rate'] / 100)
                     : 0;
+                $itemTotal = $itemSubtotal + $itemTax;
 
                 InvoiceItem::create([
+                    'company_id' => auth()->user()->company_id,
                     'invoice_id' => $invoice->id,
+                    'name' => $item['description'], // Use description as name
                     'description' => $item['description'],
                     'quantity' => $item['quantity'],
-                    'rate' => $item['rate'],
-                    'tax_rate' => $item['tax_rate'] ?? 0,
-                    'amount' => $itemTotal,
-                    'tax_amount' => $itemTax,
-                    'total' => $itemTotal + $itemTax,
+                    'price' => $item['rate'],
+                    'discount' => 0,
+                    'subtotal' => $itemSubtotal,
+                    'tax' => $itemTax,
+                    'total' => $itemTotal,
                 ]);
             }
 
@@ -242,11 +253,13 @@ class InvoicesController extends Controller
 
         // Calculate additional metrics
         $invoice->total_paid = $invoice->payments->sum('amount');
-        $invoice->balance_due = $invoice->total - $invoice->total_paid;
+        $invoice->balance_due = $invoice->amount - $invoice->total_paid;
         $invoice->is_overdue = $invoice->status !== 'paid' && $invoice->due_date < now();
         $invoice->days_overdue = $invoice->is_overdue
             ? now()->diffInDays($invoice->due_date)
             : 0;
+        
+        $invoice->total = $invoice->amount; // Alias for backwards compatibility
 
         return response()->json([
             'success' => true,
@@ -296,15 +309,8 @@ class InvoicesController extends Controller
             }
 
             $invoice->update($validated);
-            $this->handleStatusChangeNotifications($invoice, $oldStatus, $validated);
 
             DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'data' => $invoice->fresh(['client', 'items']),
-                'message' => 'Invoice updated successfully',
-            ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -316,6 +322,23 @@ class InvoicesController extends Controller
                 'error' => $e->getMessage(),
             ], 500);
         }
+
+        // Send notifications after commit to avoid transaction issues
+        // Failures here should not affect the invoice update success
+        try {
+            $this->handleStatusChangeNotifications($invoice, $oldStatus, $validated);
+        } catch (\Exception $e) {
+            Log::warning('Failed to send notification after invoice update', [
+                'invoice_id' => $invoice->id,
+                'error' => $e->getMessage()
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $invoice->fresh(['client', 'items']),
+            'message' => 'Invoice updated successfully',
+        ]);
     }
 
     /**
@@ -618,20 +641,23 @@ class InvoicesController extends Controller
     private function createInvoiceItems(int $invoiceId, array $items): void
     {
         foreach ($items as $item) {
-            $itemTotal = $item['quantity'] * $item['rate'];
+            $itemSubtotal = $item['quantity'] * $item['rate'];
             $itemTax = isset($item['tax_rate'])
-                ? $itemTotal * ($item['tax_rate'] / 100)
+                ? $itemSubtotal * ($item['tax_rate'] / 100)
                 : 0;
+            $itemTotal = $itemSubtotal + $itemTax;
 
             InvoiceItem::create([
+                'company_id' => auth()->user()->company_id,
                 'invoice_id' => $invoiceId,
+                'name' => $item['description'], // Use description as name
                 'description' => $item['description'],
                 'quantity' => $item['quantity'],
-                'rate' => $item['rate'],
-                'tax_rate' => $item['tax_rate'] ?? 0,
-                'amount' => $itemTotal,
-                'tax_amount' => $itemTax,
-                'total' => $itemTotal + $itemTax,
+                'price' => $item['rate'],
+                'discount' => 0,
+                'subtotal' => $itemSubtotal,
+                'tax' => $itemTax,
+                'total' => $itemTotal,
             ]);
         }
     }
@@ -648,31 +674,52 @@ class InvoicesController extends Controller
         if ($validated['status'] === 'sent') {
             $this->notificationService->notifyInvoiceSent($invoice);
         } elseif ($validated['status'] === 'paid') {
-            $this->notificationService->notifyPaymentReceived($invoice, $invoice->total);
+            $this->notificationService->notifyPaymentReceived($invoice, $invoice->amount);
         }
     }
 
     /**
-     * Generate a unique invoice number
+     * Generate a unique invoice number (unused - kept for compatibility)
      */
     private function generateInvoiceNumber(): string
     {
         $prefix = 'INV';
         $year = date('Y');
         $month = date('m');
-
-        $lastInvoice = Invoice::where('company_id', auth()->user()->company_id)
-            ->whereYear('created_at', $year)
-            ->whereMonth('created_at', $month)
-            ->orderBy('id', 'desc')
-            ->first();
-
-        if ($lastInvoice && preg_match('/INV-\d{6}-(\d+)/', $lastInvoice->invoice_number, $matches)) {
-            $nextNumber = intval($matches[1]) + 1;
-        } else {
-            $nextNumber = 1;
-        }
+        $nextNumber = $this->getNextInvoiceNumber();
 
         return sprintf('%s-%s%s-%04d', $prefix, $year, $month, $nextNumber);
+    }
+    
+    /**
+     * Get the next invoice number for company
+     */
+    private function getNextInvoiceNumber(): int
+    {
+        $lastInvoice = Invoice::where('company_id', auth()->user()->company_id)
+            ->where('prefix', 'INV')
+            ->orderBy('number', 'desc')
+            ->first();
+            
+        return $lastInvoice ? $lastInvoice->number + 1 : 1;
+    }
+
+    /**
+     * Get or create default category for invoices
+     */
+    private function getDefaultCategoryId(): int
+    {
+        $category = \App\Domains\Financial\Models\Category::firstOrCreate(
+            [
+                'company_id' => auth()->user()->company_id,
+                'name' => 'General',
+            ],
+            [
+                'description' => 'Default category for invoices',
+                'type' => 'income',
+            ]
+        );
+
+        return $category->id;
     }
 }

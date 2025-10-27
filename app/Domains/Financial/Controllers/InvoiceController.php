@@ -118,7 +118,7 @@ class InvoiceController extends Controller
                 $query->where(function ($q) use ($search) {
                     $q->where('number', 'like', "%{$search}%")
                         ->orWhere('scope', 'like', "%{$search}%")
-                        ->orWhere('description', 'like', "%{$search}%");
+                        ->orWhere('note', 'like', "%{$search}%");
                 });
             }
 
@@ -126,11 +126,11 @@ class InvoiceController extends Controller
 
             // Calculate totals
             $totals = [
-                'draft' => Invoice::where('company_id', $user->company_id)->where('status', 'Draft')->sum('amount'),
-                'sent' => Invoice::where('company_id', $user->company_id)->where('status', 'Sent')->sum('amount'),
-                'paid' => Invoice::where('company_id', $user->company_id)->where('status', 'Paid')->sum('amount'),
+                'draft' => Invoice::where('company_id', $user->company_id)->where('status', 'draft')->sum('amount'),
+                'sent' => Invoice::where('company_id', $user->company_id)->where('status', 'sent')->sum('amount'),
+                'paid' => Invoice::where('company_id', $user->company_id)->where('status', 'paid')->sum('amount'),
                 'overdue' => Invoice::where('company_id', $user->company_id)
-                    ->where('status', 'Sent')
+                    ->where('status', 'sent')
                     ->where('due_date', '<', now())
                     ->sum('amount'),
             ];
@@ -246,14 +246,9 @@ class InvoiceController extends Controller
         $this->authorize('update', $invoice);
 
         // Only allow editing of draft invoices
-        if ($invoice->status !== 'Draft') {
-            \Flux\Flux::toast(
-                heading: 'Cannot Edit Invoice',
-                text: 'Only draft invoices can be edited. This invoice has status: '.$invoice->status,
-                variant: 'danger'
-            );
-
-            return redirect()->route('financial.invoices.show', $invoice);
+        if ($invoice->status !== 'draft' && $invoice->status !== 'Draft') {
+            return redirect()->route('financial.invoices.show', $invoice)
+                ->with('error', 'Only draft invoices can be edited. This invoice has status: '.$invoice->status);
         }
 
         $user = Auth::user();
@@ -719,7 +714,7 @@ class InvoiceController extends Controller
         $this->authorize('delete', $invoice);
 
         try {
-            $invoiceNumber = $invoice->number;
+            $invoiceNumber = $invoice->getFullNumber();
             $this->invoiceService->deleteInvoice($invoice);
 
             Log::warning('Invoice deleted', [

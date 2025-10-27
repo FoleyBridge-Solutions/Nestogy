@@ -371,7 +371,7 @@ class Dashboard extends Component
                 return [
                     'date' => $invoice->payments->first()->created_at ?? $invoice->created_at,
                     'amount' => $invoice->payments->sum('amount'),
-                    'invoice_number' => $invoice->invoice_number,
+                    'invoice_number' => $invoice->getFullNumber(),
                     'status' => $invoice->status,
                     'method' => $invoice->payments->first()->payment_method ?? 'Unknown',
                 ];
@@ -512,7 +512,7 @@ class Dashboard extends Component
                 ->limit(3)
                 ->get()
                 ->map(fn ($invoice) => [
-                    'name' => 'Invoice #'.$invoice->invoice_number,
+                    'name' => 'Invoice #'.$invoice->getFullNumber(),
                     'type' => 'Invoice',
                     'date' => $invoice->created_at,
                     'url' => route('client.invoices.download', $invoice->id),

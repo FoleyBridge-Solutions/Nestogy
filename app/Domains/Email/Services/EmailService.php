@@ -72,6 +72,47 @@ class EmailService implements EmailServiceInterface
             return false;
         }
     }
+    
+    /**
+     * Send email using a template view
+     * @param string $to Recipient email address
+     * @param string $subject Email subject
+     * @param string $template Blade template path
+     * @param array $data Data to pass to the template
+     * @param array $attachments Optional attachments
+     * @return bool Success status
+     */
+    public function sendEmail(string $to, string $subject, string $template, array $data = [], array $attachments = []): bool
+    {
+        try {
+            Mail::send($template, $data, function ($message) use ($to, $subject, $attachments) {
+                $message->to($to)
+                    ->subject($subject);
+                    
+                foreach ($attachments as $attachment) {
+                    if (is_array($attachment)) {
+                        $message->attach($attachment['path'], [
+                            'as' => $attachment['name'] ?? null,
+                            'mime' => $attachment['mime'] ?? null,
+                        ]);
+                    } else {
+                        $message->attach($attachment);
+                    }
+                }
+            });
+
+            return true;
+        } catch (\Exception $e) {
+            logger()->error('Failed to send email', [
+                'to' => $to,
+                'subject' => $subject,
+                'template' => $template,
+                'error' => $e->getMessage(),
+            ]);
+
+            return false;
+        }
+    }
 
     /**
      * Send email using a Mailable class

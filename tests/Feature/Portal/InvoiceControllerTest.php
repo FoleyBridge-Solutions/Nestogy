@@ -385,8 +385,13 @@ class InvoiceControllerTest extends TestCase
 
     protected function actingAsPortalClient(Client $client)
     {
-        // This is a placeholder for portal authentication
-        // Actual implementation depends on your portal authentication system
-        return $this->withHeader('Authorization', 'Bearer ' . 'portal_token_' . $client->id);
+        // Create a contact for the client
+        $contact = \App\Domains\Client\Models\Contact::factory()->create([
+            'client_id' => $client->id,
+            'primary' => true,
+        ]);
+        
+        // Authenticate as the contact using the 'client' guard
+        return $this->actingAs($contact, 'client');
     }
 }

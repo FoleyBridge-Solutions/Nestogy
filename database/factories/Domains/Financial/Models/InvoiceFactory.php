@@ -127,14 +127,8 @@ class InvoiceFactory extends Factory
     public function withTotal(float $total): static
     {
         return $this->state(function (array $attributes) use ($total) {
-            $taxRate = $attributes['tax_rate'] ?? 0;
-            $subtotal = $total / (1 + $taxRate);
-            $taxAmount = $subtotal * $taxRate;
-
             return [
-            'subtotal' => round($subtotal, 2),
-                'tax_amount' => round($taxAmount, 2),
-                'total' => $total,
+                'amount' => $total,
             ];
         });
     }
@@ -176,11 +170,8 @@ class InvoiceFactory extends Factory
     public function withDiscount(float $discountAmount): static
     {
         return $this->state(function (array $attributes) use ($discountAmount) {
-            $newTotal = $attributes['total'] - $discountAmount;
-
             return [
-            'discount_amount' => $discountAmount,
-                'total' => max(0, $newTotal),
+                'discount_amount' => $discountAmount,
             ];
         });
     }

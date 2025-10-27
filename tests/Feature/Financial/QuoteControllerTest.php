@@ -174,13 +174,16 @@ class QuoteControllerTest extends TestCase
 
         $response = $this->post(route('financial.quotes.store'), $data);
 
-        $response->assertRedirect(route('financial.quotes.show', Quote::first()));
         $response->assertSessionHas('success');
 
         $this->assertDatabaseHas('quotes', [
             'client_id' => $this->client->id,
             'company_id' => $this->company->id,
         ]);
+        
+        $quote = Quote::first();
+        $this->assertNotNull($quote);
+        $response->assertRedirect(route('financial.quotes.show', $quote));
     }
 
     public function test_store_returns_json_response(): void
@@ -262,7 +265,7 @@ class QuoteControllerTest extends TestCase
         $response = $this->getJson(route('financial.quotes.show', $quote));
 
         $response->assertStatus(200);
-        $response->assertJsonPath('totals.total', 2000);
+        $response->assertJsonPath('totals.total', '2000.00');
     }
 
     public function test_show_denies_access_to_other_company_quote(): void
@@ -272,7 +275,8 @@ class QuoteControllerTest extends TestCase
 
         $response = $this->get(route('financial.quotes.show', $quote));
 
-        $response->assertStatus(403);
+        // Returns 404 because global company scope prevents finding the quote
+        $response->assertStatus(404);
     }
 
     // ==================== Edit/Update Tests ====================
@@ -297,7 +301,7 @@ class QuoteControllerTest extends TestCase
             'company_id' => $this->company->id,
             'client_id' => $this->client->id,
             'status' => 'sent',
-            'approval_status' => 'fully_approved',
+            'approval_status' => 'executive_approved',
         ]);
 
         $response = $this->get(route('financial.quotes.edit', $quote));
@@ -335,7 +339,7 @@ class QuoteControllerTest extends TestCase
             'company_id' => $this->company->id,
             'client_id' => $this->client->id,
             'status' => 'sent',
-            'approval_status' => 'fully_approved',
+            'approval_status' => 'executive_approved',
         ]);
 
         $response = $this->put(route('financial.quotes.update', $quote), [
@@ -470,7 +474,7 @@ class QuoteControllerTest extends TestCase
         $quote = Quote::factory()->create([
             'company_id' => $this->company->id,
             'client_id' => $this->client->id,
-            'approval_status' => 'fully_approved',
+            'approval_status' => 'executive_approved',
         ]);
 
         $response = $this->post(route('financial.quotes.send-email', $quote));
@@ -668,7 +672,10 @@ class QuoteControllerTest extends TestCase
         $response = $this->delete(route('financial.quotes.destroy', $quote));
 
         $response->assertRedirect(route('financial.quotes.index'));
-        $this->assertDatabaseMissing('quotes', ['id' => $quote->id]);
+        // Quote uses archived_at for soft deletes
+        $this->assertDatabaseHas('quotes', ['id' => $quote->id]);
+        $quote->refresh();
+        $this->assertNotNull($quote->archived_at);
     }
 
     public function test_cancel_quote(): void
@@ -806,7 +813,8 @@ class QuoteControllerTest extends TestCase
 
         $response = $this->get(route('financial.quotes.show', $quote));
 
-        $response->assertStatus(403);
+        $response->assertStatus(404);
+        // Returns 404 because global company scope prevents finding the quote
     }
 
     public function test_index_only_shows_user_company_quotes(): void

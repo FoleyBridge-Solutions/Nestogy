@@ -15,9 +15,27 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('financial')->name('finan
     Route::get('/', [\App\Domains\Financial\Controllers\FinancialDashboardController::class, 'index'])->name('index');
     Route::get('/dashboard', [\App\Domains\Financial\Controllers\FinancialDashboardController::class, 'index'])->name('dashboard');
 
+    // Quote utility routes (MUST be before resource route to avoid ID conflicts)
+    Route::get('quotes/export-csv', [QuoteController::class, 'exportCsv'])->name('quotes.export-csv');
+    Route::get('quotes/search-products', [QuoteController::class, 'searchProducts'])->name('quotes.search-products');
+    Route::get('quotes/search-clients', [QuoteController::class, 'searchClients'])->name('quotes.search-clients');
+    Route::get('quotes/product-categories', [QuoteController::class, 'getProductCategories'])->name('quotes.product-categories');
+    Route::post('quotes/bulk-update-status', [QuoteController::class, 'bulkUpdateStatus'])->name('quotes.bulk-update-status');
+    Route::get('quotes/statistics', [QuoteController::class, 'statistics'])->name('quotes.statistics');
+    
     // Quote routes
     Route::resource('quotes', QuoteController::class);
+    
     Route::prefix('quotes/{quote}')->name('quotes.')->group(function () {
+        Route::post('add-item', [QuoteController::class, 'addItem'])->name('add-item');
+        Route::delete('delete-item/{item}', [QuoteController::class, 'deleteItem'])->name('delete-item');
+        Route::post('submit-for-approval', [QuoteController::class, 'submitForApproval'])->name('submit-for-approval');
+        Route::post('process-approval', [QuoteController::class, 'processApproval'])->name('process-approval');
+        Route::post('send-email', [QuoteController::class, 'sendEmail'])->name('send-email');
+        Route::get('generate-pdf', [QuoteController::class, 'generatePdf'])->name('generate-pdf');
+        Route::post('convert-to-recurring', [QuoteController::class, 'convertToRecurring'])->name('convert-to-recurring');
+        Route::get('preview-recurring', [QuoteController::class, 'previewRecurringConversion'])->name('preview-recurring');
+        Route::post('create-revision', [QuoteController::class, 'createRevision'])->name('create-revision');
         Route::post('approve', [QuoteController::class, 'approve'])->name('approve');
         Route::post('reject', [QuoteController::class, 'reject'])->name('reject');
         Route::post('send', [QuoteController::class, 'send'])->name('send');
@@ -30,6 +48,9 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('financial')->name('finan
         Route::get('versions', [QuoteController::class, 'versions'])->name('versions');
         Route::post('versions/{version}/restore', [QuoteController::class, 'restoreVersion'])->name('versions.restore');
     });
+    
+    // Quote template routes
+    Route::post('quotes/templates/{template}/create-from-template', [QuoteController::class, 'createFromTemplate'])->name('quotes.create-from-template');
 
     // API routes for enhanced quote/invoice builder
     Route::prefix('api')->name('api.')->group(function () {
@@ -43,19 +64,25 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('financial')->name('finan
         Route::post('document-templates/{template}/favorite', [\App\Domains\Knowledge\Http\Controllers\Api\DocumentTemplateController::class, 'toggleFavorite'])->name('document-templates.favorite');
     });
 
-    // Invoice routes
-    Route::resource('invoices', InvoiceController::class)->except(['show']);
-    Route::get('invoices/{invoice}', \App\Livewire\Financial\InvoiceShow::class)->name('invoices.show');
+    // Invoice utility routes (MUST be before resource route to avoid ID conflicts)
     Route::get('invoices/overdue', [InvoiceController::class, 'overdue'])->name('invoices.overdue');
     Route::get('invoices/draft', [InvoiceController::class, 'draft'])->name('invoices.draft');
     Route::get('invoices/sent', [InvoiceController::class, 'sent'])->name('invoices.sent');
     Route::get('invoices/paid', [InvoiceController::class, 'paid'])->name('invoices.paid');
     Route::get('invoices/recurring', [InvoiceController::class, 'recurring'])->name('invoices.recurring');
     Route::get('invoices/export/csv', [InvoiceController::class, 'exportCsv'])->name('invoices.export.csv');
+    
+    // Invoice routes
+    Route::resource('invoices', InvoiceController::class);
 
     // Recurring Invoices
     Route::resource('recurring-invoices', RecurringInvoiceController::class);
     Route::prefix('invoices/{invoice}')->name('invoices.')->group(function () {
+        Route::post('add-item', [InvoiceController::class, 'addItem'])->name('add-item');
+        Route::put('update-item/{item}', [InvoiceController::class, 'updateItem'])->name('update-item');
+        Route::delete('delete-item/{item}', [InvoiceController::class, 'deleteItem'])->name('delete-item');
+        Route::post('add-payment', [InvoiceController::class, 'addPayment'])->name('add-payment');
+        Route::post('send-email', [InvoiceController::class, 'sendEmail'])->name('send-email');
         Route::post('send', [InvoiceController::class, 'send'])->name('send');
         Route::get('pdf', [InvoiceController::class, 'generatePdf'])->name('pdf');
         Route::post('duplicate', [InvoiceController::class, 'duplicate'])->name('duplicate');
