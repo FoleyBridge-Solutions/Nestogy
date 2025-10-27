@@ -58,7 +58,7 @@ class QuoteControllerTest extends TestCase
         ]);
 
         $response = $this->getJson(route('financial.quotes.index', [
-            'status' => 'draft',
+            'status' => 'Draft',
             'client_id' => $this->client->id,
         ]));
 
@@ -74,16 +74,16 @@ class QuoteControllerTest extends TestCase
         Quote::factory()->count(2)->create([
             'company_id' => $this->company->id,
             'client_id' => $this->client->id,
-            'status' => 'draft',
+            'status' => 'Draft',
         ]);
 
         Quote::factory()->count(3)->create([
             'company_id' => $this->company->id,
             'client_id' => $this->client->id,
-            'status' => 'sent',
+            'status' => 'Sent',
         ]);
 
-        $response = $this->getJson(route('financial.quotes.index', ['status' => 'draft']));
+        $response = $this->getJson(route('financial.quotes.index', ['status' => 'Draft']));
 
         $response->assertStatus(200);
     }
@@ -169,7 +169,7 @@ class QuoteControllerTest extends TestCase
             'date' => now()->format('Y-m-d'),
             'expire' => now()->addDays(30)->format('Y-m-d'),
             'amount' => 2500,
-            'status' => 'draft',
+            'status' => 'Draft',
         ];
 
         $response = $this->post(route('financial.quotes.store'), $data);
@@ -286,7 +286,7 @@ class QuoteControllerTest extends TestCase
         $quote = Quote::factory()->create([
             'company_id' => $this->company->id,
             'client_id' => $this->client->id,
-            'status' => 'draft',
+            'status' => 'Draft',
         ]);
 
         $response = $this->get(route('financial.quotes.edit', $quote));
@@ -300,7 +300,7 @@ class QuoteControllerTest extends TestCase
         $quote = Quote::factory()->create([
             'company_id' => $this->company->id,
             'client_id' => $this->client->id,
-            'status' => 'sent',
+            'status' => 'Sent',
             'approval_status' => 'executive_approved',
         ]);
 
@@ -315,7 +315,7 @@ class QuoteControllerTest extends TestCase
         $quote = Quote::factory()->create([
             'company_id' => $this->company->id,
             'client_id' => $this->client->id,
-            'status' => 'draft',
+            'status' => 'Draft',
             'amount' => 1000,
         ]);
 
@@ -338,7 +338,7 @@ class QuoteControllerTest extends TestCase
         $quote = Quote::factory()->create([
             'company_id' => $this->company->id,
             'client_id' => $this->client->id,
-            'status' => 'sent',
+            'status' => 'Sent',
             'approval_status' => 'executive_approved',
         ]);
 
@@ -356,7 +356,7 @@ class QuoteControllerTest extends TestCase
         $quote = Quote::factory()->create([
             'company_id' => $this->company->id,
             'client_id' => $this->client->id,
-            'status' => 'draft',
+            'status' => 'Draft',
         ]);
 
         $response = $this->post(route('financial.quotes.add-item', $quote), [
@@ -407,7 +407,7 @@ class QuoteControllerTest extends TestCase
         $quote = Quote::factory()->create([
             'company_id' => $this->company->id,
             'client_id' => $this->client->id,
-            'status' => 'draft',
+            'status' => 'Draft',
         ]);
 
         $response = $this->post(route('financial.quotes.submit-for-approval', $quote));
@@ -538,7 +538,7 @@ class QuoteControllerTest extends TestCase
         $quote = Quote::factory()->create([
             'company_id' => $this->company->id,
             'client_id' => $this->client->id,
-            'status' => 'draft',
+            'status' => 'Draft',
         ]);
 
         $response = $this->post(route('financial.quotes.convert-to-invoice', $quote));
@@ -666,7 +666,7 @@ class QuoteControllerTest extends TestCase
         $quote = Quote::factory()->create([
             'company_id' => $this->company->id,
             'client_id' => $this->client->id,
-            'status' => 'draft',
+            'status' => 'Draft',
         ]);
 
         $response = $this->delete(route('financial.quotes.destroy', $quote));
@@ -683,7 +683,7 @@ class QuoteControllerTest extends TestCase
         $quote = Quote::factory()->create([
             'company_id' => $this->company->id,
             'client_id' => $this->client->id,
-            'status' => 'sent',
+            'status' => 'Sent',
         ]);
 
         $response = $this->post(route('financial.quotes.cancel', $quote));
@@ -691,7 +691,7 @@ class QuoteControllerTest extends TestCase
         $response->assertRedirect();
         $this->assertDatabaseHas('quotes', [
             'id' => $quote->id,
-            'status' => 'cancelled',
+            'status' => 'Cancelled',
         ]);
     }
 
@@ -700,7 +700,7 @@ class QuoteControllerTest extends TestCase
         $quote = Quote::factory()->create([
             'company_id' => $this->company->id,
             'client_id' => $this->client->id,
-            'status' => 'cancelled',
+            'status' => 'Cancelled',
         ]);
 
         $response = $this->post(route('financial.quotes.cancel', $quote));
@@ -774,14 +774,14 @@ class QuoteControllerTest extends TestCase
         $quotes = Quote::factory()->count(3)->create([
             'company_id' => $this->company->id,
             'client_id' => $this->client->id,
-            'status' => 'draft',
+            'status' => 'Draft',
         ]);
 
         $quoteIds = $quotes->pluck('id')->toArray();
 
         $response = $this->postJson(route('financial.quotes.bulk-update-status'), [
             'quote_ids' => $quoteIds,
-            'status' => 'sent',
+            'status' => 'Sent',
         ]);
 
         $response->assertStatus(200);

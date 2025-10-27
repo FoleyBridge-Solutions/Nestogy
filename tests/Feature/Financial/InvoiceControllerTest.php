@@ -78,7 +78,7 @@ class InvoiceControllerTest extends TestCase
             'client_id' => $this->client->id,
         ]);
 
-        $response = $this->getJson(route('financial.invoices.index', ['status' => 'draft']));
+        $response = $this->getJson(route('financial.invoices.index', ['status' => 'Draft']));
 
         $response->assertStatus(200);
     }
@@ -473,13 +473,13 @@ class InvoiceControllerTest extends TestCase
         ]);
 
         $response = $this->patch(route('financial.invoices.update-status', $invoice), [
-            'status' => 'sent',
+            'status' => 'Sent',
         ]);
 
         $response->assertRedirect(route('financial.invoices.show', $invoice));
         $this->assertDatabaseHas('invoices', [
             'id' => $invoice->id,
-            'status' => 'sent',
+            'status' => 'Sent',
         ]);
     }
 
@@ -515,7 +515,7 @@ class InvoiceControllerTest extends TestCase
         $response->assertRedirect(route('financial.invoices.show', $invoice));
         $this->assertDatabaseHas('invoices', [
             'id' => $invoice->id,
-            'status' => 'sent',
+            'status' => 'Sent',
         ]);
     }
 
@@ -535,7 +535,7 @@ class InvoiceControllerTest extends TestCase
         $response->assertRedirect(route('financial.invoices.show', $invoice));
         $this->assertDatabaseHas('invoices', [
             'id' => $invoice->id,
-            'status' => 'sent',
+            'status' => 'Sent',
         ]);
     }
 
