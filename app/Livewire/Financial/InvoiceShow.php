@@ -160,7 +160,7 @@ class InvoiceShow extends Component
             if ($result) {
                 // Update status to sent if it was draft
                 if ($this->invoice->status === 'Draft') {
-                    $this->invoiceService->updateInvoiceStatus($this->invoice, 'Sent');
+                    $this->invoice->update(['status' => 'Sent']);
                     $this->loadInvoiceData(); // Refresh data
                 }
 
