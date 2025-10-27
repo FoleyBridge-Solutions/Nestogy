@@ -39,12 +39,14 @@ class NavigationServiceTest extends TestCase
         
         $this->actingAs($this->user);
         NavigationService::clearSelectedClient();
+        Route::clearResolvedInstances();
     }
 
     protected function tearDown(): void
     {
         NavigationService::clearSelectedClient();
         session()->flush();
+        Route::clearResolvedInstances();
         \Mockery::close();
         parent::tearDown();
     }
@@ -56,7 +58,7 @@ class NavigationServiceTest extends TestCase
      public function test_gets_active_domain_from_clients_route(): void
      {
          NavigationService::setSelectedClient($this->client->id);
-         Route::shouldReceive('currentRouteName')->andReturn('clients.show');
+         Route::shouldReceive('currentRouteName')->andReturn('clients.show')->byDefault();
          
          $domain = NavigationService::getActiveDomain();
          
@@ -65,7 +67,7 @@ class NavigationServiceTest extends TestCase
 
     public function test_gets_active_domain_from_tickets_route(): void
     {
-        Route::shouldReceive('currentRouteName')->andReturn('tickets.index');
+        Route::shouldReceive('currentRouteName')->andReturn('tickets.index')->byDefault();
         
         $domain = NavigationService::getActiveDomain();
         
@@ -74,7 +76,7 @@ class NavigationServiceTest extends TestCase
 
     public function test_gets_active_domain_from_assets_route(): void
     {
-        Route::shouldReceive('currentRouteName')->andReturn('assets.index');
+        Route::shouldReceive('currentRouteName')->andReturn('assets.index')->byDefault();
         
         $domain = NavigationService::getActiveDomain();
         
@@ -83,7 +85,7 @@ class NavigationServiceTest extends TestCase
 
     public function test_gets_active_domain_from_financial_route(): void
     {
-        Route::shouldReceive('currentRouteName')->andReturn('financial.invoices.index');
+        Route::shouldReceive('currentRouteName')->andReturn('financial.invoices.index')->byDefault();
         
         $domain = NavigationService::getActiveDomain();
         
@@ -92,7 +94,7 @@ class NavigationServiceTest extends TestCase
 
     public function test_gets_active_domain_from_billing_route(): void
     {
-        Route::shouldReceive('currentRouteName')->andReturn('billing.index');
+        Route::shouldReceive('currentRouteName')->andReturn('billing.index')->byDefault();
         
         $domain = NavigationService::getActiveDomain();
         
@@ -101,7 +103,7 @@ class NavigationServiceTest extends TestCase
 
     public function test_gets_active_domain_from_projects_route(): void
     {
-        Route::shouldReceive('currentRouteName')->andReturn('projects.index');
+        Route::shouldReceive('currentRouteName')->andReturn('projects.index')->byDefault();
         
         $domain = NavigationService::getActiveDomain();
         
@@ -110,7 +112,7 @@ class NavigationServiceTest extends TestCase
 
     public function test_gets_active_domain_from_reports_route(): void
     {
-        Route::shouldReceive('currentRouteName')->andReturn('reports.index');
+        Route::shouldReceive('currentRouteName')->andReturn('reports.index')->byDefault();
         
         $domain = NavigationService::getActiveDomain();
         
@@ -119,7 +121,7 @@ class NavigationServiceTest extends TestCase
 
     public function test_returns_null_for_unknown_route(): void
     {
-        Route::shouldReceive('currentRouteName')->andReturn('unknown.route');
+        Route::shouldReceive('currentRouteName')->andReturn('unknown.route')->byDefault();
         
         $domain = NavigationService::getActiveDomain();
         
@@ -128,7 +130,7 @@ class NavigationServiceTest extends TestCase
 
     public function test_returns_null_when_no_route_name(): void
     {
-        Route::shouldReceive('currentRouteName')->andReturn(null);
+        Route::shouldReceive('currentRouteName')->andReturn(null)->byDefault();
         
         $domain = NavigationService::getActiveDomain();
         
@@ -141,7 +143,7 @@ class NavigationServiceTest extends TestCase
 
     public function test_gets_sidebar_context_matches_active_domain(): void
     {
-        Route::shouldReceive('currentRouteName')->andReturn('tickets.index');
+        Route::shouldReceive('currentRouteName')->andReturn('tickets.index')->byDefault();
         
         $context = NavigationService::getSidebarContext();
         $domain = NavigationService::getActiveDomain();
@@ -151,7 +153,7 @@ class NavigationServiceTest extends TestCase
 
     public function test_sidebar_context_hidden_on_clients_index_without_selection(): void
     {
-        Route::shouldReceive('currentRouteName')->andReturn('clients.index');
+        Route::shouldReceive('currentRouteName')->andReturn('clients.index')->byDefault();
         
         $context = NavigationService::getSidebarContext();
         
@@ -161,7 +163,7 @@ class NavigationServiceTest extends TestCase
      public function test_sidebar_context_shown_on_clients_index_with_selection(): void
      {
          NavigationService::setSelectedClient($this->client->id);
-         Route::shouldReceive('currentRouteName')->andReturn('clients.show');
+         Route::shouldReceive('currentRouteName')->andReturn('clients.show')->byDefault();
          
          $context = NavigationService::getSidebarContext();
          
@@ -170,7 +172,7 @@ class NavigationServiceTest extends TestCase
 
      public function test_sidebar_context_hidden_on_client_create_route(): void
      {
-         Route::shouldReceive('currentRouteName')->andReturn('clients.create');
+         Route::shouldReceive('currentRouteName')->andReturn('clients.create')->byDefault();
          
          $context = NavigationService::getSidebarContext();
          
@@ -179,7 +181,7 @@ class NavigationServiceTest extends TestCase
 
      public function test_settings_route_returns_settings_domain(): void
      {
-         Route::shouldReceive('currentRouteName')->andReturn('settings.general');
+         Route::shouldReceive('currentRouteName')->andReturn('settings.general')->byDefault();
          
          $domain = NavigationService::getActiveDomain();
          
@@ -189,7 +191,7 @@ class NavigationServiceTest extends TestCase
      public function test_settings_route_overrides_client_selection(): void
      {
          NavigationService::setSelectedClient($this->client->id);
-         Route::shouldReceive('currentRouteName')->andReturn('settings.email');
+         Route::shouldReceive('currentRouteName')->andReturn('settings.email')->byDefault();
          
          $domain = NavigationService::getActiveDomain();
          
@@ -199,7 +201,7 @@ class NavigationServiceTest extends TestCase
      public function test_settings_sidebar_context_with_selected_client(): void
      {
          NavigationService::setSelectedClient($this->client->id);
-         Route::shouldReceive('currentRouteName')->andReturn('settings.security');
+         Route::shouldReceive('currentRouteName')->andReturn('settings.security')->byDefault();
          
          $context = NavigationService::getSidebarContext();
          
@@ -212,7 +214,7 @@ class NavigationServiceTest extends TestCase
 
     public function test_gets_active_navigation_item_for_tickets_index(): void
     {
-        Route::shouldReceive('currentRouteName')->andReturn('tickets.index');
+        Route::shouldReceive('currentRouteName')->andReturn('tickets.index')->byDefault();
         
         $item = NavigationService::getActiveNavigationItem();
         
@@ -221,7 +223,7 @@ class NavigationServiceTest extends TestCase
 
     public function test_gets_active_navigation_item_for_tickets_create(): void
     {
-        Route::shouldReceive('currentRouteName')->andReturn('tickets.create');
+        Route::shouldReceive('currentRouteName')->andReturn('tickets.create')->byDefault();
         
         $item = NavigationService::getActiveNavigationItem();
         
@@ -230,7 +232,7 @@ class NavigationServiceTest extends TestCase
 
     public function test_gets_active_navigation_item_for_financial_invoices(): void
     {
-        Route::shouldReceive('currentRouteName')->andReturn('financial.invoices.index');
+        Route::shouldReceive('currentRouteName')->andReturn('financial.invoices.index')->byDefault();
         
         $item = NavigationService::getActiveNavigationItem();
         
@@ -239,7 +241,7 @@ class NavigationServiceTest extends TestCase
 
     public function test_gets_active_navigation_item_for_financial_contracts(): void
     {
-        Route::shouldReceive('currentRouteName')->andReturn('financial.contracts.index');
+        Route::shouldReceive('currentRouteName')->andReturn('financial.contracts.index')->byDefault();
         
         $item = NavigationService::getActiveNavigationItem();
         
@@ -248,7 +250,7 @@ class NavigationServiceTest extends TestCase
 
     public function test_returns_null_navigation_item_for_unknown_route(): void
     {
-        Route::shouldReceive('currentRouteName')->andReturn('unknown.route');
+        Route::shouldReceive('currentRouteName')->andReturn('unknown.route')->byDefault();
         
         $item = NavigationService::getActiveNavigationItem();
         
@@ -261,7 +263,7 @@ class NavigationServiceTest extends TestCase
 
     public function test_is_route_active_returns_true_for_matching_route(): void
     {
-        Route::shouldReceive('currentRouteName')->andReturn('tickets.index');
+        Route::shouldReceive('currentRouteName')->andReturn('tickets.index')->byDefault();
         
         $isActive = NavigationService::isRouteActive('tickets.index');
         
@@ -270,7 +272,7 @@ class NavigationServiceTest extends TestCase
 
     public function test_is_route_active_returns_false_for_different_route(): void
     {
-        Route::shouldReceive('currentRouteName')->andReturn('tickets.create');
+        Route::shouldReceive('currentRouteName')->andReturn('tickets.create')->byDefault();
         
         $isActive = NavigationService::isRouteActive('tickets.index');
         
@@ -279,7 +281,7 @@ class NavigationServiceTest extends TestCase
 
     public function test_is_route_active_checks_parameters(): void
     {
-        Route::shouldReceive('currentRouteName')->andReturn('tickets.index');
+        Route::shouldReceive('currentRouteName')->andReturn('tickets.index')->byDefault();
         
         request()->merge(['filter' => 'my']);
         $isActive = NavigationService::isRouteActive('tickets.index', ['filter' => 'my']);
@@ -289,7 +291,7 @@ class NavigationServiceTest extends TestCase
 
     public function test_is_route_active_returns_false_for_mismatched_parameters(): void
     {
-        Route::shouldReceive('currentRouteName')->andReturn('tickets.index');
+        Route::shouldReceive('currentRouteName')->andReturn('tickets.index')->byDefault();
         
         request()->merge(['filter' => 'my']);
         $isActive = NavigationService::isRouteActive('tickets.index', ['filter' => 'open']);
@@ -481,7 +483,7 @@ class NavigationServiceTest extends TestCase
     {
         NavigationService::setSelectedClient($this->client->id);
         NavigationService::setWorkflowContext('urgent');
-        Route::shouldReceive('currentRouteName')->andReturn('tickets.index');
+        Route::shouldReceive('currentRouteName')->andReturn('tickets.index')->byDefault();
         
         $state = NavigationService::getWorkflowNavigationState();
         
@@ -494,7 +496,7 @@ class NavigationServiceTest extends TestCase
     public function test_get_workflow_navigation_state_handles_no_client(): void
     {
         NavigationService::clearSelectedClient();
-        Route::shouldReceive('currentRouteName')->andReturn('tickets.index');
+        Route::shouldReceive('currentRouteName')->andReturn('tickets.index')->byDefault();
         
         $state = NavigationService::getWorkflowNavigationState();
         
@@ -890,7 +892,7 @@ class NavigationServiceTest extends TestCase
 
     public function test_breadcrumbs_empty_for_clients_index_without_selection(): void
     {
-        Route::shouldReceive('currentRouteName')->andReturn('clients.index');
+        Route::shouldReceive('currentRouteName')->andReturn('clients.index')->byDefault();
         
         $breadcrumbs = NavigationService::getBreadcrumbs();
         
@@ -1124,7 +1126,7 @@ class NavigationServiceTest extends TestCase
         ];
         
         foreach ($routes as $route) {
-            Route::shouldReceive('currentRouteName')->andReturn($route);
+            Route::shouldReceive('currentRouteName')->andReturn($route)->byDefault();
             $breadcrumbs = NavigationService::getBreadcrumbs();
             $this->assertIsArray($breadcrumbs);
         }

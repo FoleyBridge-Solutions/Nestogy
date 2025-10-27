@@ -243,6 +243,7 @@ class Handler extends ExceptionHandler
 
         return response()->view('errors.404', [
             'message' => "The requested {$model} could not be found.",
+            'errors' => session()->get('errors', new \Illuminate\Support\ViewErrorBag()),
         ], 404);
     }
 
@@ -260,6 +261,7 @@ class Handler extends ExceptionHandler
 
         return response()->view('errors.404', [
             'message' => 'The requested page could not be found.',
+            'errors' => session()->get('errors', new \Illuminate\Support\ViewErrorBag()),
         ], 404);
     }
 
@@ -277,6 +279,7 @@ class Handler extends ExceptionHandler
 
         return response()->view('errors.405', [
             'message' => 'The requested method is not allowed.',
+            'errors' => session()->get('errors', new \Illuminate\Support\ViewErrorBag()),
         ], 405);
     }
 
@@ -335,6 +338,7 @@ class Handler extends ExceptionHandler
 
         return response()->view("errors.{$statusCode}", [
             'message' => $message,
+            'errors' => session()->get('errors', new \Illuminate\Support\ViewErrorBag()),
         ], $statusCode);
     }
 
@@ -362,6 +366,7 @@ class Handler extends ExceptionHandler
 
         return response()->view('errors.500', [
             'message' => $message,
+            'errors' => session()->get('errors', new \Illuminate\Support\ViewErrorBag()),
         ], 500);
     }
 
