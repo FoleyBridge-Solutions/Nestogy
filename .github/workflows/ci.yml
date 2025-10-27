@@ -103,11 +103,10 @@ jobs:
             exit 1
           fi
 
-      - name: Upload to SonarCloud
+      - name: SonarQube Scan
         if: github.ref == 'refs/heads/main'
-        uses: SonarSource/sonarcloud-github-action@master
+        uses: SonarSource/sonarqube-scan-action@v6
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       - name: Deploy to Laravel Cloud
