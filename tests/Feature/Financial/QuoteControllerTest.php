@@ -720,7 +720,7 @@ class QuoteControllerTest extends TestCase
         $response = $this->get(route('financial.quotes.export-csv'));
 
         $response->assertStatus(200);
-        $response->assertHeader('content-type', 'text/csv');
+        $response->assertHeader('content-type', 'text/csv; charset=UTF-8');
     }
 
     public function test_export_csv_includes_all_columns(): void
