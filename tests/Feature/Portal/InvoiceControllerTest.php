@@ -27,7 +27,7 @@ class InvoiceControllerTest extends TestCase
 
     public function test_index_requires_authentication(): void
     {
-        $response = $this->getJson(route('portal.invoices.index'));
+        $response = $this->getJson(route('client.invoices'));
 
         $response->assertStatus(401);
     }
@@ -41,7 +41,7 @@ class InvoiceControllerTest extends TestCase
             'client_id' => $this->client->id,
         ]);
 
-        $response = $this->actingAsPortalClient($this->client)->getJson(route('portal.invoices.index'));
+        $response = $this->actingAsPortalClient($this->client)->getJson(route('client.invoices'));
 
         $response->assertStatus(200);
         $response->assertJsonStructure([
@@ -63,7 +63,7 @@ class InvoiceControllerTest extends TestCase
             'client_id' => $this->client->id,
         ]);
 
-        $response = $this->actingAsPortalClient($this->client)->getJson(route('portal.invoices.index', [
+        $response = $this->actingAsPortalClient($this->client)->getJson(route('client.invoices', [
             'status' => 'paid',
         ]));
 
@@ -78,7 +78,7 @@ class InvoiceControllerTest extends TestCase
             'date' => now()->subDays(5),
         ]);
 
-        $response = $this->actingAsPortalClient($this->client)->getJson(route('portal.invoices.index', [
+        $response = $this->actingAsPortalClient($this->client)->getJson(route('client.invoices', [
             'start_date' => now()->subDays(10)->format('Y-m-d'),
             'end_date' => now()->format('Y-m-d'),
         ]));
@@ -93,7 +93,7 @@ class InvoiceControllerTest extends TestCase
             'client_id' => $this->client->id,
         ]);
 
-        $response = $this->actingAsPortalClient($this->client)->getJson(route('portal.invoices.index', [
+        $response = $this->actingAsPortalClient($this->client)->getJson(route('client.invoices', [
             'per_page' => 10,
         ]));
 
@@ -113,7 +113,7 @@ class InvoiceControllerTest extends TestCase
             'client_id' => $this->client->id,
         ]);
 
-        $response = $this->actingAsPortalClient($this->client)->getJson(route('portal.invoices.index'));
+        $response = $this->actingAsPortalClient($this->client)->getJson(route('client.invoices'));
 
         $response->assertStatus(200);
         $response->assertJsonStructure(['summary' => ['total_outstanding', 'overdue_amount']]);
@@ -128,7 +128,7 @@ class InvoiceControllerTest extends TestCase
             'client_id' => $this->client->id,
         ]);
 
-        $response = $this->actingAsPortalClient($this->client)->getJson(route('portal.invoices.show', $invoice->id));
+        $response = $this->actingAsPortalClient($this->client)->getJson(route('client.invoices.show', $invoice->id));
 
         $response->assertStatus(200);
         $response->assertJsonStructure([
@@ -145,7 +145,7 @@ class InvoiceControllerTest extends TestCase
             'client_id' => $this->client->id,
         ]);
 
-        $response = $this->actingAsPortalClient($this->client)->getJson(route('portal.invoices.show', $invoice->id));
+        $response = $this->actingAsPortalClient($this->client)->getJson(route('client.invoices.show', $invoice->id));
 
         $response->assertStatus(200);
         $response->assertJsonPath('invoice.can_be_paid', true);
@@ -159,14 +159,14 @@ class InvoiceControllerTest extends TestCase
             'client_id' => $otherClient->id,
         ]);
 
-        $response = $this->actingAsPortalClient($this->client)->getJson(route('portal.invoices.show', $invoice->id));
+        $response = $this->actingAsPortalClient($this->client)->getJson(route('client.invoices.show', $invoice->id));
 
         $response->assertStatus(404);
     }
 
     public function test_show_returns_404_for_nonexistent_invoice(): void
     {
-        $response = $this->actingAsPortalClient($this->client)->getJson(route('portal.invoices.show', 99999));
+        $response = $this->actingAsPortalClient($this->client)->getJson(route('client.invoices.show', 99999));
 
         $response->assertStatus(404);
     }
@@ -180,7 +180,7 @@ class InvoiceControllerTest extends TestCase
             'client_id' => $this->client->id,
         ]);
 
-        $response = $this->actingAsPortalClient($this->client)->getJson(route('portal.invoices.summary'));
+        $response = $this->actingAsPortalClient($this->client)->getJson(route('client.invoices.summary'));
 
         $response->assertStatus(200);
         $response->assertJsonStructure([
@@ -199,7 +199,7 @@ class InvoiceControllerTest extends TestCase
             'client_id' => $this->client->id,
         ]);
 
-        $response = $this->actingAsPortalClient($this->client)->getJson(route('portal.invoices.summary'));
+        $response = $this->actingAsPortalClient($this->client)->getJson(route('client.invoices.summary'));
 
         $response->assertStatus(200);
         $response->assertJsonStructure(['recent_invoices']);
@@ -213,7 +213,7 @@ class InvoiceControllerTest extends TestCase
             'due_date' => now()->addDays(15),
         ]);
 
-        $response = $this->actingAsPortalClient($this->client)->getJson(route('portal.invoices.summary'));
+        $response = $this->actingAsPortalClient($this->client)->getJson(route('client.invoices.summary'));
 
         $response->assertStatus(200);
         $response->assertJsonStructure(['upcoming_due']);
@@ -228,7 +228,7 @@ class InvoiceControllerTest extends TestCase
             'client_id' => $this->client->id,
         ]);
 
-        $response = $this->actingAsPortalClient($this->client)->getJson(route('portal.invoices.pdf', $invoice->id));
+        $response = $this->actingAsPortalClient($this->client)->getJson(route('client.invoices.pdf', $invoice->id));
 
         $response->assertStatus(200);
         $response->assertJsonStructure([
@@ -245,7 +245,7 @@ class InvoiceControllerTest extends TestCase
             'client_id' => $otherClient->id,
         ]);
 
-        $response = $this->actingAsPortalClient($this->client)->getJson(route('portal.invoices.pdf', $invoice->id));
+        $response = $this->actingAsPortalClient($this->client)->getJson(route('client.invoices.pdf', $invoice->id));
 
         $response->assertStatus(404);
     }
@@ -260,7 +260,7 @@ class InvoiceControllerTest extends TestCase
             'amount' => 1000,
         ]);
 
-        $response = $this->actingAsPortalClient($this->client)->getJson(route('portal.invoices.payment-options', $invoice->id));
+        $response = $this->actingAsPortalClient($this->client)->getJson(route('client.invoices.payment-options', $invoice->id));
 
         $response->assertStatus(200);
         $response->assertJsonStructure([
@@ -278,7 +278,7 @@ class InvoiceControllerTest extends TestCase
             'amount' => 1000,
         ]);
 
-        $response = $this->actingAsPortalClient($this->client)->getJson(route('portal.invoices.payment-options', $invoice->id));
+        $response = $this->actingAsPortalClient($this->client)->getJson(route('client.invoices.payment-options', $invoice->id));
 
         $response->assertStatus(200);
         $response->assertJsonStructure(['payment_amounts' => ['suggested_amounts']]);
@@ -291,7 +291,7 @@ class InvoiceControllerTest extends TestCase
             'client_id' => $this->client->id,
         ]);
 
-        $response = $this->actingAsPortalClient($this->client)->getJson(route('portal.invoices.payment-options', $invoice->id));
+        $response = $this->actingAsPortalClient($this->client)->getJson(route('client.invoices.payment-options', $invoice->id));
 
         $response->assertStatus(400);
     }
@@ -305,7 +305,7 @@ class InvoiceControllerTest extends TestCase
             'client_id' => $this->client->id,
         ]);
 
-        $response = $this->actingAsPortalClient($this->client)->getJson(route('portal.invoices.statistics'));
+        $response = $this->actingAsPortalClient($this->client)->getJson(route('client.invoices.statistics'));
 
         $response->assertStatus(200);
         $response->assertJsonStructure([
@@ -323,7 +323,7 @@ class InvoiceControllerTest extends TestCase
             'date' => now()->subMonths(3),
         ]);
 
-        $response = $this->actingAsPortalClient($this->client)->getJson(route('portal.invoices.statistics', [
+        $response = $this->actingAsPortalClient($this->client)->getJson(route('client.invoices.statistics', [
             'start_date' => now()->subMonths(6)->format('Y-m-d'),
             'end_date' => now()->format('Y-m-d'),
         ]));
@@ -339,11 +339,11 @@ class InvoiceControllerTest extends TestCase
 
         // Make multiple requests
         for ($i = 0; $i < 121; $i++) {
-            $this->actingAsPortalClient($client)->getJson(route('portal.invoices.index'));
+            $this->actingAsPortalClient($client)->getJson(route('client.invoices'));
         }
 
         // 121st request should be rate limited
-        $response = $this->actingAsPortalClient($client)->getJson(route('portal.invoices.index'));
+        $response = $this->actingAsPortalClient($client)->getJson(route('client.invoices'));
 
         // Rate limit will vary depending on configuration
         // This is a placeholder assertion
@@ -359,7 +359,7 @@ class InvoiceControllerTest extends TestCase
             'client_id' => $this->client->id,
         ]);
 
-        $this->actingAsPortalClient($this->client)->getJson(route('portal.invoices.show', $invoice->id));
+        $this->actingAsPortalClient($this->client)->getJson(route('client.invoices.show', $invoice->id));
 
         // Activity should be logged (test implementation depends on logging setup)
     }
@@ -376,7 +376,7 @@ class InvoiceControllerTest extends TestCase
             'client_id' => $otherClient->id,
         ]);
 
-        $response = $this->actingAsPortalClient($this->client)->getJson(route('portal.invoices.show', $invoice->id));
+        $response = $this->actingAsPortalClient($this->client)->getJson(route('client.invoices.show', $invoice->id));
 
         $response->assertStatus(404);
     }

@@ -1334,4 +1334,98 @@ class ClientPortalController extends Controller
             'total_value' => $quotes->where('status', 'Accepted')->sum('amount'),
         ];
     }
+
+    /**
+     * Get invoice summary dashboard data
+     */
+    public function invoicesSummary(Request $request)
+    {
+        $contact = auth('client')->user();
+
+        if (! $this->canViewInvoices($contact)) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $stats = $this->getInvoiceStatsForContact($contact);
+        $recentInvoices = $this->getInvoicesForContact($contact)->take(5);
+        $upcomingDue = $contact->client->invoices()
+            ->where('status', '!=', 'paid')
+            ->where('due_date', '>', now())
+            ->where('due_date', '<=', now()->addDays(30))
+            ->orderBy('due_date')
+            ->take(5)
+            ->get();
+
+        return response()->json([
+            'stats' => $stats,
+            'recent_invoices' => $recentInvoices,
+            'upcoming_due' => $upcomingDue,
+        ]);
+    }
+
+    /**
+     * Get invoice statistics/analytics
+     */
+    public function invoicesStatistics(Request $request)
+    {
+        $contact = auth('client')->user();
+
+        if (! $this->canViewInvoices($contact)) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $startDate = $request->input('start_date', now()->subYear());
+        $endDate = $request->input('end_date', now());
+
+        $invoices = $contact->client->invoices()
+            ->whereBetween('date', [$startDate, $endDate]);
+
+        return response()->json([
+            'total_invoiced' => $invoices->sum('amount'),
+            'total_paid' => $invoices->where('status', 'paid')->sum('amount'),
+            'total_outstanding' => $invoices->whereIn('status', ['sent', 'viewed', 'overdue'])->sum('amount'),
+            'average_invoice_value' => $invoices->avg('amount'),
+            'invoice_count' => $invoices->count(),
+            'payment_history' => $invoices->where('status', 'paid')
+                ->orderBy('date')
+                ->get()
+                ->groupBy(function ($invoice) {
+                    return $invoice->date->format('Y-m');
+                })
+                ->map(function ($group) {
+                    return $group->sum('amount');
+                }),
+        ]);
+    }
+
+    /**
+     * Get payment options for an invoice
+     */
+    public function invoicePaymentOptions(Request $request, $invoiceId)
+    {
+        $contact = auth('client')->user();
+        $invoice = \App\Domains\Financial\Models\Invoice::findOrFail($invoiceId);
+
+        if ($invoice->client_id !== $contact->client_id || ! $this->canViewInvoices($contact)) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        if ($invoice->status === 'paid') {
+            return response()->json(['error' => 'Invoice already paid'], 422);
+        }
+
+        $balance = $invoice->amount - ($invoice->payments()->sum('amount') ?? 0);
+
+        return response()->json([
+            'invoice_id' => $invoice->id,
+            'balance' => $balance,
+            'payment_methods' => ['credit_card', 'bank_transfer', 'ach'],
+            'suggested_amounts' => [
+                'minimum' => max(50, $balance * 0.25),
+                'partial' => $balance * 0.5,
+                'full' => $balance,
+            ],
+            'payment_terms' => $invoice->payment_terms ?? 'Net 30',
+        ]);
+    }
 }

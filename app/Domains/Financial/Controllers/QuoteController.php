@@ -116,7 +116,7 @@ class QuoteController extends Controller
 
         // Get all categories for dropdown
         $categories = Category::where('company_id', $user->company_id)
-            ->where('type', 'quote')
+            ->where('type', '=', 'quote')
             ->orderBy('name')
             ->select(['id', 'name'])
             ->get();
@@ -323,7 +323,7 @@ class QuoteController extends Controller
 
         // Get all categories for dropdown
         $categories = Category::where('company_id', $user->company_id)
-            ->where('type', 'quote')
+            ->where('type', '=', 'quote')
             ->orderBy('name')
             ->select(['id', 'name'])
             ->get();

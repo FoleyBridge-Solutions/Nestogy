@@ -44,7 +44,7 @@ class InvoicesControllerTest extends TestCase
             'client_id' => $this->client->id,
         ]);
 
-        $response = $this->getJson(route('api.invoices.index'));
+        $response = $this->getJson(route('api.financial.invoices.index'));
 
         $response->assertStatus(200);
         $response->assertJsonStructure([
@@ -62,7 +62,7 @@ class InvoicesControllerTest extends TestCase
             'client_id' => $this->client->id,
         ]);
 
-        $response = $this->getJson(route('api.invoices.index', ['per_page' => 15]));
+        $response = $this->getJson(route('api.financial.invoices.index', ['per_page' => 15]));
 
         $response->assertStatus(200);
         $response->assertJsonStructure(['data', 'success']);
@@ -80,7 +80,7 @@ class InvoicesControllerTest extends TestCase
             'client_id' => $this->client->id,
         ]);
 
-        $response = $this->getJson(route('api.invoices.index', ['status' => 'paid']));
+        $response = $this->getJson(route('api.financial.invoices.index', ['status' => 'paid']));
 
         $response->assertStatus(200);
     }
@@ -100,7 +100,7 @@ class InvoicesControllerTest extends TestCase
             'client_id' => $client2->id,
         ]);
 
-        $response = $this->getJson(route('api.invoices.index', ['client_id' => $client1->id]));
+        $response = $this->getJson(route('api.financial.invoices.index', ['client_id' => $client1->id]));
 
         $response->assertStatus(200);
     }
@@ -112,7 +112,7 @@ class InvoicesControllerTest extends TestCase
             'client_id' => $this->client->id,
         ]);
 
-        $response = $this->getJson(route('api.invoices.index', ['overdue' => true]));
+        $response = $this->getJson(route('api.financial.invoices.index', ['overdue' => true]));
 
         $response->assertStatus(200);
     }
@@ -125,7 +125,7 @@ class InvoicesControllerTest extends TestCase
             'invoice_number' => 'INV-2024-123',
         ]);
 
-        $response = $this->getJson(route('api.invoices.index', ['search' => 'INV-2024-123']));
+        $response = $this->getJson(route('api.financial.invoices.index', ['search' => 'INV-2024-123']));
 
         $response->assertStatus(200);
     }
@@ -137,7 +137,7 @@ class InvoicesControllerTest extends TestCase
             'client_id' => $this->client->id,
         ]);
 
-        $response = $this->getJson(route('api.invoices.index'));
+        $response = $this->getJson(route('api.financial.invoices.index'));
 
         $response->assertStatus(200);
         $response->assertJsonStructure(['summary' => ['total_amount', 'total_paid', 'total_outstanding']]);
@@ -161,7 +161,7 @@ class InvoicesControllerTest extends TestCase
             ],
         ];
 
-        $response = $this->postJson(route('api.invoices.store'), $data);
+        $response = $this->postJson(route('api.financial.invoices.store'), $data);
 
         $response->assertStatus(201);
         $response->assertJson(['success' => true]);
@@ -184,7 +184,7 @@ class InvoicesControllerTest extends TestCase
             ],
         ];
 
-        $response = $this->postJson(route('api.invoices.store'), $data);
+        $response = $this->postJson(route('api.financial.invoices.store'), $data);
 
         $response->assertStatus(201);
         $response->assertJson(['success' => true]);
@@ -207,14 +207,14 @@ class InvoicesControllerTest extends TestCase
             ],
         ];
 
-        $response = $this->postJson(route('api.invoices.store'), $data);
+        $response = $this->postJson(route('api.financial.invoices.store'), $data);
 
         $response->assertStatus(201);
     }
 
     public function test_api_store_validates_required_fields(): void
     {
-        $response = $this->postJson(route('api.invoices.store'), []);
+        $response = $this->postJson(route('api.financial.invoices.store'), []);
 
         $response->assertStatus(422);
         $response->assertJsonValidationErrors(['client_id', 'items']);
@@ -235,7 +235,7 @@ class InvoicesControllerTest extends TestCase
             ],
         ];
 
-        $response = $this->postJson(route('api.invoices.store'), $data);
+        $response = $this->postJson(route('api.financial.invoices.store'), $data);
 
         $response->assertStatus(422);
         $response->assertJsonValidationErrors(['due_date']);
@@ -250,7 +250,7 @@ class InvoicesControllerTest extends TestCase
             'client_id' => $this->client->id,
         ]);
 
-        $response = $this->getJson(route('api.invoices.show', $invoice));
+        $response = $this->getJson(route('api.financial.invoices.show', $invoice));
 
         $response->assertStatus(200);
         $response->assertJsonStructure([
@@ -267,7 +267,7 @@ class InvoicesControllerTest extends TestCase
             'total' => 1000,
         ]);
 
-        $response = $this->getJson(route('api.invoices.show', $invoice));
+        $response = $this->getJson(route('api.financial.invoices.show', $invoice));
 
         $response->assertStatus(200);
         $response->assertJsonStructure(['data' => ['total_paid', 'balance_due', 'is_overdue']]);
@@ -278,7 +278,7 @@ class InvoicesControllerTest extends TestCase
         $otherCompany = Company::factory()->create();
         $invoice = Invoice::factory()->create(['company_id' => $otherCompany->id]);
 
-        $response = $this->getJson(route('api.invoices.show', $invoice));
+        $response = $this->getJson(route('api.financial.invoices.show', $invoice));
 
         $response->assertStatus(403);
     }
@@ -293,7 +293,7 @@ class InvoicesControllerTest extends TestCase
             'status' => 'draft',
         ]);
 
-        $response = $this->putJson(route('api.invoices.update', $invoice), [
+        $response = $this->putJson(route('api.financial.invoices.update', $invoice), [
             'status' => 'sent',
             'notes' => 'Updated notes',
         ]);
@@ -312,7 +312,7 @@ class InvoicesControllerTest extends TestCase
             'client_id' => $this->client->id,
         ]);
 
-        $response = $this->putJson(route('api.invoices.update', $invoice), [
+        $response = $this->putJson(route('api.financial.invoices.update', $invoice), [
             'discount_type' => 'fixed',
             'discount_value' => 100,
         ]);
@@ -327,7 +327,7 @@ class InvoicesControllerTest extends TestCase
             'client_id' => $this->client->id,
         ]);
 
-        $response = $this->putJson(route('api.invoices.update', $invoice), [
+        $response = $this->putJson(route('api.financial.invoices.update', $invoice), [
             'notes' => 'Test',
         ]);
 
@@ -343,7 +343,7 @@ class InvoicesControllerTest extends TestCase
             'client_id' => $this->client->id,
         ]);
 
-        $response = $this->deleteJson(route('api.invoices.destroy', $invoice));
+        $response = $this->deleteJson(route('api.financial.invoices.destroy', $invoice));
 
         $response->assertStatus(200);
         $this->assertDatabaseMissing('invoices', ['id' => $invoice->id]);
@@ -356,7 +356,7 @@ class InvoicesControllerTest extends TestCase
             'client_id' => $this->client->id,
         ]);
 
-        $response = $this->deleteJson(route('api.invoices.destroy', $invoice));
+        $response = $this->deleteJson(route('api.financial.invoices.destroy', $invoice));
 
         $response->assertStatus(422);
     }
@@ -365,7 +365,7 @@ class InvoicesControllerTest extends TestCase
 
     public function test_api_generate_recurring_invoices(): void
     {
-        $response = $this->postJson(route('api.invoices.generate-recurring'), [
+        $response = $this->postJson(route('api.financial.invoices.generate-recurring'), [
             'dry_run' => true,
         ]);
 
@@ -375,7 +375,7 @@ class InvoicesControllerTest extends TestCase
 
     public function test_api_forecast_generates_billing_forecast(): void
     {
-        $response = $this->getJson(route('api.invoices.forecast', ['months' => 3]));
+        $response = $this->getJson(route('api.financial.invoices.forecast', ['months' => 3]));
 
         $response->assertStatus(200);
         $response->assertJson(['success' => true]);
@@ -390,7 +390,7 @@ class InvoicesControllerTest extends TestCase
             'client_id' => $this->client->id,
         ]);
 
-        $response = $this->postJson(route('api.invoices.retry-payment', $invoice));
+        $response = $this->postJson(route('api.financial.invoices.retry-payment', $invoice));
 
         $response->assertStatus(200);
     }
@@ -402,7 +402,7 @@ class InvoicesControllerTest extends TestCase
             'client_id' => $this->client->id,
         ]);
 
-        $response = $this->postJson(route('api.invoices.send-email', $invoice));
+        $response = $this->postJson(route('api.financial.invoices.send-email', $invoice));
 
         $response->assertStatus(200);
         $response->assertJson(['success' => true]);
@@ -415,7 +415,7 @@ class InvoicesControllerTest extends TestCase
         $otherCompany = Company::factory()->create();
         $invoice = Invoice::factory()->create(['company_id' => $otherCompany->id]);
 
-        $response = $this->getJson(route('api.invoices.show', $invoice));
+        $response = $this->getJson(route('api.financial.invoices.show', $invoice));
 
         $response->assertStatus(403);
     }
@@ -434,7 +434,7 @@ class InvoicesControllerTest extends TestCase
             'client_id' => Client::factory()->create(['company_id' => $otherCompany->id])->id,
         ]);
 
-        $response = $this->getJson(route('api.invoices.index'));
+        $response = $this->getJson(route('api.financial.invoices.index'));
 
         $response->assertStatus(200);
     }

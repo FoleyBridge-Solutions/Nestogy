@@ -551,7 +551,7 @@ class InvoiceControllerTest extends TestCase
             'client_id' => $this->client->id,
         ]);
 
-        $response = $this->get(route('financial.invoices.generate-pdf', $invoice));
+        $response = $this->get(route('financial.invoices.pdf', $invoice));
 
         $response->assertStatus(200);
     }
@@ -616,7 +616,7 @@ class InvoiceControllerTest extends TestCase
             'client_id' => $this->client->id,
         ]);
 
-        $response = $this->get(route('financial.invoices.export-csv'));
+        $response = $this->get(route('financial.invoices.export.csv'));
 
         $response->assertStatus(200);
         $response->assertHeader('content-type', 'text/csv');
@@ -637,7 +637,7 @@ class InvoiceControllerTest extends TestCase
             'client_id' => $client2->id,
         ]);
 
-        $response = $this->get(route('financial.invoices.export-csv', ['client_id' => $client1->id]));
+        $response = $this->get(route('financial.invoices.export.csv', ['client_id' => $client1->id]));
 
         $response->assertStatus(200);
     }
@@ -651,7 +651,7 @@ class InvoiceControllerTest extends TestCase
             'client_id' => $this->client->id,
         ]);
 
-        $response = $this->postJson(route('financial.invoices.update-notes', $invoice), [
+        $response = $this->postJson(route('financial.invoices.update', $invoice), [
             'notes' => 'Updated notes',
         ]);
 

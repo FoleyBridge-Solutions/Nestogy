@@ -57,9 +57,6 @@ class InvoiceFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'status' => 'draft',
-            'sent_at' => null,
-            'viewed_at' => null,
-            'paid_at' => null,
         ]);
     }
 
@@ -70,7 +67,6 @@ class InvoiceFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'status' => 'sent',
-            'sent_at' => $this->faker->dateTimeBetween($attributes['date'], 'now'),
         ]);
     }
 
@@ -80,12 +76,8 @@ class InvoiceFactory extends Factory
     public function viewed(): static
     {
         return $this->state(function (array $attributes) {
-            $sentAt = $attributes['sent_at'] ?? $attributes['date'];
-
             return [
-            'status' => 'viewed',
-                'sent_at' => $sentAt,
-                'viewed_at' => $this->faker->dateTimeBetween($sentAt, 'now'),
+                'status' => 'viewed',
             ];
         });
     }
@@ -96,14 +88,8 @@ class InvoiceFactory extends Factory
     public function paid(): static
     {
         return $this->state(function (array $attributes) {
-            $viewedAt = $attributes['viewed_at'] ?? $attributes['sent_at'] ?? $attributes['date'];
-            $paidAt = $this->faker->dateTimeBetween($viewedAt, 'now');
-
             return [
-            'status' => 'paid',
-                'paid_at' => $paidAt,
-                'sent_at' => $attributes['sent_at'] ?? $attributes['date'],
-                'viewed_at' => $attributes['viewed_at'] ?? $this->faker->dateTimeBetween($attributes['date'], $paidAt),
+                'status' => 'paid',
             ];
         });
     }
@@ -118,12 +104,9 @@ class InvoiceFactory extends Factory
             $invoiceDate = (clone $dueDate)->modify('-30 days');
 
             return [
-            'status' => 'overdue',
+                'status' => 'overdue',
                 'date' => $invoiceDate,
                 'due_date' => $dueDate,
-                'sent_at' => $this->faker->dateTimeBetween($invoiceDate, $dueDate),
-                'viewed_at' => $this->faker->dateTimeBetween($invoiceDate, $dueDate),
-                'paid_at' => null,
             ];
         });
     }
@@ -135,7 +118,6 @@ class InvoiceFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'status' => 'cancelled',
-            'paid_at' => null,
         ]);
     }
 

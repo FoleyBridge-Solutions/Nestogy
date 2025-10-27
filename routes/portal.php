@@ -50,8 +50,12 @@ Route::prefix('client-portal')->name('client.')->group(function () {
 
         // General invoices (all invoices for client)
         Route::get('invoices', [\App\Domains\Client\Controllers\ClientPortalController::class, 'invoices'])->name('invoices');
+        Route::get('invoices/summary', [\App\Domains\Client\Controllers\ClientPortalController::class, 'invoicesSummary'])->name('invoices.summary');
+        Route::get('invoices/statistics', [\App\Domains\Client\Controllers\ClientPortalController::class, 'invoicesStatistics'])->name('invoices.statistics');
         Route::get('invoices/{invoice}', [\App\Domains\Client\Controllers\ClientPortalController::class, 'showInvoice'])->name('invoices.show');
         Route::get('invoices/{invoice}/download', [\App\Domains\Client\Controllers\ClientPortalController::class, 'downloadClientInvoice'])->name('invoices.download');
+        Route::get('invoices/{invoice}/pdf', [\App\Domains\Client\Controllers\ClientPortalController::class, 'downloadClientInvoice'])->name('invoices.pdf');
+        Route::get('invoices/{invoice}/payment-options', [\App\Domains\Client\Controllers\ClientPortalController::class, 'invoicePaymentOptions'])->name('invoices.payment-options');
 
         // Quotes
         Route::get('quotes', [\App\Domains\Client\Controllers\ClientPortalController::class, 'quotes'])->name('quotes');
