@@ -705,7 +705,7 @@ class QuoteControllerTest extends TestCase
 
         $response = $this->post(route('financial.quotes.cancel', $quote));
 
-        $response->assertStatus(302);
+        $response->assertStatus(403);
     }
 
     // ==================== CSV Export Tests ====================
