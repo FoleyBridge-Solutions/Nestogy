@@ -387,6 +387,7 @@ class InvoiceControllerTest extends TestCase
     {
         // Create a contact for the client
         $contact = \App\Domains\Client\Models\Contact::factory()->create([
+            'company_id' => $client->company_id,
             'client_id' => $client->id,
             'primary' => true,
         ]);
