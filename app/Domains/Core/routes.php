@@ -20,10 +20,10 @@ use Illuminate\Support\Facades\Route;
 */
 
 // Homepage
-Route::get('/', [\App\Domains\Core\Controllers\WelcomeController::class, 'index']);
+Route::middleware('web')->get('/', [\App\Domains\Core\Controllers\WelcomeController::class, 'index']);
 
 // Setup Wizard Routes (when no companies exist)
-Route::prefix('setup')->name('setup.wizard.')->group(function () {
+Route::middleware('web')->prefix('setup')->name('setup.wizard.')->group(function () {
     Route::get('/', [\App\Domains\Core\Controllers\SetupWizardController::class, 'index'])->name('index');
     Route::get('/company', \App\Livewire\Setup\SetupWizard::class)->name('company-form');
     Route::post('/company', [\App\Domains\Core\Controllers\SetupWizardController::class, 'processSetup'])->name('process');
@@ -31,12 +31,12 @@ Route::prefix('setup')->name('setup.wizard.')->group(function () {
 });
 
 // Redirect /register to our SaaS signup form
-Route::get('/register', function () {
+Route::middleware('web')->get('/register', function () {
     return redirect()->route('signup.form');
 });
 
 // Company Registration Routes (pre-login)
-Route::prefix('signup')->name('signup.')->group(function () {
+Route::middleware('web')->prefix('signup')->name('signup.')->group(function () {
     Route::get('/', [\App\Domains\Client\Controllers\CompanyRegistrationController::class, 'showRegistrationForm'])->name('form');
     Route::post('/', [\App\Domains\Client\Controllers\CompanyRegistrationController::class, 'register'])->name('submit');
     Route::get('plans', [\App\Domains\Client\Controllers\CompanyRegistrationController::class, 'getPlans'])->name('plans');
@@ -44,7 +44,7 @@ Route::prefix('signup')->name('signup.')->group(function () {
 });
 
 // Security verification routes (suspicious login handling)
-Route::prefix('security')->name('security.')->group(function () {
+Route::middleware('web')->prefix('security')->name('security.')->group(function () {
     Route::prefix('suspicious-login')->name('suspicious-login.')->group(function () {
         Route::match(['GET', 'POST'], 'approve/{token}', [\App\Domains\Security\Controllers\SuspiciousLoginController::class, 'approve'])->name('approve');
         Route::match(['GET', 'POST'], 'deny/{token}', [\App\Domains\Security\Controllers\SuspiciousLoginController::class, 'deny'])->name('deny');
@@ -65,10 +65,10 @@ Route::prefix('security')->name('security.')->group(function () {
 });
 
 // Additional auth route for checking suspicious login approval
-Route::post('/auth/check-suspicious-login', [\App\Domains\Security\Controllers\Auth\LoginController::class, 'checkSuspiciousLoginApproval'])->name('auth.check-suspicious-login');
+Route::middleware('web')->post('/auth/check-suspicious-login', [\App\Domains\Security\Controllers\Auth\LoginController::class, 'checkSuspiciousLoginApproval'])->name('auth.check-suspicious-login');
 
 // Custom secure authentication routes (override Fortify)
-Route::middleware('guest')->group(function () {
+Route::middleware(['web', 'guest'])->group(function () {
     Route::get('/login', [\App\Domains\Security\Controllers\Auth\LoginController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [\App\Domains\Security\Controllers\Auth\LoginController::class, 'login']);
     Route::get('/auth/select-company', [\App\Domains\Security\Controllers\Auth\LoginController::class, 'showCompanySelection'])->name('auth.company-select');
@@ -77,20 +77,20 @@ Route::middleware('guest')->group(function () {
 
 // Logout route (authenticated users only)
 Route::post('/logout', [\App\Domains\Security\Controllers\Auth\LoginController::class, 'logout'])
-    ->middleware('auth')
+    ->middleware(['web', 'auth'])
     ->name('logout');
 
 // Dashboard
 Route::get('/dashboard', \App\Livewire\Dashboard\MainDashboard::class)
-    ->middleware(['auth', 'verified'])
+    ->middleware(['web', 'auth', 'verified'])
     ->name('dashboard');
 
 Route::get('/dashboard-enhanced', function () {
     return view('dashboard-enhanced');
-})->middleware(['auth', 'verified'])->name('dashboard.enhanced');
+})->middleware(['web', 'auth', 'verified'])->name('dashboard.enhanced');
 
 // Dashboard API endpoints
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['web', 'auth', 'verified'])->group(function () {
     Route::get('/api/dashboard/stats', [\App\Domains\Core\Controllers\DashboardController::class, 'getData'])->name('api.dashboard.stats');
     Route::get('/api/dashboard/realtime', [\App\Domains\Core\Controllers\DashboardController::class, 'getRealtimeData'])->name('api.dashboard.realtime');
     Route::get('/api/dashboard/export', [\App\Domains\Core\Controllers\DashboardController::class, 'exportData'])->name('api.dashboard.export');
@@ -106,11 +106,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 // Company switching route
 Route::post('/switch-company', [\App\Http\Middleware\SubsidiaryAccessMiddleware::class, 'handleCompanySwitch'])
-    ->middleware(['auth', 'verified'])
+    ->middleware(['web', 'auth', 'verified'])
     ->name('company.switch');
 
 // Navigation API routes
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['web', 'auth', 'verified'])->group(function () {
     Route::prefix('api/navigation')->name('api.navigation.')->group(function () {
         Route::get('tree', [\App\Domains\Core\Controllers\NavigationController::class, 'getNavigationTree'])->name('tree');
         Route::get('badges', [\App\Domains\Core\Controllers\NavigationController::class, 'getBadgeCounts'])->name('badges');
@@ -182,7 +182,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 // Webhook routes for external integrations (digital signatures, etc.)
-Route::prefix('webhooks')->name('webhooks.')->group(function () {
+Route::middleware('web')->prefix('webhooks')->name('webhooks.')->group(function () {
     Route::post('docusign', [\App\Domains\Contract\Controllers\ContractController::class, 'docusignWebhook'])->name('docusign');
     Route::post('hellosign', [\App\Domains\Contract\Controllers\ContractController::class, 'hellosignWebhook'])->name('hellosign');
     Route::post('adobe-sign', [\App\Domains\Contract\Controllers\ContractController::class, 'adobeSignWebhook'])->name('adobe-sign');
@@ -190,7 +190,7 @@ Route::prefix('webhooks')->name('webhooks.')->group(function () {
 });
 
 // Utility routes
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['web', 'auth', 'verified'])->group(function () {
     Route::get('/settings/physical-mail', function () {
         return view('settings.physical-mail');
     })->name('settings.physical-mail');

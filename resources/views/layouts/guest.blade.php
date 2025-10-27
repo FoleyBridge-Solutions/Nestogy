@@ -30,6 +30,9 @@
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     
+    <!-- Livewire Styles -->
+    @livewireStyles
+    
     <!-- Guest Theme Context for JavaScript -->
     <script>
         window.GUEST_THEME = localStorage.getItem('guest_theme') || 'auto';
@@ -138,5 +141,8 @@
 
     <!-- Additional Scripts -->
     @stack('scripts')
+    
+    <!-- Livewire Scripts -->
+    @livewireScripts
 </body>
 </html>

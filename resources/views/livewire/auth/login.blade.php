@@ -33,7 +33,6 @@
 
                 <flux:card>
                     <form wire:submit="login" class="space-y-6">
-                        @csrf
                         <flux:input
                             wire:model="email"
                             type="email"
