@@ -20,17 +20,19 @@ class UpdateInvoiceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'client_id' => 'required|integer|exists:clients,id',
-            'category_id' => 'required|integer|exists:categories,id',
+            'client_id' => 'sometimes|required|integer|exists:clients,id',
+            'category_id' => 'sometimes|required|integer|exists:categories,id',
             'prefix' => 'nullable|string|max:10',
             'scope' => 'nullable|string|max:255',
-            'status' => 'required|in:Draft,Sent,Paid,Overdue,Cancelled',
-            'date' => 'required|date',
-            'due_date' => 'required|date|after_or_equal:date',
+            'status' => 'sometimes|required|in:Draft,Sent,Paid,Overdue,Cancelled',
+            'date' => 'sometimes|required|date',
+            'due_date' => 'sometimes|required|date|after_or_equal:date',
+            'amount' => 'nullable|numeric|min:0',
             'discount_amount' => 'nullable|numeric|min:0',
-            'currency_code' => 'required|string|size:3',
+            'currency_code' => 'sometimes|required|string|size:3',
             'note' => 'nullable|string',
             'ticket_id' => 'nullable|integer|exists:tickets,id',
+            'items' => 'nullable|array',
         ];
     }
 

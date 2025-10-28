@@ -3,8 +3,11 @@
 namespace App\Domains\Financial\Models;
 
 use App\Domains\Client\Models\Client;
-
+use App\Domains\Core\Models\User;
 use App\Domains\Financial\Services\TaxEngine\LocalTaxRateService;
+use App\Domains\Tax\Models\TaxCalculation;
+use App\Domains\Tax\Models\TaxExemption;
+use App\Domains\Tax\Models\TaxExemptionUsage;
 use App\Traits\BelongsToCompany;
 use App\Traits\QuotePricingCalculations;
 use Carbon\Carbon;
@@ -482,11 +485,27 @@ class Quote extends Model
      */
     public function needsApproval(): bool
     {
-        // return in_array($this->approval_status, [
-        //     self::APPROVAL_PENDING,
-        //     self::APPROVAL_MANAGER_APPROVED
-        // ]);
-        return false; // Default to no approval needed
+        // Check if approval_status column exists and if it's in a pending state
+        return in_array($this->approval_status, [
+            'pending',
+            'manager_approved',  // Needs higher level approval
+        ]);
+    }
+
+    /**
+     * Check if quote needs manager approval.
+     */
+    public function needsManagerApproval(): bool
+    {
+        return $this->approval_status === 'pending';
+    }
+
+    /**
+     * Check if quote needs executive approval.
+     */
+    public function needsExecutiveApproval(): bool
+    {
+        return $this->approval_status === 'manager_approved';
     }
 
     /**
@@ -662,10 +681,10 @@ class Quote extends Model
 
         $invoice->calculateTotals();
 
-// Update quote status
+        // Update quote status
         $this->update([
             'status' => self::STATUS_CONVERTED,
-            'converted_invoice_id' => $invoice->id,
+            // 'converted_invoice_id' => $invoice->id, // column doesn't exist in database
         ]);
 
         return $invoice;
@@ -674,22 +693,39 @@ class Quote extends Model
     /**
      * Create a new version of this quote.
      */
-    public function createRevision(array $changes = []): Quote
+    public function createRevision(array $changes = [], ?string $reason = null): Quote
     {
         $newQuote = $this->replicate();
         // $newQuote->version = $this->version + 1; // version field not in database
-        $newQuote->parent_quote_id = $this->id;
+        // $newQuote->parent_quote_id = $this->id; // parent_quote_id field not in database
         $newQuote->status = self::STATUS_DRAFT;
         // $newQuote->approval_status = self::APPROVAL_PENDING; // approval_status field not in database
         $newQuote->url_key = null;
         $newQuote->sent_at = null;
-        $newQuote->viewed_at = null;
-        $newQuote->accepted_at = null;
-        $newQuote->declined_at = null;
+        // $newQuote->viewed_at = null; // column doesn't exist
+        // $newQuote->accepted_at = null; // column doesn't exist
+        // $newQuote->declined_at = null; // column doesn't exist
+        
+        // Generate new quote number to avoid unique constraint violation
+        // Use the QuoteService to generate a proper number
+        $quoteService = app(\App\Domains\Financial\Services\QuoteService::class);
+        $newNumber = $quoteService->generateQuoteNumber();
+        // Extract just the number part from the generated number (e.g., "QTE-0001" -> "0001")
+        if (preg_match('/-(\d+)$/', $newNumber, $matches)) {
+            $newQuote->number = (int)$matches[1];
+        } else {
+            $newQuote->number = random_int(10000, 99999); // Fallback
+        }
+        $newQuote->prefix = null; // Clear prefix to avoid constraint issues
 
         // Apply any changes
         foreach ($changes as $key => $value) {
             $newQuote->$key = $value;
+        }
+
+        // Store revision reason if provided (using note field since no revision_reason field exists)
+        if ($reason) {
+            $newQuote->note = ($newQuote->note ? $newQuote->note . "\n\n" : '') . "Revision reason: " . $reason;
         }
 
         $newQuote->save();

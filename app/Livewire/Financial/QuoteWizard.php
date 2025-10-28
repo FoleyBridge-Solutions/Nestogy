@@ -128,7 +128,7 @@ class QuoteWizard extends Component
             ->get(['id', 'name', 'email', 'currency_code']);
 
         $this->categories = Category::where('company_id', $companyId)
-            ->where('type', 'quote')
+            ->whereRaw("type::text = ?", ['quote'])
             ->orderBy('name')
             ->get(['id', 'name']);
 

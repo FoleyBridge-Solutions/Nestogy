@@ -32,7 +32,7 @@ class StoreQuoteRequest extends BaseQuoteRequest
     {
         return array_merge($this->getCommonRules(), [
             // Relationships - simplified validation for creation
-            'category_id' => 'nullable|integer|exists:categories,id',
+            'category_id' => 'required|integer|exists:categories,id',
             'client_id' => 'required|integer|exists:clients,id',
         ]);
     }

@@ -204,7 +204,7 @@ class CollectionManagementService
         // Use eager-loaded invoices if available, otherwise query
         $overdueInvoices = $client->relationLoaded('invoices')
             ? $client->invoices->filter(function ($invoice) {
-                return $invoice->status === 'overdue' || ($invoice->due_date && $invoice->due_date < now() && in_array($invoice->status, ['sent', 'partial']));
+                return in_array($invoice->status, ['overdue', 'Overdue']) || ($invoice->due_date && $invoice->due_date < now() && in_array($invoice->status, ['sent', 'Sent', 'partial', 'Partial']));
             })
             : $client->invoices()->overdue()->get();
         $totalBalance = $client->getBalance();

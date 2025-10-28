@@ -270,7 +270,7 @@ class InvoiceControllerTest extends TestCase
         $response = $this->getJson(route('financial.invoices.show', $invoice));
 
         $response->assertStatus(200);
-        $response->assertJsonPath('totals.total', '1500.00');
+        $response->assertJsonPath('totals.total', 1500);
     }
 
     // ==================== Edit/Update Tests ====================

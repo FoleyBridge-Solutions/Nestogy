@@ -24,7 +24,7 @@
             
             <!-- Progress Indicator -->
             <div class="flex items-center space-x-4">
-                @for ($step = 1; $step <= $totalSteps; $step++)
+                @foreach (range(1, $totalSteps) as $step)
                     <div class="flex items-center @if(!$loop->last) flex-1 @endif">
                         <!-- Step Circle -->
                         <div class="relative">
@@ -59,7 +59,7 @@
                             </div>
                         @endif
                     </div>
-                @endfor
+                @endforeach
             </div>
         </flux:card>
     </div>

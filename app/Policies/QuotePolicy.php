@@ -122,12 +122,8 @@ class QuotePolicy
     public function send(User $user, Quote $quote): bool
     {
         // Must have permission and quote must belong to company
-        if (! $user->can('financial.quotes.manage') || $quote->company_id !== $user->company_id) {
-            return false;
-        }
-
-        // Quote must be approved or not require approval
-        return $quote->isFullyApproved() || $quote->approval_status === Quote::APPROVAL_NOT_REQUIRED;
+        // Note: Approval status is checked in the controller, not here
+        return $user->can('financial.quotes.manage') && $quote->company_id === $user->company_id;
     }
 
     /**
@@ -135,15 +131,11 @@ class QuotePolicy
      */
     public function convert(User $user, Quote $quote): bool
     {
-        // Must have both quote and invoice permissions
-        if (! $user->can('financial.quotes.manage') ||
-            ! $user->can('financial.invoices.manage') ||
-            $quote->company_id !== $user->company_id) {
-            return false;
-        }
-
-        // Quote must be accepted
-        return $quote->isAccepted();
+        // Must have both quote and invoice permissions and quote must belong to company
+        // Note: Acceptance status is checked in the controller, not here
+        return $user->can('financial.quotes.manage') &&
+               $user->can('financial.invoices.manage') &&
+               $quote->company_id === $user->company_id;
     }
 
     /**

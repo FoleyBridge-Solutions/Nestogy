@@ -126,11 +126,11 @@ class InvoiceController extends Controller
 
             // Calculate totals
             $totals = [
-                'draft' => Invoice::where('company_id', $user->company_id)->where('status', 'draft')->sum('amount'),
-                'sent' => Invoice::where('company_id', $user->company_id)->where('status', 'sent')->sum('amount'),
-                'paid' => Invoice::where('company_id', $user->company_id)->where('status', 'paid')->sum('amount'),
+                'draft' => Invoice::where('company_id', $user->company_id)->where('status', Invoice::STATUS_DRAFT)->sum('amount'),
+                'sent' => Invoice::where('company_id', $user->company_id)->where('status', Invoice::STATUS_SENT)->sum('amount'),
+                'paid' => Invoice::where('company_id', $user->company_id)->where('status', Invoice::STATUS_PAID)->sum('amount'),
                 'overdue' => Invoice::where('company_id', $user->company_id)
-                    ->where('status', 'sent')
+                    ->where('status', Invoice::STATUS_SENT)
                     ->where('due_date', '<', now())
                     ->sum('amount'),
             ];
@@ -466,7 +466,11 @@ class InvoiceController extends Controller
         $this->authorize('update', $invoice);
 
         try {
-            $payment = $this->paymentService->createPayment($invoice, $request->validated());
+            $paymentData = array_merge($request->validated(), [
+                'invoice_id' => $invoice->id,
+                'client_id' => $invoice->client_id,
+            ]);
+            $payment = $this->paymentService->createPayment($paymentData);
 
             // Send receipt email if requested
             if ($request->get('email_receipt')) {

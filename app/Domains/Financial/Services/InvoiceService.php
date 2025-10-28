@@ -56,21 +56,18 @@ class InvoiceService
 
                 foreach ($data['items'] as $item) {
                     $invoice->items()->create([
-                        'description' => $item['description'],
+                        'description' => $item['description'] ?? '',
                         'quantity' => $item['quantity'] ?? 1,
-                        'rate' => $item['rate'] ?? 0,
-                        'amount' => ($item['quantity'] ?? 1) * ($item['rate'] ?? 0),
+                        'price' => $item['price'] ?? $item['rate'] ?? 0,
+                        'amount' => ($item['quantity'] ?? 1) * ($item['price'] ?? $item['rate'] ?? 0),
                         'tax_rate' => $item['tax_rate'] ?? 0,
                     ]);
                 }
+
+                $invoice->calculateTotals();
             }
 
-            Log::info('Invoice updated', [
-                'invoice_id' => $invoice->id,
-                'user_id' => Auth::id(),
-            ]);
-
-            return $invoice->load('items');
+            return $invoice->fresh();
         });
     }
 
@@ -264,6 +261,139 @@ class InvoiceService
                 ]);
                 throw new \Exception('Failed to duplicate invoice: '.$e->getMessage());
             }
+        });
+    }
+
+    /**
+     * Add an item to an invoice
+     */
+    public function addInvoiceItem(Invoice $invoice, array $itemData)
+    {
+        return DB::transaction(function () use ($invoice, $itemData) {
+            $item = $invoice->items()->create([
+                'name' => $itemData['name'] ?? $itemData['description'] ?? 'Item',
+                'description' => $itemData['description'] ?? '',
+                'quantity' => $itemData['quantity'] ?? 1,
+                'price' => $itemData['price'] ?? $itemData['rate'] ?? 0,
+                'amount' => ($itemData['quantity'] ?? 1) * ($itemData['price'] ?? $itemData['rate'] ?? 0),
+                'tax_rate' => $itemData['tax_rate'] ?? 0,
+            ]);
+
+            $invoice->calculateTotals();
+
+            Log::info('Invoice item added', [
+                'invoice_id' => $invoice->id,
+                'item_id' => $item->id,
+                'user_id' => Auth::id(),
+            ]);
+
+            return $item;
+        });
+    }
+
+    /**
+     * Update invoice status
+     */
+    public function updateInvoiceStatus(Invoice $invoice, string $status): bool
+    {
+        try {
+            $invoice->update(['status' => $status]);
+
+            Log::info('Invoice status updated', [
+                'invoice_id' => $invoice->id,
+                'status' => $status,
+                'user_id' => Auth::id(),
+            ]);
+
+            return true;
+        } catch (\Exception $e) {
+            Log::error('Failed to update invoice status', [
+                'invoice_id' => $invoice->id,
+                'error' => $e->getMessage(),
+                'user_id' => Auth::id(),
+            ]);
+
+            return false;
+        }
+    }
+
+    /**
+     * Delete an invoice
+     */
+    public function deleteInvoice(Invoice $invoice): bool
+    {
+        try {
+            DB::transaction(function () use ($invoice) {
+                $invoice->items()->delete();
+                $invoice->delete();
+            });
+
+            Log::info('Invoice deleted', [
+                'invoice_id' => $invoice->id,
+                'user_id' => Auth::id(),
+            ]);
+
+            return true;
+        } catch (\Exception $e) {
+            Log::error('Failed to delete invoice', [
+                'invoice_id' => $invoice->id,
+                'error' => $e->getMessage(),
+                'user_id' => Auth::id(),
+            ]);
+
+            return false;
+        }
+    }
+
+    /**
+     * Update an invoice item
+     */
+    public function updateInvoiceItem($item, array $data)
+    {
+        return DB::transaction(function () use ($item, $data) {
+            $item->update([
+                'name' => $data['name'] ?? $item->name,
+                'description' => $data['description'] ?? $item->description,
+                'quantity' => $data['quantity'] ?? $item->quantity,
+                'price' => $data['price'] ?? $item->price,
+                'amount' => ($data['quantity'] ?? $item->quantity) * ($data['price'] ?? $item->price),
+                'tax_rate' => $data['tax_rate'] ?? $item->tax_rate,
+            ]);
+
+            // Recalculate invoice totals
+            $item->invoice->calculateTotals();
+
+            Log::info('Invoice item updated', [
+                'item_id' => $item->id,
+                'invoice_id' => $item->invoice_id,
+                'user_id' => Auth::id(),
+            ]);
+
+            return $item->fresh();
+        });
+    }
+
+    /**
+     * Delete an invoice item
+     */
+    public function deleteInvoiceItem($item): bool
+    {
+        return DB::transaction(function () use ($item) {
+            $invoice = $item->invoice;
+            $itemId = $item->id;
+
+            $item->forceDelete();
+
+            // Recalculate invoice totals
+            $invoice->calculateTotals();
+
+            Log::info('Invoice item deleted', [
+                'item_id' => $itemId,
+                'invoice_id' => $invoice->id,
+                'user_id' => Auth::id(),
+            ]);
+
+            return true;
         });
     }
 }

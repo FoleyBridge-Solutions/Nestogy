@@ -636,14 +636,13 @@ class ClientPortalController extends Controller
     protected function getInvoicesForContact(Contact $contact)
     {
         if (! $contact->client) {
-            return collect();
+            return new \Illuminate\Pagination\LengthAwarePaginator([], 0, 10);
         }
 
         return $contact->client->invoices()
             ->with(['payments'])
             ->orderBy('created_at', 'desc')
-            ->limit(10)
-            ->get();
+            ->paginate(10);
     }
 
     protected function getInvoiceStatsForContact(Contact $contact): array
@@ -656,7 +655,8 @@ class ClientPortalController extends Controller
 
         return [
             'total_invoices' => $invoices->count(),
-            'outstanding_amount' => $invoices->where('status', 'sent')->sum('amount'),
+            'total_outstanding' => $invoices->where('status', 'sent')->sum('amount'),
+            'overdue_amount' => $invoices->where('due_date', '<', now())->where('status', 'sent')->sum('amount'),
             'overdue_count' => $invoices->where('due_date', '<', now())->where('status', 'sent')->count(),
             'paid_this_month' => $invoices->where('status', 'paid')
                 ->whereMonth('updated_at', now()->month)
@@ -867,10 +867,23 @@ class ClientPortalController extends Controller
         $stats = $this->getInvoiceStatsForContact($contact);
         $notifications = $this->getNotificationsForContact($contact);
 
+        if ($request->wantsJson()) {
+            return response()->json([
+                'invoices' => $invoices->items(),
+                'pagination' => [
+                    'current_page' => $invoices->currentPage(),
+                    'total_pages' => $invoices->lastPage(),
+                    'total_count' => $invoices->total(),
+                    'per_page' => $invoices->perPage(),
+                ],
+                'summary' => $stats,
+            ]);
+        }
+
         return view('client-portal.invoices.index', compact('invoices', 'stats', 'contact', 'notifications'));
     }
 
-    public function showInvoice(Invoice $invoice)
+    public function showInvoice(Request $request, Invoice $invoice)
     {
         $contact = auth('client')->user();
 
@@ -879,15 +892,32 @@ class ClientPortalController extends Controller
         }
 
         if ($invoice->client_id !== $contact->client_id) {
-            abort(403, 'Unauthorized access to invoice.');
+            abort(404);
         }
 
         $invoice->load(['items', 'payments']);
 
+        if ($request->wantsJson()) {
+            $invoiceData = $invoice->toArray();
+            $invoiceData['can_be_paid'] = $invoice->canBePaid();
+            
+            return response()->json([
+                'invoice' => $invoiceData,
+                'items' => $invoice->items,
+                'payments' => $invoice->payments,
+                'payment_info' => [
+                    'total' => $invoice->amount,
+                    'paid' => $invoice->getTotalPaid(),
+                    'balance' => $invoice->getBalance(),
+                    'is_paid' => $invoice->isFullyPaid(),
+                ],
+            ]);
+        }
+
         return view('client-portal.invoices.show', compact('invoice', 'contact'));
     }
 
-    public function downloadClientInvoice(Invoice $invoice)
+    public function downloadClientInvoice(Request $request, Invoice $invoice)
     {
         $contact = auth('client')->user();
 
@@ -896,7 +926,14 @@ class ClientPortalController extends Controller
         }
 
         if ($invoice->client_id !== $contact->client_id) {
-            abort(403, 'Unauthorized access to invoice.');
+            abort(404);
+        }
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'pdf_url' => route('client.invoices.pdf', $invoice->id),
+                'download_url' => route('client.invoices.download', $invoice->id),
+            ]);
         }
 
         try {
@@ -1356,11 +1393,22 @@ class ClientPortalController extends Controller
             ->take(5)
             ->get();
 
-        return response()->json([
-            'stats' => $stats,
+        $thisYear = $contact->client->invoices()
+            ->whereYear('date', now()->year)
+            ->sum('amount');
+        
+        $thisMonth = $contact->client->invoices()
+            ->whereYear('date', now()->year)
+            ->whereMonth('date', now()->month)
+            ->sum('amount');
+
+        return response()->json(array_merge($stats, [
+            'current_balance' => $stats['total_outstanding'] ?? 0,
+            'this_year' => $thisYear,
+            'this_month' => $thisMonth,
             'recent_invoices' => $recentInvoices,
             'upcoming_due' => $upcomingDue,
-        ]);
+        ]));
     }
 
     /**
@@ -1380,13 +1428,24 @@ class ClientPortalController extends Controller
         $invoices = $contact->client->invoices()
             ->whereBetween('date', [$startDate, $endDate]);
 
+        $byStatus = $contact->client->invoices()
+            ->selectRaw('status, count(*) as count, sum(amount) as total')
+            ->groupBy('status')
+            ->get()
+            ->mapWithKeys(function ($item) {
+                return [$item->status => ['count' => $item->count, 'total' => $item->total]];
+            });
+
         return response()->json([
-            'total_invoiced' => $invoices->sum('amount'),
-            'total_paid' => $invoices->where('status', 'paid')->sum('amount'),
-            'total_outstanding' => $invoices->whereIn('status', ['sent', 'viewed', 'overdue'])->sum('amount'),
-            'average_invoice_value' => $invoices->avg('amount'),
-            'invoice_count' => $invoices->count(),
-            'payment_history' => $invoices->where('status', 'paid')
+            'totals' => [
+                'total_invoiced' => $invoices->sum('amount'),
+                'total_paid' => $invoices->where('status', 'paid')->sum('amount'),
+                'total_outstanding' => $invoices->whereIn('status', ['sent', 'viewed', 'overdue'])->sum('amount'),
+                'average_invoice_value' => $invoices->avg('amount'),
+                'invoice_count' => $invoices->count(),
+            ],
+            'by_status' => $byStatus,
+            'payment_trends' => $invoices->where('status', 'paid')
                 ->orderBy('date')
                 ->get()
                 ->groupBy(function ($invoice) {
@@ -1410,20 +1469,26 @@ class ClientPortalController extends Controller
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
-        if ($invoice->status === 'paid') {
-            return response()->json(['error' => 'Invoice already paid'], 422);
+        if (! $invoice->canBePaid()) {
+            return response()->json(['error' => 'Invoice cannot be paid'], 400);
         }
 
-        $balance = $invoice->amount - ($invoice->payments()->sum('amount') ?? 0);
+        $balance = $invoice->getBalance();
 
         return response()->json([
-            'invoice_id' => $invoice->id,
-            'balance' => $balance,
+            'invoice' => [
+                'id' => $invoice->id,
+                'number' => $invoice->number,
+                'amount' => $invoice->amount,
+                'balance' => $balance,
+            ],
             'payment_methods' => ['credit_card', 'bank_transfer', 'ach'],
-            'suggested_amounts' => [
-                'minimum' => max(50, $balance * 0.25),
-                'partial' => $balance * 0.5,
-                'full' => $balance,
+            'payment_amounts' => [
+                'suggested_amounts' => [
+                    'minimum' => max(50, $balance * 0.25),
+                    'partial' => $balance * 0.5,
+                    'full' => $balance,
+                ],
             ],
             'payment_terms' => $invoice->payment_terms ?? 'Net 30',
         ]);

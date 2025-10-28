@@ -421,8 +421,8 @@ class Invoice extends Model
      */
     public function getTotalPaid(): float
     {
-        $paymentApplications = $this->activePaymentApplications()->sum('amount');
-        $creditApplications = $this->activeCreditApplications()->sum('amount');
+        $paymentApplications = $this->activePaymentApplications()->sum('payment_applications.amount');
+        $creditApplications = $this->activeCreditApplications()->sum('client_credit_applications.amount');
         return round($paymentApplications + $creditApplications, 2);
     }
 
@@ -435,11 +435,29 @@ class Invoice extends Model
     }
 
     /**
+     * Get total paid amount (alias for getTotalPaid for consistency).
+     */
+    public function getPaidAmount(): float
+    {
+        return $this->getTotalPaid();
+    }
+
+    /**
      * Check if invoice is fully paid.
      */
     public function isFullyPaid(): bool
     {
-        return $this->getBalance() <= 0;
+        return $this->amount > 0 && $this->getBalance() <= 0;
+    }
+
+    /**
+     * Check if invoice can be paid (not already fully paid or cancelled).
+     */
+    public function canBePaid(): bool
+    {
+        return !$this->isFullyPaid() 
+            && $this->status !== self::STATUS_CANCELLED 
+            && $this->status !== self::STATUS_PAID;
     }
 
     /**

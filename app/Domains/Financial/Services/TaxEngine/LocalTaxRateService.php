@@ -31,24 +31,30 @@ class LocalTaxRateService
         array $lineItems = []
     ): array {
         try {
-            // Primary: Use API Ninjas for accurate US-wide coverage
-            if ($destination && ! empty($destination['zip'])) {
-                $apiNinjasService = new \App\Services\TaxEngine\ApiNinjasTaxService($this->companyId);
-                $apiResult = $apiNinjasService->calculateTax($amount, $serviceType, $destination, $lineItems);
+            // Primary: Use API Ninjas for accurate US-wide coverage (if configured)
+            if ($destination && ! empty($destination['zip']) && config('services.api_ninjas.key')) {
+                try {
+                    $apiNinjasService = new ApiNinjasTaxService($this->companyId);
+                    $apiResult = $apiNinjasService->calculateTax($amount, $serviceType, $destination, $lineItems);
 
-                if ($apiResult['success']) {
-                    Log::info('Tax calculation using API Ninjas successful', [
-                        'zip' => $destination['zip'],
-                        'tax_rate' => $apiResult['tax_rate'],
-                        'tax_amount' => $apiResult['tax_amount'],
+                    if ($apiResult['success']) {
+                        Log::info('Tax calculation using API Ninjas successful', [
+                            'zip' => $destination['zip'],
+                            'tax_rate' => $apiResult['tax_rate'],
+                            'tax_amount' => $apiResult['tax_amount'],
+                        ]);
+
+                        return $apiResult;
+                    }
+
+                    Log::warning('API Ninjas failed, falling back to local data', [
+                        'error' => $apiResult['error'] ?? 'Unknown error',
                     ]);
-
-                    return $apiResult;
+                } catch (\Exception $e) {
+                    Log::warning('API Ninjas service unavailable, falling back to local data', [
+                        'error' => $e->getMessage(),
+                    ]);
                 }
-
-                Log::warning('API Ninjas failed, falling back to local data', [
-                    'error' => $apiResult['error'] ?? 'Unknown error',
-                ]);
             }
 
             // Fallback: Use local tax rates for backup or when API Ninjas unavailable

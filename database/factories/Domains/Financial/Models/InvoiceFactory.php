@@ -38,7 +38,7 @@ class InvoiceFactory extends Factory
             'scope' => $this->faker->optional()->word(),
             'date' => $date,
             'due_date' => $dueDate,
-            'status' => $this->faker->randomElement(['draft', 'sent', 'viewed', 'paid', 'overdue', 'cancelled']),
+            'status' => 'Draft',
             'discount_amount' => $discountAmount ?? 0,
             'amount' => $amount,
             'currency_code' => 'USD',
@@ -56,7 +56,7 @@ class InvoiceFactory extends Factory
     public function draft(): static
     {
         return $this->state(fn (array $attributes) => [
-            'status' => 'draft',
+            'status' => 'Draft',
         ]);
     }
 
@@ -66,7 +66,7 @@ class InvoiceFactory extends Factory
     public function sent(): static
     {
         return $this->state(fn (array $attributes) => [
-            'status' => 'sent',
+            'status' => 'Sent',
         ]);
     }
 
@@ -77,7 +77,7 @@ class InvoiceFactory extends Factory
     {
         return $this->state(function (array $attributes) {
             return [
-                'status' => 'viewed',
+                'status' => 'Viewed',
             ];
         });
     }
@@ -89,7 +89,7 @@ class InvoiceFactory extends Factory
     {
         return $this->state(function (array $attributes) {
             return [
-                'status' => 'paid',
+                'status' => 'Paid',
             ];
         });
     }
@@ -104,7 +104,7 @@ class InvoiceFactory extends Factory
             $invoiceDate = (clone $dueDate)->modify('-30 days');
 
             return [
-                'status' => 'overdue',
+                'status' => 'Overdue',
                 'date' => $invoiceDate,
                 'due_date' => $dueDate,
             ];
@@ -117,7 +117,7 @@ class InvoiceFactory extends Factory
     public function cancelled(): static
     {
         return $this->state(fn (array $attributes) => [
-            'status' => 'cancelled',
+            'status' => 'Cancelled',
         ]);
     }
 

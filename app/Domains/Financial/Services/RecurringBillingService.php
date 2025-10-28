@@ -94,7 +94,7 @@ class RecurringBillingService
     {
         Log::info('Retrying failed payment', ['invoice_id' => $invoice->id]);
 
-        if ($invoice->status === 'paid') {
+        if (in_array($invoice->status, ['paid', 'Paid'])) {
             return [
                 'success' => false,
                 'message' => 'Invoice is already paid',

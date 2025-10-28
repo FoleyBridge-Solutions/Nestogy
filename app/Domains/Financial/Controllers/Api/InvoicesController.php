@@ -55,7 +55,7 @@ class InvoicesController extends Controller
         }
 
         if ($request->has('overdue') && $request->overdue) {
-            $query->where('status', '!=', 'paid')
+            $query->whereNotIn('status', ['paid', 'Paid'])
                 ->where('due_date', '<', now());
         }
 
@@ -82,7 +82,7 @@ class InvoicesController extends Controller
         $invoices->getCollection()->transform(function ($invoice) {
             $invoice->total_paid = $invoice->payments->sum('amount');
             $invoice->balance_due = $invoice->amount - $invoice->total_paid;
-            $invoice->is_overdue = $invoice->status !== 'paid' && $invoice->due_date < now();
+            $invoice->is_overdue = !in_array($invoice->status, ['paid', 'Paid']) && $invoice->due_date < now();
             $invoice->days_overdue = $invoice->is_overdue
                 ? now()->diffInDays($invoice->due_date)
                 : 0;
@@ -98,7 +98,7 @@ class InvoicesController extends Controller
                 'total_paid' => $query->whereHas('payments')->get()->sum(function ($invoice) {
                     return $invoice->payments->sum('amount');
                 }),
-                'total_outstanding' => $query->where('status', '!=', 'paid')->sum('amount'),
+                'total_outstanding' => $query->whereNotIn('status', ['paid', 'Paid'])->sum('amount'),
             ],
             'message' => 'Invoices retrieved successfully',
         ]);
@@ -212,7 +212,7 @@ class InvoicesController extends Controller
             }
 
             // Send notification if invoice is sent
-            if ($invoice->status === 'sent') {
+            if (in_array($invoice->status, ['sent', 'Sent'])) {
                 $this->notificationService->notifyInvoiceSent($invoice);
             }
 
@@ -280,7 +280,7 @@ class InvoicesController extends Controller
             ], 403);
         }
 
-        if (in_array($invoice->status, ['paid', 'cancelled'])) {
+        if (in_array($invoice->status, ['Paid', 'paid', 'Cancelled', 'cancelled'])) {
             return response()->json([
                 'success' => false,
                 'message' => 'Cannot edit '.$invoice->status.' invoices',
@@ -355,7 +355,7 @@ class InvoicesController extends Controller
         }
 
         // Cannot delete paid invoices
-        if ($invoice->status === 'paid') {
+        if (in_array($invoice->status, ['paid', 'Paid'])) {
             return response()->json([
                 'success' => false,
                 'message' => 'Cannot delete paid invoices',
@@ -450,7 +450,7 @@ class InvoicesController extends Controller
         }
 
         // Only retry for unpaid invoices with payment method
-        if ($invoice->status === 'paid') {
+        if (in_array($invoice->status, ['paid', 'Paid'])) {
             return response()->json([
                 'success' => false,
                 'message' => 'Invoice is already paid',
@@ -524,8 +524,8 @@ class InvoicesController extends Controller
 
         try {
             // Update status to sent if it's still draft
-            if ($invoice->status === 'draft') {
-                $invoice->update(['status' => 'sent']);
+            if (in_array($invoice->status, ['draft', 'Draft'])) {
+                $invoice->update(['status' => 'Sent']);
             }
 
             // Send email notification
@@ -671,9 +671,9 @@ class InvoicesController extends Controller
             return;
         }
 
-        if ($validated['status'] === 'sent') {
+        if (in_array($validated['status'], ['sent', 'Sent'])) {
             $this->notificationService->notifyInvoiceSent($invoice);
-        } elseif ($validated['status'] === 'paid') {
+        } elseif (in_array($validated['status'], ['paid', 'Paid'])) {
             $this->notificationService->notifyPaymentReceived($invoice, $invoice->amount);
         }
     }

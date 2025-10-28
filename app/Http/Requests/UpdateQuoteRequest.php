@@ -30,12 +30,21 @@ class UpdateQuoteRequest extends BaseQuoteRequest
     {
         $user = Auth::user();
 
-        return array_merge($this->getCommonRules(), [
+        $rules = $this->getCommonRules();
+        
+        // Make required fields sometimes required for partial updates
+        $rules['status'] = 'sometimes|required|in:'.implode(',', Quote::getAvailableStatuses());
+        $rules['currency_code'] = 'sometimes|required|string|size:3';
+        $rules['date'] = 'sometimes|required|date';
+        $rules['discount_type'] = 'sometimes|required|in:percentage,fixed';
+
+        return array_merge($rules, [
             // Update-specific fields
             'change_reason' => 'nullable|string|max:500',
 
             // Enhanced relationship validation for updates
             'category_id' => [
+                'sometimes',
                 'required',
                 'integer',
                 'exists:categories,id',
@@ -47,6 +56,7 @@ class UpdateQuoteRequest extends BaseQuoteRequest
                 },
             ],
             'client_id' => [
+                'sometimes',
                 'required',
                 'integer',
                 'exists:clients,id',
@@ -112,7 +122,7 @@ class UpdateQuoteRequest extends BaseQuoteRequest
             }
 
             // Validate status transitions
-            if ($quote && $this->status !== $quote->status) {
+            if ($quote && $this->status && $this->status !== $quote->status) {
                 $this->validateStatusTransition($validator, $quote->status, $this->status);
             }
         });

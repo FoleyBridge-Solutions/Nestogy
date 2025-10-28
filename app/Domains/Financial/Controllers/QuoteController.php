@@ -116,7 +116,7 @@ class QuoteController extends Controller
 
         // Get all categories for dropdown
         $categories = Category::where('company_id', $user->company_id)
-            ->where('type', '=', 'quote')
+            ->whereRaw("type::text = ?", ['quote'])
             ->orderBy('name')
             ->select(['id', 'name'])
             ->get();
@@ -125,14 +125,14 @@ class QuoteController extends Controller
         $templates = QuoteTemplate::where('company_id', $user->company_id)
             ->where('is_active', true)
             ->orderBy('name')
-            ->select(['id', 'name', 'description', 'items'])
+            ->select(['id', 'name', 'description'])
             ->get();
 
         // Get products for item selection
         $products = Product::where('company_id', $user->company_id)
             ->where('is_active', true)
             ->orderBy('name')
-            ->select(['id', 'name', 'description', 'price', 'category'])
+            ->select(['id', 'name', 'description'])
             ->limit(50) // Initial load limit for performance
             ->get();
 
@@ -306,12 +306,12 @@ class QuoteController extends Controller
      */
     public function edit(Quote $quote)
     {
-        $this->authorize('update', $quote);
-
-        // Only allow editing of draft quotes or those not yet approved
+        // Check quote state before authorization to provide better error messages
         if (! $quote->isDraft() && $quote->approval_status !== Quote::APPROVAL_REJECTED) {
-            return back()->with('error', 'Only draft or rejected quotes can be edited');
+            return redirect()->back()->with('error', 'Only draft or rejected quotes can be edited');
         }
+
+        $this->authorize('update', $quote);
 
         $user = Auth::user();
 
@@ -323,7 +323,7 @@ class QuoteController extends Controller
 
         // Get all categories for dropdown
         $categories = Category::where('company_id', $user->company_id)
-            ->where('type', '=', 'quote')
+            ->whereRaw("type::text = ?", ['quote'])
             ->orderBy('name')
             ->select(['id', 'name'])
             ->get();
@@ -332,14 +332,14 @@ class QuoteController extends Controller
         $templates = QuoteTemplate::where('company_id', $user->company_id)
             ->where('is_active', true)
             ->orderBy('name')
-            ->select(['id', 'name', 'description', 'items'])
+            ->select(['id', 'name', 'description'])
             ->get();
 
         // Get products for item selection
         $products = Product::where('company_id', $user->company_id)
             ->where('is_active', true)
             ->orderBy('name')
-            ->select(['id', 'name', 'description', 'price', 'category'])
+            ->select(['id', 'name', 'description'])
             ->limit(50) // Initial load limit for performance
             ->get();
 
@@ -1406,7 +1406,7 @@ class QuoteController extends Controller
         $request->validate([
             'quote_ids' => 'required|array|min:1',
             'quote_ids.*' => 'integer|exists:quotes,id',
-            'status' => 'required|string|in:draft,sent,accepted,rejected,expired',
+            'status' => 'required|string|in:Draft,Sent,Viewed,Accepted,Declined,Expired,Converted,Cancelled',
         ]);
 
         try {

@@ -5,11 +5,12 @@ namespace App\Domains\Financial\Services;
 use App\Domains\Financial\Exceptions\QuoteNotFoundException;
 use App\Domains\Financial\Exceptions\QuotePermissionException;
 use App\Domains\Financial\Exceptions\QuoteValidationException;
-use App\Domains\Financial\Services\TaxEngine\TaxEngineRouter;
+use App\Domains\Financial\Services\TaxEngine\LocalTaxRateService;
 use App\Domains\Financial\Models\Category;
 use App\Domains\Client\Models\Client;
 use App\Domains\Product\Models\Product;
 use App\Domains\Financial\Models\Quote;
+use App\Domains\Financial\Models\Invoice;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -22,16 +23,16 @@ use Illuminate\Support\Facades\Validator;
  */
 class QuoteService
 {
-    protected ?TaxEngineRouter $taxEngine = null;
+    protected ?LocalTaxRateService $taxEngine = null;
 
     /**
-     * Get or create tax engine router instance
+     * Get or create tax engine instance
      */
-    protected function getTaxEngine(): TaxEngineRouter
+    protected function getTaxEngine(): LocalTaxRateService
     {
         if (! $this->taxEngine) {
             $companyId = auth()->user()->company_id ?? 1;
-            $this->taxEngine = new TaxEngineRouter($companyId);
+            $this->taxEngine = new LocalTaxRateService($companyId);
         }
 
         return $this->taxEngine;
@@ -225,12 +226,18 @@ class QuoteService
                 unset($quoteData['id'], $quoteData['number'], $quoteData['created_at'],
                     $quoteData['updated_at'], $quoteData['archived_at']);
 
-                // Apply overrides
-                $quoteData = array_merge($quoteData, $overrides);
+                // Fix column name mapping (database uses 'expire', but createQuote expects 'expire_date')
+                if (isset($quoteData['expire'])) {
+                    $quoteData['expire_date'] = $quoteData['expire'];
+                    unset($quoteData['expire']);
+                }
 
-                // Set new date and status
+                // Set new date and status (before overrides so they can be overridden)
                 $quoteData['date'] = now();
                 $quoteData['status'] = Quote::STATUS_DRAFT;
+
+                // Apply overrides (after setting defaults)
+                $quoteData = array_merge($quoteData, $overrides);
 
                 // Create new quote
                 $newQuote = $this->createQuote($quoteData);
@@ -255,17 +262,37 @@ class QuoteService
                     'user_id' => auth()->id(),
                 ]);
 
-                return $newQuote->fresh(['client', 'category', 'items', 'user']);
+                return $newQuote->fresh(['client', 'category', 'items']);
 
+            } catch (QuoteValidationException $e) {
+                Log::error('Quote duplication failed - validation errors', [
+                    'original_quote_id' => $originalQuote->id,
+                    'error' => $e->getMessage(),
+                    'validation_errors' => $e->getErrors(),
+                    'user_id' => auth()->id(),
+                ]);
+                throw $e;
             } catch (\Exception $e) {
                 Log::error('Quote duplication failed', [
                     'original_quote_id' => $originalQuote->id,
                     'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
                     'user_id' => auth()->id(),
                 ]);
                 throw new QuoteValidationException('Failed to duplicate quote: '.$e->getMessage());
             }
         });
+    }
+
+    /**
+     * Add a single item to a quote
+     */
+    public function addQuoteItem(Quote $quote, array $itemData)
+    {
+        $items = $this->addQuoteItems($quote, [$itemData], true); // Skip complex tax calculations
+        $this->calculatePricing($quote);
+        
+        return $items->first();
     }
 
     /**
@@ -397,8 +424,21 @@ class QuoteService
         }
 
         try {
-            // Try the complex tax engine first
-            return $this->getTaxEngine()->calculateTaxes($params);
+            // Try the tax engine first
+            $serviceType = $params['category_type'] ?? 'general';
+            $destination = $params['customer_address'] ?? null;
+            
+            $result = $this->getTaxEngine()->calculateTax($subtotal, $serviceType, $destination);
+            
+            if ($result['success'] ?? false) {
+                return [
+                    'total_tax_amount' => $result['tax_amount'] ?? 0,
+                    'effective_tax_rate' => $result['tax_rate'] ?? 0,
+                    'tax_breakdown' => $result['jurisdictions'] ?? [],
+                ];
+            }
+            
+            throw new \Exception($result['error'] ?? 'Tax calculation failed');
         } catch (\Exception $e) {
             Log::warning('Tax calculation failed for quote item, using fallback', [
                 'error' => $e->getMessage(),
@@ -472,6 +512,33 @@ class QuoteService
 
             return null;
         }
+    }
+
+    /**
+     * Update a single quote item
+     */
+    public function updateQuoteItem($item, array $data)
+    {
+        $item->update([
+            'name' => $data['name'] ?? $item->name,
+            'description' => $data['description'] ?? $item->description,
+            'quantity' => $data['quantity'] ?? $item->quantity,
+            'price' => $data['price'] ?? $item->price,
+            'discount' => $data['discount'] ?? $item->discount,
+            'tax_id' => $data['tax_id'] ?? $item->tax_id,
+            'category_id' => $data['category_id'] ?? $item->category_id,
+        ]);
+        
+        // Recalculate item totals
+        $subtotal = ($item->quantity * $item->price) - ($item->discount ?? 0);
+        $item->update(['subtotal' => $subtotal]);
+        
+        // Recalculate quote totals if this is a quote item
+        if ($item->quote) {
+            $this->calculatePricing($item->quote);
+        }
+        
+        return $item->fresh();
     }
 
     /**
@@ -789,12 +856,15 @@ class QuoteService
      */
     private function validateQuoteData(array $data, ?int $quoteId = null): void
     {
+        // For updates, make required fields optional (sometimes|required)
+        $isUpdate = $quoteId !== null;
+        
         $rules = [
-            'client_id' => 'required|exists:clients,id',
-            'category_id' => 'required|exists:categories,id',
-            'date' => 'required|date',
+            'client_id' => ($isUpdate ? 'sometimes|' : '') . 'required|exists:clients,id',
+            'category_id' => ($isUpdate ? 'sometimes|' : '') . 'required|exists:categories,id',
+            'date' => ($isUpdate ? 'sometimes|' : '') . 'required|date',
             'expire_date' => 'nullable|date|after:date',
-            'currency_code' => 'required|string|size:3',
+            'currency_code' => ($isUpdate ? 'sometimes|' : '') . 'required|string|size:3',
             'discount_amount' => 'nullable|numeric|min:0',
             'items' => 'nullable|array',
             'items.*.name' => 'required_with:items|string|max:255',
@@ -1155,5 +1225,216 @@ class QuoteService
         ]);
 
         return $quoteData;
+    }
+
+    /**
+     * Create a quote from a template
+     *
+     * @throws QuoteValidationException
+     */
+    public function createFromTemplate($template, Client $client, array $customizations = []): Quote
+    {
+        return DB::transaction(function () use ($template, $client, $customizations) {
+            try {
+                // Prepare quote data from template
+                $quoteData = [
+                    'client_id' => $client->id,
+                    'category_id' => $template->category_id ?? $customizations['category_id'] ?? null,
+                    'company_id' => auth()->user()->company_id,
+                    'date' => now(),
+                    'expire_date' => $customizations['expire_date'] ?? now()->addDays(30),
+                    'status' => Quote::STATUS_DRAFT,
+                    'currency_code' => $template->currency_code ?? 'USD',
+                    'scope' => $customizations['scope'] ?? $template->scope ?? '',
+                    'note' => $customizations['note'] ?? $template->note ?? '',
+                    'terms_conditions' => $template->terms_conditions ?? '',
+                    'template_name' => $template->name ?? null,
+                    'discount_amount' => $customizations['discount_amount'] ?? $template->discount_amount ?? 0,
+                ];
+
+                // Get template items if the template has them
+                $items = [];
+                if (method_exists($template, 'items') && $template->items) {
+                    foreach ($template->items as $templateItem) {
+                        $items[] = [
+                            'name' => $templateItem->name,
+                            'description' => $templateItem->description ?? '',
+                            'quantity' => $customizations['items'][$templateItem->id]['quantity'] ?? $templateItem->quantity ?? 1,
+                            'price' => $customizations['items'][$templateItem->id]['price'] ?? $templateItem->price ?? 0,
+                            'discount' => $customizations['items'][$templateItem->id]['discount'] ?? $templateItem->discount ?? 0,
+                            'product_id' => $templateItem->product_id ?? null,
+                            'service_type' => $templateItem->service_type ?? 'general',
+                        ];
+                    }
+                }
+
+                // Add custom items from customizations if provided
+                if (!empty($customizations['additional_items'])) {
+                    $items = array_merge($items, $customizations['additional_items']);
+                }
+
+                $quoteData['items'] = $items;
+
+                // Create the quote using existing createQuote method
+                $quote = $this->createQuote($quoteData);
+
+                Log::info('Quote created from template', [
+                    'quote_id' => $quote->id,
+                    'template_id' => $template->id ?? null,
+                    'client_id' => $client->id,
+                    'user_id' => auth()->id(),
+                ]);
+
+                return $quote;
+
+            } catch (\Exception $e) {
+                Log::error('Failed to create quote from template', [
+                    'template_id' => $template->id ?? null,
+                    'client_id' => $client->id,
+                    'error' => $e->getMessage(),
+                    'user_id' => auth()->id(),
+                ]);
+                throw new QuoteValidationException('Failed to create quote from template: '.$e->getMessage());
+            }
+        });
+    }
+
+    /**
+     * Delete a quote item
+     */
+    public function deleteQuoteItem($item): bool
+    {
+        try {
+            $quoteId = $item->quote_id ?? $item->invoice_id ?? null;
+            $itemId = $item->id;
+            
+            $item->delete();
+            
+            // Recalculate quote totals if this is a quote item
+            if ($quoteId && $item->quote) {
+                $this->calculatePricing($item->quote);
+            }
+            
+            Log::info('Quote item deleted', [
+                'quote_id' => $quoteId,
+                'item_id' => $itemId,
+                'user_id' => auth()->id(),
+            ]);
+            
+            return true;
+        } catch (\Exception $e) {
+            Log::error('Failed to delete quote item', [
+                'item_id' => $item->id ?? null,
+                'error' => $e->getMessage(),
+                'user_id' => auth()->id(),
+            ]);
+            
+            return false;
+        }
+    }
+
+    /**
+     * Submit quote for approval
+     */
+    public function submitForApproval(Quote $quote): Quote
+    {
+        return DB::transaction(function () use ($quote) {
+            $quote->update([
+                'approval_status' => Quote::APPROVAL_PENDING,
+                'status' => Quote::STATUS_SENT,
+            ]);
+            
+            Log::info('Quote submitted for approval', [
+                'quote_id' => $quote->id,
+                'user_id' => auth()->id(),
+            ]);
+            
+            return $quote->fresh();
+        });
+    }
+
+    /**
+     * Process approval for quote
+     */
+    public function processApproval(Quote $quote, string $level, string $action, ?string $comments = null): Quote
+    {
+        return DB::transaction(function () use ($quote, $level, $action, $comments) {
+            // Map level to approval status
+            $approvalStatus = match ($level) {
+                'manager' => $action === 'approve' ? Quote::APPROVAL_MANAGER_APPROVED : Quote::APPROVAL_REJECTED,
+                'executive' => $action === 'approve' ? Quote::APPROVAL_EXECUTIVE_APPROVED : Quote::APPROVAL_REJECTED,
+                default => $action === 'approve' ? Quote::APPROVAL_EXECUTIVE_APPROVED : Quote::APPROVAL_REJECTED,
+            };
+            
+            $quote->update([
+                'approval_status' => $approvalStatus,
+                // 'approved_by' => auth()->id(), // column doesn't exist in database
+            ]);
+            
+            // Create approval record if QuoteApproval model exists
+            if (class_exists(\App\Domains\Financial\Models\QuoteApproval::class)) {
+                $quote->approvals()->create([
+                    'company_id' => $quote->company_id,
+                    'quote_id' => $quote->id,
+                    'user_id' => auth()->id(),
+                    'approval_level' => $level,
+                    'status' => $action === 'approve' ? 'approved' : 'rejected',
+                    'comments' => $comments,
+                    'approved_at' => $action === 'approve' ? now() : null,
+                    'rejected_at' => $action === 'reject' ? now() : null,
+                ]);
+            }
+            
+            Log::info('Quote approval processed', [
+                'quote_id' => $quote->id,
+                'level' => $level,
+                'action' => $action,
+                'user_id' => auth()->id(),
+            ]);
+            
+            return $quote->fresh();
+        });
+    }
+
+    /**
+     * Send quote to client
+     */
+    public function sendQuote(Quote $quote): bool
+    {
+        try {
+            $quote->markAsSent();
+            
+            Log::info('Quote sent to client', [
+                'quote_id' => $quote->id,
+                'client_id' => $quote->client_id,
+                'user_id' => auth()->id(),
+            ]);
+            
+            return true;
+        } catch (\Exception $e) {
+            Log::error('Failed to send quote', [
+                'quote_id' => $quote->id,
+                'error' => $e->getMessage(),
+                'user_id' => auth()->id(),
+            ]);
+            
+            return false;
+        }
+    }
+
+    /**
+     * Convert quote to invoice
+     */
+    public function convertToInvoice(Quote $quote): Invoice
+    {
+        return $quote->convertToInvoice();
+    }
+
+    /**
+     * Create a revision of a quote
+     */
+    public function createRevision(Quote $quote, array $changes = [], ?string $reason = null): Quote
+    {
+        return $quote->createRevision($changes, $reason);
     }
 }

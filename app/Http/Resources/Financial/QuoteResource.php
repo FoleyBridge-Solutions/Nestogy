@@ -28,6 +28,7 @@ class QuoteResource extends JsonResource
             'date' => $this->date?->format('Y-m-d'),
             'expire_date' => $this->expire?->format('Y-m-d'),
             'currency_code' => $this->currency_code,
+            'amount' => $this->amount,
 
             // Client information (when loaded)
             'client' => $this->whenLoaded('client', function () {

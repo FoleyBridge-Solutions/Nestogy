@@ -11,17 +11,18 @@ class QuoteTemplateFactory extends Factory
 
     public function definition(): array
     {
-        return ['company_id' => \App\Domains\Company\Models\Company::factory(),
+        return [
+            'company_id' => \App\Domains\Company\Models\Company::factory(),
             'name' => $this->faker->words(3, true),
             'description' => $this->faker->optional()->sentence,
             'category' => $this->faker->randomElement(['basic', 'standard', 'premium', 'custom']),
-            'template_items' => $this->faker->optional()->randomNumber(),
-            'service_config' => $this->faker->optional()->randomNumber(),
-            'pricing_config' => $this->faker->optional()->randomNumber(),
-            'tax_config' => $this->faker->optional()->randomFloat(2, 0, 1000),
-            'terms_conditions' => $this->faker->optional()->randomNumber(),
+            'template_items' => json_encode([]),
+            'service_config' => json_encode([]),
+            'pricing_config' => json_encode([]),
+            'tax_config' => json_encode([]),
+            'terms_conditions' => $this->faker->optional()->sentence,
             'is_active' => $this->faker->boolean(70),
-            'created_by' => \App\Domains\Core\Models\User::factory()
+            'created_by' => \App\Domains\Core\Models\User::factory(),
         ];
     }
 }

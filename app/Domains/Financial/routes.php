@@ -36,7 +36,7 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('financial')->name('finan
         Route::post('convert-to-recurring', [QuoteController::class, 'convertToRecurring'])->name('convert-to-recurring');
         Route::get('preview-recurring', [QuoteController::class, 'previewRecurringConversion'])->name('preview-recurring');
         Route::post('create-revision', [QuoteController::class, 'createRevision'])->name('create-revision');
-        Route::post('approve', [QuoteController::class, 'approve'])->name('approve');
+        Route::get('approve', [QuoteController::class, 'approve'])->name('approve'); // Changed to GET - shows approval form
         Route::post('reject', [QuoteController::class, 'reject'])->name('reject');
         Route::post('send', [QuoteController::class, 'send'])->name('send');
         Route::post('cancel', [QuoteController::class, 'cancel'])->name('cancel');

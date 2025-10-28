@@ -31,4 +31,27 @@ class InvoiceItemFactory extends Factory
             'tax_rate' => 10.0,
         ];
     }
+
+    /**
+     * Configure the model factory.
+     */
+    public function configure(): static
+    {
+        return $this->afterMaking(function (InvoiceItem $item) {
+            // If invoice_id is set, use the invoice's company_id (ALWAYS override)
+            if ($item->invoice_id) {
+                $invoice = \App\Domains\Financial\Models\Invoice::withoutGlobalScopes()->find($item->invoice_id);
+                if ($invoice) {
+                    $item->company_id = $invoice->company_id;
+                }
+            }
+            // If quote_id is set, use the quote's company_id (ALWAYS override)
+            elseif ($item->quote_id) {
+                $quote = \App\Domains\Financial\Models\Quote::withoutGlobalScopes()->find($item->quote_id);
+                if ($quote) {
+                    $item->company_id = $quote->company_id;
+                }
+            }
+        });
+    }
 }

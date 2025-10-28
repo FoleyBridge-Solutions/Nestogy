@@ -11,6 +11,8 @@ class QuoteFactory extends Factory
 
     public function definition(): array
     {
+        $date = $this->faker->dateTimeBetween('-1 year', 'now');
+        
         return [
             'company_id' => \App\Domains\Company\Models\Company::factory(),
             'category_id' => \App\Domains\Financial\Models\Category::factory(),
@@ -18,12 +20,12 @@ class QuoteFactory extends Factory
             'prefix' => $this->faker->optional()->word,
             'number' => $this->faker->numberBetween(1, 100),
             'scope' => $this->faker->optional()->word,
-            'status' => $this->faker->randomElement(['Draft', 'Sent', 'Viewed', 'Accepted', 'Declined', 'Expired']),
-            'approval_status' => $this->faker->randomElement(['pending', 'manager_approved', 'executive_approved', 'rejected', 'not_required']),
-            'date' => $this->faker->dateTimeBetween('-1 year', 'now'),
-            'expire' => $this->faker->optional()->dateTimeBetween('now', '+1 year'),
-            'discount_amount' => $this->faker->randomFloat(2, 0, 10000),
-            'amount' => $this->faker->randomFloat(2, 0, 10000),
+            'status' => 'Draft',
+            'approval_status' => 'not_required',
+            'date' => $date,
+            'expire' => $this->faker->dateTimeBetween($date, '+1 year'),
+            'discount_amount' => 0,
+            'amount' => 0,
             'currency_code' => 'USD',
             'note' => $this->faker->optional()->sentence,
             'url_key' => bin2hex(random_bytes(16)),
