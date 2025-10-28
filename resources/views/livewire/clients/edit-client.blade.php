@@ -50,7 +50,7 @@
                     <!-- Client Type -->
                     <flux:field>
                         <flux:label>Client Type</flux:label>
-                        <flux:radio.group wire:model="type" variant="segmented">
+                        <flux:radio.group wire:model.live="type" variant="segmented">
                             <flux:radio value="individual" label="Individual" />
                             <flux:radio value="business" label="Business" />
                         </flux:radio.group>
@@ -278,7 +278,7 @@
                 <div class="space-y-6">
                     <!-- Enable Custom Rates -->
                     <flux:field>
-                        <flux:checkbox wire:model="use_custom_rates" label="Use custom billing rates for this client" />
+                        <flux:checkbox wire:model.live="use_custom_rates" label="Use custom billing rates for this client" />
                         <flux:description>Override company-wide billing rates with client-specific rates</flux:description>
                     </flux:field>
 
@@ -286,7 +286,7 @@
                     <div class="space-y-6">
                         <flux:field>
                             <flux:label>Rate Calculation Method</flux:label>
-                            <flux:radio.group wire:model="custom_rate_calculation_method" variant="cards">
+                            <flux:radio.group wire:model.live="custom_rate_calculation_method" variant="cards">
                                 <flux:radio value="fixed_rates" label="Fixed Rates">
                                     <flux:description>Set specific dollar amounts for each rate type</flux:description>
                                 </flux:radio>
