@@ -23,7 +23,7 @@ class NavigationComposer
             'sidebarConfig' => $sidebarConfig,
             'selectedClient' => $selectedClient,
             'activeItem' => null,
-            'breadcrumbs' => [],
+            'breadcrumbs' => $view->getData()['breadcrumbs'] ?? [],
             'currentCompany' => $company,
         ]);
     }
