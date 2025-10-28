@@ -23,21 +23,21 @@
         </flux:card>
     @endif
 
-    <flux:tabs wire:model="activeTab" class="mb-6">
-        <flux:tab name="basic">Basic Information</flux:tab>
-        <flux:tab name="address">Address</flux:tab>
-        <flux:tab name="contacts">Contacts</flux:tab>
-        <flux:tab name="billing">Billing</flux:tab>
-        <flux:tab name="rates">Custom Rates</flux:tab>
-        <flux:tab name="contract">Contract & SLA</flux:tab>
-        <flux:tab name="additional">Additional</flux:tab>
-    </flux:tabs>
-
-    <!-- Form -->
     <form wire:submit="save">
-        @if($activeTab === 'basic')
+        <flux:tab.group>
+            <flux:tabs wire:model="activeTab">
+                <flux:tab name="basic">Basic Information</flux:tab>
+                <flux:tab name="address">Address</flux:tab>
+                <flux:tab name="contacts">Contacts</flux:tab>
+                <flux:tab name="billing">Billing</flux:tab>
+                <flux:tab name="rates">Custom Rates</flux:tab>
+                <flux:tab name="contract">Contract & SLA</flux:tab>
+                <flux:tab name="additional">Additional</flux:tab>
+            </flux:tabs>
+
             <!-- Basic Information Tab -->
-            <flux:card>
+            <flux:tab.panel name="basic">
+                <flux:card>
                 <flux:heading size="lg" class="mb-4">Basic Information</flux:heading>
                 
                 <div class="space-y-6">
@@ -121,11 +121,11 @@
                     </div>
                 </div>
             </flux:card>
-        @endif
+            </flux:tab.panel>
 
-        @if($activeTab === 'address')
             <!-- Address Tab -->
-            <flux:card>
+            <flux:tab.panel name="address">
+                <flux:card>
                 <flux:heading size="lg" class="mb-4">Physical Address</flux:heading>
                 <flux:text class="mb-6">Primary business or billing address</flux:text>
                 
@@ -177,11 +177,11 @@
                     </div>
                 </div>
             </flux:card>
-        @endif
+            </flux:tab.panel>
 
-        @if($activeTab === 'contacts')
             <!-- Contacts Tab -->
-            <flux:card>
+            <flux:tab.panel name="contacts">
+                <flux:card>
                 <flux:heading size="lg" class="mb-4">Key Contacts</flux:heading>
                 <flux:text class="mb-6">Specify primary contacts for different purposes</flux:text>
                 
@@ -203,11 +203,11 @@
                     </flux:field>
                 </div>
             </flux:card>
-        @endif
+            </flux:tab.panel>
 
-        @if($activeTab === 'billing')
             <!-- Billing Tab -->
-            <flux:card>
+            <flux:tab.panel name="billing">
+                <flux:card>
                 <flux:heading size="lg" class="mb-4">Billing Settings</flux:heading>
                 <flux:text class="mb-6">Default billing configuration for this client</flux:text>
                 
@@ -268,11 +268,11 @@
                     </flux:field>
                 </div>
             </flux:card>
-        @endif
+            </flux:tab.panel>
 
-        @if($activeTab === 'rates')
             <!-- Custom Rates Tab -->
-            <flux:card>
+            <flux:tab.panel name="rates">
+                <flux:card>
                 <flux:heading size="lg" class="mb-4">Custom Billing Rates</flux:heading>
                 
                 <div class="space-y-6">
@@ -370,11 +370,11 @@
                     @endif
                 </div>
             </flux:card>
-        @endif
+            </flux:tab.panel>
 
-        @if($activeTab === 'contract')
             <!-- Contract & SLA Tab -->
-            <flux:card>
+            <flux:tab.panel name="contract">
+                <flux:card>
                 <flux:heading size="lg" class="mb-4">Contract Information</flux:heading>
                 
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -412,11 +412,11 @@
                     </flux:field>
                 </div>
             </flux:card>
-        @endif
+            </flux:tab.panel>
 
-        @if($activeTab === 'additional')
             <!-- Additional Tab -->
-            <flux:card>
+            <flux:tab.panel name="additional">
+                <flux:card>
                 <flux:heading size="lg" class="mb-4">Additional Information</flux:heading>
                 
                 <div class="space-y-6">
@@ -460,7 +460,8 @@
                     </flux:field>
                 </div>
             </flux:card>
-        @endif
+            </flux:tab.panel>
+        </flux:tab.group>
 
         <flux:separator class="my-6" />
 
