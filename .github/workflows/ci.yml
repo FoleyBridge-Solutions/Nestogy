@@ -89,7 +89,7 @@ jobs:
           echo "REDIS_PORT=6379" >> .env
 
       - name: Run tests with coverage
-        run: php artisan test --parallel --processes=2 --coverage-clover=coverage.xml
+        run: php artisan test --parallel --recreate-databases --processes=2 --coverage-clover=coverage.xml
 
       - name: Verify coverage file
         run: |
