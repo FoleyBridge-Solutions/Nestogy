@@ -208,11 +208,11 @@ return [
     ],
 
     'Product' => [
-        'enabled' => false,  // Not implemented yet
+        'enabled' => true,
         'middleware' => ['web', 'auth', 'verified'],
-        'prefix' => 'products',
-        'name' => 'products.',
-        'apply_grouping' => true,
+        'prefix' => null,
+        'name' => null,
+        'apply_grouping' => false,
         'priority' => 85,
         'description' => 'Product and service catalog routes',
         'tags' => ['catalog', 'products', 'services'],

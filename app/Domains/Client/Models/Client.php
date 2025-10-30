@@ -6,6 +6,7 @@ use App\Domains\Contract\Models\Contract;
 use App\Domains\Ticket\Models\Ticket;
 use App\Domains\Client\Models\Address;
 use App\Domains\Asset\Models\Asset;
+use App\Domains\Client\Models\ClientService;
 use App\Domains\Client\Models\CommunicationLog;
 use App\Domains\Client\Models\Contact;
 use App\Domains\Company\Models\Company;
@@ -647,6 +648,11 @@ class Client extends Model
     {
         return $this->hasMany(\App\Domains\Financial\Models\RateCard::class)
             ->where('is_active', true);
+    }
+
+    public function services()
+    {
+        return $this->hasMany(ClientService::class);
     }
 
     public function getEffectiveRateCard(string $serviceType = 'standard', ?\Carbon\Carbon $date = null)

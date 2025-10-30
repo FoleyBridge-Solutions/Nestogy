@@ -16,11 +16,14 @@ class ClientService extends Model
     protected $fillable = [
         'company_id',
         'client_id',
+        'contract_id',
+        'product_id',
         'name',
         'description',
         'service_type',
         'category',
         'status',
+        'provisioning_status',
         'start_date',
         'end_date',
         'renewal_date',
@@ -47,27 +50,57 @@ class ClientService extends Model
         'maintenance_schedule',
         'last_review_date',
         'next_review_date',
+        'renewal_count',
         'client_satisfaction',
+        'health_score',
+        'sla_breaches_count',
         'notes',
         'tags',
+        'cancellation_reason',
+        'cancellation_fee',
+        'recurring_billing_id',
+        'actual_monthly_revenue',
+        // Lifecycle timestamps
+        'provisioned_at',
+        'activated_at',
+        'suspended_at',
+        'cancelled_at',
+        'last_renewed_at',
+        'last_health_check_at',
+        'last_sla_breach_at',
     ];
 
     protected $casts = [
         'company_id' => 'integer',
         'client_id' => 'integer',
+        'contract_id' => 'integer',
+        'product_id' => 'integer',
         'assigned_technician' => 'integer',
         'backup_technician' => 'integer',
+        'recurring_billing_id' => 'integer',
         'start_date' => 'date',
         'end_date' => 'date',
         'renewal_date' => 'date',
+        'last_review_date' => 'date',
+        'next_review_date' => 'date',
+        'provisioned_at' => 'datetime',
+        'activated_at' => 'datetime',
+        'suspended_at' => 'datetime',
+        'cancelled_at' => 'datetime',
+        'last_renewed_at' => 'datetime',
+        'last_health_check_at' => 'datetime',
+        'last_sla_breach_at' => 'datetime',
         'monthly_cost' => self::DECIMAL_CAST,
         'setup_cost' => self::DECIMAL_CAST,
         'total_contract_value' => self::DECIMAL_CAST,
+        'cancellation_fee' => self::DECIMAL_CAST,
+        'actual_monthly_revenue' => self::DECIMAL_CAST,
         'auto_renewal' => 'boolean',
         'monitoring_enabled' => 'boolean',
-        'last_review_date' => 'date',
-        'next_review_date' => 'date',
         'client_satisfaction' => 'integer',
+        'health_score' => 'integer',
+        'renewal_count' => 'integer',
+        'sla_breaches_count' => 'integer',
         'tags' => 'array',
         'service_hours' => 'array',
         'performance_metrics' => 'array',
@@ -79,6 +112,13 @@ class ClientService extends Model
         'renewal_date',
         'last_review_date',
         'next_review_date',
+        'provisioned_at',
+        'activated_at',
+        'suspended_at',
+        'cancelled_at',
+        'last_renewed_at',
+        'last_health_check_at',
+        'last_sla_breach_at',
         'deleted_at',
     ];
 
@@ -104,6 +144,30 @@ class ClientService extends Model
     public function backupTechnician()
     {
         return $this->belongsTo(\App\Domains\Core\Models\User::class, 'backup_technician');
+    }
+
+    /**
+     * Get the contract this service belongs to.
+     */
+    public function contract()
+    {
+        return $this->belongsTo(\App\Domains\Contract\Models\Contract::class);
+    }
+
+    /**
+     * Get the product/service template.
+     */
+    public function product()
+    {
+        return $this->belongsTo(\App\Domains\Product\Models\Product::class);
+    }
+
+    /**
+     * Get the recurring billing record for this service.
+     */
+    public function recurringBilling()
+    {
+        return $this->belongsTo(\App\Domains\Financial\Models\Recurring::class, 'recurring_billing_id');
     }
 
     /**
@@ -182,7 +246,7 @@ class ClientService extends Model
     {
         return $this->end_date &&
                $this->end_date->isFuture() &&
-               $this->end_date->diffInDays(now()) <= $days;
+               now()->diffInDays($this->end_date, false) <= $days;
     }
 
     /**
@@ -192,7 +256,7 @@ class ClientService extends Model
     {
         return $this->renewal_date &&
                $this->renewal_date->isFuture() &&
-               $this->renewal_date->diffInDays(now()) <= $days;
+               now()->diffInDays($this->renewal_date, false) <= $days;
     }
 
     /**
@@ -382,5 +446,86 @@ class ClientService extends Model
             'high' => 'High',
             'critical' => 'Critical',
         ];
+    }
+
+    /**
+     * Get available provisioning statuses.
+     */
+    public static function getProvisioningStatuses()
+    {
+        return [
+            'pending' => 'Pending Provisioning',
+            'in_progress' => 'Provisioning In Progress',
+            'completed' => 'Provisioning Completed',
+            'failed' => 'Provisioning Failed',
+        ];
+    }
+
+    /**
+     * Check if service is active.
+     */
+    public function isActive(): bool
+    {
+        return $this->status === 'active' && $this->activated_at !== null;
+    }
+
+    /**
+     * Check if service is suspended.
+     */
+    public function isSuspended(): bool
+    {
+        return $this->status === 'suspended' && $this->suspended_at !== null;
+    }
+
+    /**
+     * Check if service is cancelled.
+     */
+    public function isCancelled(): bool
+    {
+        return $this->status === 'cancelled' && $this->cancelled_at !== null;
+    }
+
+    /**
+     * Check if service is provisioned.
+     */
+    public function isProvisioned(): bool
+    {
+        return $this->provisioned_at !== null;
+    }
+
+    /**
+     * Check if service is activated.
+     */
+    public function isActivated(): bool
+    {
+        return $this->activated_at !== null;
+    }
+
+    /**
+     * Check if service has recurring billing setup.
+     */
+    public function hasRecurringBilling(): bool
+    {
+        return $this->recurring_billing_id !== null;
+    }
+
+    /**
+     * Get service lifecycle stage.
+     */
+    public function getLifecycleStage(): string
+    {
+        if ($this->isCancelled()) {
+            return 'cancelled';
+        }
+        if ($this->isSuspended()) {
+            return 'suspended';
+        }
+        if ($this->isActive()) {
+            return 'active';
+        }
+        if ($this->isProvisioned()) {
+            return 'provisioned';
+        }
+        return 'pending';
     }
 }
