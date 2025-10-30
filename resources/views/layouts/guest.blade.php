@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
+    @PwaHead
+
     <!-- Apply theme IMMEDIATELY before any CSS loads -->
     <script>
         const guestTheme = localStorage.getItem('guest_theme') || 'auto';
@@ -144,5 +146,7 @@
     
     <!-- Livewire Scripts -->
     @livewireScripts
+
+    @RegisterServiceWorkerScript
 </body>
 </html>

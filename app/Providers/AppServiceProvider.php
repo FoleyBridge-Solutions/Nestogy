@@ -209,6 +209,65 @@ class AppServiceProvider extends ServiceProvider
             \App\Events\ContractScheduleActivated::class,
             \App\Listeners\ReevaluateAssetsOnScheduleChange::class
         );
+
+        // Service Management Event Listeners
+        
+        // Service Activation - Create recurring billing
+        Event::listen(
+            \App\Domains\Client\Events\ServiceActivated::class,
+            \App\Domains\Client\Listeners\CreateRecurringBillingForService::class
+        );
+
+        // Service Activation - Send notification
+        Event::listen(
+            \App\Domains\Client\Events\ServiceActivated::class,
+            \App\Domains\Client\Listeners\NotifyServiceActivated::class
+        );
+
+        // Service Suspension - Suspend billing
+        Event::listen(
+            \App\Domains\Client\Events\ServiceSuspended::class,
+            \App\Domains\Client\Listeners\SuspendRecurringBilling::class
+        );
+
+        // Service Suspension - Send notification
+        Event::listen(
+            \App\Domains\Client\Events\ServiceSuspended::class,
+            \App\Domains\Client\Listeners\NotifyServiceSuspended::class
+        );
+
+        // Service Resume - Resume billing
+        Event::listen(
+            \App\Domains\Client\Events\ServiceResumed::class,
+            \App\Domains\Client\Listeners\ResumeRecurringBilling::class
+        );
+
+        // Service Cancellation - Cancel billing (handled by ServiceBillingService)
+        // Event dispatched but billing cancellation happens in the service directly
+
+        // Service Renewal Due - Send reminder notification
+        Event::listen(
+            \App\Domains\Client\Events\ServiceDueForRenewal::class,
+            \App\Domains\Client\Listeners\NotifyServiceRenewalDue::class
+        );
+
+        // SLA Breach - Create alert/ticket
+        Event::listen(
+            \App\Domains\Client\Events\ServiceSLABreached::class,
+            \App\Domains\Client\Listeners\AlertOnSLABreach::class
+        );
+
+        // SLA Breach - Recalculate health score
+        Event::listen(
+            \App\Domains\Client\Events\ServiceSLABreached::class,
+            \App\Domains\Client\Listeners\RecalculateServiceHealth::class
+        );
+
+        // Health Degraded - Recalculate (additional monitoring)
+        Event::listen(
+            \App\Domains\Client\Events\ServiceHealthDegraded::class,
+            \App\Domains\Client\Listeners\RecalculateServiceHealth::class
+        );
     }
 
     /**

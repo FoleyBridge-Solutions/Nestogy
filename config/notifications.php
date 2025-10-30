@@ -26,7 +26,8 @@ return [
         'sms' => env('NOTIFICATIONS_SMS', false),
         'slack' => env('NOTIFICATIONS_SLACK', false),
         'webhook' => env('NOTIFICATIONS_WEBHOOK', false),
-        'push' => env('NOTIFICATIONS_PUSH', false),
+        'push' => env('NOTIFICATIONS_PUSH', true),
+        'webpush' => env('NOTIFICATIONS_WEBPUSH', true),
         'teams' => env('NOTIFICATIONS_TEAMS', false),
     ],
 

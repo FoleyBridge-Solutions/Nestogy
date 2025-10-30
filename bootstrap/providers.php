@@ -16,4 +16,5 @@ return [
     App\Providers\Smtp2goServiceProvider::class,
     Flux\FluxServiceProvider::class,
     FluxPro\FluxProServiceProvider::class,
+    EragLaravelPwa\EragLaravelPwaServiceProvider::class,
 ];

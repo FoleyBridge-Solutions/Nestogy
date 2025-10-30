@@ -1,7 +1,7 @@
-<div class="relative" x-data="{ open: @entangle('showDropdown') }">
+<div class="relative" x-data="notificationCenter()" x-init="init()">
     <!-- Bell Icon Button -->
     <button 
-        @click="open = !open"
+        @click="$wire.toggleDropdown()"
         type="button"
         class="relative p-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition"
     >
@@ -16,30 +16,66 @@
 
     <!-- Dropdown Panel -->
     <div 
-        x-show="open"
-        @click.away="open = false"
+        x-show="@js($showDropdown)"
+        @click.away="$wire.toggleDropdown()"
         x-transition:enter="transition ease-out duration-200"
         x-transition:enter-start="transform opacity-0 scale-95"
         x-transition:enter-end="transform opacity-100 scale-100"
         x-transition:leave="transition ease-in duration-75"
         x-transition:leave-start="transform opacity-100 scale-100"
         x-transition:leave-end="transform opacity-0 scale-95"
-        class="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 z-50"
+        class="absolute right-0 mt-2 w-96 bg-white dark:bg-gray-800 rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 z-50"
         style="display: none;"
     >
-        <!-- Header -->
-        <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-            <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                Notifications
-            </h3>
-            @if($unreadCount > 0)
+        <!-- Header with Push Notification Toggle -->
+        <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+            <div class="flex items-center justify-between mb-2">
+                <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                    Notifications
+                </h3>
+                @if($unreadCount > 0)
+                    <button 
+                        wire:click="markAllAsRead"
+                        class="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                    >
+                        Mark all read
+                    </button>
+                @endif
+            </div>
+            
+            <!-- Push Notification Toggle -->
+            <div class="flex items-center justify-between py-2 px-3 bg-gray-50 dark:bg-gray-900 rounded-md">
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-mobile-alt text-gray-600 dark:text-gray-400 text-sm"></i>
+                    <span class="text-xs text-gray-700 dark:text-gray-300">Push Notifications</span>
+                </div>
+                
                 <button 
-                    wire:click="markAllAsRead"
-                    class="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                    x-show="isSupported && !@js($isPushSubscribed)" 
+                    @click="enablePushNotifications()"
+                    :disabled="permission === 'denied'"
+                    class="text-xs px-3 py-1 rounded-md transition"
+                    :class="permission === 'denied' ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'"
                 >
-                    Mark all read
+                    <span x-show="permission !== 'denied'">Enable</span>
+                    <span x-show="permission === 'denied'">Blocked</span>
                 </button>
-            @endif
+                
+                <button 
+                    x-show="isSupported && @js($isPushSubscribed)" 
+                    @click="disablePushNotifications()"
+                    class="text-xs px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700 transition"
+                >
+                    ✓ Enabled
+                </button>
+                
+                <span 
+                    x-show="!isSupported" 
+                    class="text-xs text-gray-500 dark:text-gray-400"
+                >
+                    Not supported
+                </span>
+            </div>
         </div>
 
         <!-- Notification List -->
@@ -108,4 +144,96 @@
             </div>
         @endif
     </div>
+
+    @script
+    <script>
+        Alpine.data('notificationCenter', () => ({
+            isSupported: false,
+            permission: 'default',
+            
+            init() {
+                // Check browser support
+                this.isSupported = ('serviceWorker' in navigator && 'PushManager' in window);
+                
+                if (this.isSupported) {
+                    this.permission = Notification.permission;
+                }
+                
+                console.log('[NotificationCenter] Initialized', {
+                    isSupported: this.isSupported,
+                    permission: this.permission
+                });
+            },
+            
+            async enablePushNotifications() {
+                try {
+                    if (!this.isSupported) {
+                        alert('Push notifications are not supported in your browser');
+                        return;
+                    }
+
+                    // Register service worker if not already registered
+                    let registration = await navigator.serviceWorker.getRegistration();
+                    if (!registration) {
+                        console.log('[NotificationCenter] Registering service worker...');
+                        registration = await navigator.serviceWorker.register('/sw.js');
+                    }
+                    
+                    await navigator.serviceWorker.ready;
+                    console.log('[NotificationCenter] Service worker ready');
+
+                    // Request permission
+                    const permission = await Notification.requestPermission();
+                    this.permission = permission;
+                    
+                    console.log('[NotificationCenter] Permission:', permission);
+                    
+                    if (permission !== 'granted') {
+                        alert('Please allow notifications in your browser settings');
+                        return;
+                    }
+
+                    // Subscribe to push notifications
+                    console.log('[NotificationCenter] Subscribing to push...');
+                    const subscription = await registration.pushManager.subscribe({
+                        userVisibleOnly: true,
+                        applicationServerKey: @js(config('webpush.vapid.public_key'))
+                    });
+
+                    // Send subscription to server via Livewire
+                    const subscriptionData = subscription.toJSON();
+                    console.log('[NotificationCenter] Subscription created, sending to server...');
+                    $wire.subscribeToPush(subscriptionData);
+
+                } catch (error) {
+                    console.error('[NotificationCenter] Failed to enable notifications:', error);
+                    alert('Failed to enable push notifications: ' + error.message);
+                }
+            },
+            
+            async disablePushNotifications() {
+                try {
+                    const registration = await navigator.serviceWorker.getRegistration();
+                    if (!registration) return;
+                    
+                    const subscription = await registration.pushManager.getSubscription();
+                    if (!subscription) return;
+                    
+                    console.log('[NotificationCenter] Unsubscribing from push...');
+                    
+                    // Unsubscribe from push
+                    await subscription.unsubscribe();
+                    
+                    // Notify server via Livewire
+                    $wire.unsubscribeFromPush(subscription.endpoint);
+                    
+                    console.log('[NotificationCenter] Unsubscribed successfully');
+                    
+                } catch (error) {
+                    console.error('[NotificationCenter] Failed to disable notifications:', error);
+                }
+            }
+        }));
+    </script>
+    @endscript
 </div>

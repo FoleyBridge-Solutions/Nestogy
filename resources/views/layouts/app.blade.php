@@ -11,6 +11,8 @@
 
     <title>{{ $currentCompany?->name ?? config('app.name', 'Nestogy ERP') }} - @yield('title', 'Dashboard')</title>
 
+    @PwaHead
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600&display=swap" rel="stylesheet" />
@@ -540,5 +542,7 @@
     {{-- Timer Modals (Global) --}}
     @livewire('timer-completion-modal')
     @livewire('timer-batch-completion-modal')
+
+    @RegisterServiceWorkerScript
 </body>
 </html>

@@ -25,6 +25,7 @@ class NotificationPreference extends Model
         'daily_digest',
         'email_enabled',
         'in_app_enabled',
+        'push_enabled',
         'digest_time',
     ];
 
@@ -39,6 +40,7 @@ class NotificationPreference extends Model
         'daily_digest' => 'boolean',
         'email_enabled' => 'boolean',
         'in_app_enabled' => 'boolean',
+        'push_enabled' => 'boolean',
     ];
 
     public function user(): BelongsTo
@@ -60,6 +62,7 @@ class NotificationPreference extends Model
             'daily_digest' => false,
             'email_enabled' => true,
             'in_app_enabled' => true,
+            'push_enabled' => true,
             'digest_time' => '08:00',
         ];
     }
@@ -89,5 +92,10 @@ class NotificationPreference extends Model
     public function shouldSendInApp(string $eventType): bool
     {
         return $this->in_app_enabled && $this->shouldNotify($eventType);
+    }
+
+    public function shouldSendPush(string $eventType): bool
+    {
+        return $this->push_enabled && $this->shouldNotify($eventType);
     }
 }

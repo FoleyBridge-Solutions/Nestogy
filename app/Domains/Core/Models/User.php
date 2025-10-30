@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use NotificationChannels\WebPush\HasPushSubscriptions;
 use Silber\Bouncer\Database\HasRolesAndAbilities;
 
 /**
@@ -39,7 +40,7 @@ use Silber\Bouncer\Database\HasRolesAndAbilities;
  */
 class User extends Authenticatable
 {
-    use HasEnhancedPermissions, HasFactory, HasRolesAndAbilities, Notifiable, SoftDeletes;
+    use HasEnhancedPermissions, HasFactory, HasPushSubscriptions, HasRolesAndAbilities, Notifiable, SoftDeletes;
 
     protected static function newFactory()
     {

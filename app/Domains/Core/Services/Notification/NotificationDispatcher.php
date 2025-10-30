@@ -354,6 +354,7 @@ class NotificationDispatcher implements NotificationDispatcherInterface
         $this->registerChannel(new \App\Domains\Core\Services\Notification\Channels\EmailChannel);
         $this->registerChannel(new \App\Domains\Core\Services\Notification\Channels\SmsChannel);
         $this->registerChannel(new \App\Domains\Core\Services\Notification\Channels\SlackChannel);
+        $this->registerChannel(new \App\Domains\Core\Services\Notification\Channels\WebPushChannel);
     }
 
     /**
