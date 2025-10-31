@@ -49,7 +49,7 @@ class AssetIndex extends BaseIndexComponent
                 'filterable' => true,
                 'type' => 'select',
                 'options' => array_combine(Asset::STATUSES, Asset::STATUSES),
-                'component' => 'asset.cells.status',
+                'component' => 'components.asset.cells.status',
             ],
             'make' => [
                 'label' => 'Make',
@@ -75,7 +75,7 @@ class AssetIndex extends BaseIndexComponent
                 'label' => 'Warranty Expiry',
                 'sortable' => true,
                 'type' => 'date',
-                'component' => 'asset.cells.warranty',
+                'component' => 'components.asset.cells.warranty',
             ],
             'support_status' => [
                 'label' => 'Support Status',
@@ -83,7 +83,7 @@ class AssetIndex extends BaseIndexComponent
                 'filterable' => true,
                 'type' => 'select',
                 'options' => Asset::SUPPORT_STATUSES,
-                'component' => 'asset.cells.support-status',
+                'component' => 'components.asset.cells.support-status',
             ],
         ];
     }
@@ -101,7 +101,7 @@ class AssetIndex extends BaseIndexComponent
         return [
             ['label' => 'Total Assets', 'value' => $total, 'icon' => 'cube', 'iconBg' => 'bg-blue-500'],
             ['label' => 'Deployed', 'value' => $deployed, 'icon' => 'check-circle', 'iconBg' => 'bg-green-500'],
-            ['label' => 'Ready to Deploy', 'value' => $ready, 'icon' => 'package', 'iconBg' => 'bg-emerald-500'],
+            ['label' => 'Ready to Deploy', 'value' => $ready, 'icon' => 'archive-box', 'iconBg' => 'bg-emerald-500'],
             ['label' => 'Supported', 'value' => $supported, 'icon' => 'shield-check', 'iconBg' => 'bg-purple-500'],
             ['label' => 'Warranty Expiring', 'value' => $warrantyExpiring, 'icon' => 'calendar', 'iconBg' => 'bg-amber-500'],
         ];

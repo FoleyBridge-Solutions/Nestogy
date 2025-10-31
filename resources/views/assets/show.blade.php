@@ -2,805 +2,701 @@
 
 @section('title', $asset->name . ' - Asset Details')
 
-@php
-$pageTitle = $asset->name;
-$pageSubtitle = 'No assignment or location set';
-$pageActions = [
-    [
-        'label' => 'Edit Asset',
-        'href' => {{ route('assets.edit', $asset) }},
-        'icon' => 'pencil',
-        'variant' => 'primary',
-    ],
-];
-@endphp
-
 @section('content')
-<div class="max-w-7xl mx-auto px-6 sm:px-6 lg:px-8 py-6">
-    <!-- Page Header -->
-    <div class="mb-6 flex items-center justify-between">
-        <div>
-            <p class="mt-1 text-sm text-gray-600 dark:text-gray-300">{{ $asset->type }} • {{ $asset->make }} {{ $asset->model }}</p>
-        </div>
-        
-        <div class="flex items-center space-x-3">
-            <!-- Edit Button -->
-            <a href="{{ route('assets.edit', $asset) }}" 
-               class="inline-flex items-center px-6 py-2 bg-blue-600 dark:bg-blue-700 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-blue-700 dark:hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
-                <i class="fas fa-edit mr-2"></i>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    {{-- Page Header --}}
+    <div class="mb-6 flex items-center justify-end">
+        <div class="flex items-center gap-3">
+            <flux:button 
+                href="{{ route('assets.edit', $asset) }}" 
+                variant="primary"
+                icon="pencil"
+            >
                 Edit Asset
-            </a>
+            </flux:button>
             
-            <!-- Actions Dropdown -->
-            <div x-data="{ open: false }" class="relative">
-                <button @click="open = !open" 
-                        class="inline-flex items-center px-6 py-2 bg-gray-600 dark:bg-gray-700 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-gray-700 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors duration-200">
-                    <i class="fas fa-ellipsis-v mr-2"></i>
-                    Actions
-                    <i class="fas fa-chevron-down ml-2 text-xs"></i>
-                </button>
+            <flux:dropdown align="end">
+                <flux:button icon="ellipsis-vertical" variant="filled">Actions</flux:button>
                 
-                <div x-show="open" 
-                     x-transition:enter="transition ease-out duration-100"
-                     x-transition:enter-start="transform opacity-0 scale-95"
-                     x-transition:enter-end="transform opacity-100 scale-100"
-                     x-transition:leave="transition ease-in duration-75"
-                     x-transition:leave-start="transform opacity-100 scale-100"
-                     x-transition:leave-end="transform opacity-0 scale-95"
-                     @click.away="open = false"
-                     class="absolute right-0 mt-2 w-56 rounded-lg shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 z-50">
-                    <div class="py-1" role="menu">
-                        <a href="{{ route('assets.qr-code', $asset) }}" target="_blank" 
-                           class="flex items-center px-6 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
-                            <i class="fas fa-qrcode w-4 mr-3 text-gray-400"></i>
-                            View QR Code
-                        </a>
-                        <a href="{{ route('assets.label', $asset) }}" target="_blank"
-                           class="flex items-center px-6 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
-                            <i class="fas fa-tag w-4 mr-3 text-gray-400"></i>
-                            Print Label
-                        </a>
-                        <hr class="my-1 border-gray-200 dark:border-gray-600">
-                        <button type="button" 
-                                @click="open = false; $dispatch('open-modal', 'checkInOutModal')"
-                                class="w-full text-left flex items-center px-6 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
-                            <i class="fas fa-exchange-alt w-4 mr-3 text-gray-400"></i>
+                <flux:menu>
+                    <flux:menu.item icon="qr-code" href="{{ route('assets.qr-code', $asset) }}" target="_blank">
+                        View QR Code
+                    </flux:menu.item>
+                    <flux:menu.item icon="tag" href="{{ route('assets.label', $asset) }}" target="_blank">
+                        Print Label
+                    </flux:menu.item>
+                    
+                    <flux:separator />
+                    
+                    <flux:modal.trigger name="check-in-out-{{ $asset->id }}">
+                        <flux:menu.item icon="arrow-path">
                             Check In/Out
-                        </button>
-                        <hr class="my-1 border-gray-200 dark:border-gray-600">
-                        <form action="{{ route('assets.archive', $asset) }}" method="POST" class="block">
-                            @csrf
-                            @method('PATCH')
-                            <button type="submit" 
-                                    class="w-full text-left flex items-center px-6 py-2 text-sm text-yellow-600 dark:text-yellow-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
-                                <i class="fas fa-archive w-4 mr-3 text-yellow-400"></i>
-                                Archive Asset
-                            </button>
-                        </form>
-                        @can('delete', $asset)
-                        <form action="{{ route('assets.destroy', $asset) }}" method="POST" 
-                              onsubmit="return confirm('Are you sure you want to delete this asset? This action cannot be undone.');" 
-                              class="block">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" 
-                                    class="w-full text-left flex items-center px-6 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
-                                <i class="fas fa-trash w-4 mr-3 text-red-400"></i>
-                                Delete Asset
-                            </button>
-                        </form>
-                        @endcan
-                    </div>
-                </div>
-            </div>
+                        </flux:menu.item>
+                    </flux:modal.trigger>
+                    
+                    <flux:separator />
+                    
+                    <flux:menu.item 
+                        icon="archive-box" 
+                        href="{{ route('assets.archive', $asset) }}"
+                        x-on:click.prevent="$el.closest('form') ? $el.closest('form').submit() : (function() { 
+                            let form = document.createElement('form');
+                            form.method = 'POST';
+                            form.action = '{{ route('assets.archive', $asset) }}';
+                            let csrf = document.createElement('input');
+                            csrf.type = 'hidden';
+                            csrf.name = '_token';
+                            csrf.value = '{{ csrf_token() }}';
+                            form.appendChild(csrf);
+                            let method = document.createElement('input');
+                            method.type = 'hidden';
+                            method.name = '_method';
+                            method.value = 'PATCH';
+                            form.appendChild(method);
+                            document.body.appendChild(form);
+                            form.submit();
+                        })()"
+                    >
+                        Archive Asset
+                    </flux:menu.item>
+                    
+                    @can('delete', $asset)
+                    <flux:menu.item 
+                        variant="danger" 
+                        icon="trash"
+                        x-on:click.prevent="if(confirm('Are you sure you want to delete this asset? This action cannot be undone.')) {
+                            let form = document.createElement('form');
+                            form.method = 'POST';
+                            form.action = '{{ route('assets.destroy', $asset) }}';
+                            let csrf = document.createElement('input');
+                            csrf.type = 'hidden';
+                            csrf.name = '_token';
+                            csrf.value = '{{ csrf_token() }}';
+                            form.appendChild(csrf);
+                            let method = document.createElement('input');
+                            method.type = 'hidden';
+                            method.name = '_method';
+                            method.value = 'DELETE';
+                            form.appendChild(method);
+                            document.body.appendChild(form);
+                            form.submit();
+                        }"
+                    >
+                        Delete Asset
+                    </flux:menu.item>
+                    @endcan
+                </flux:menu>
+            </flux:dropdown>
         </div>
     </div>
 
-    <!-- Asset Overview Card -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden mb-6">
-        <div class="px-6 py-6 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-3">
-                    <div class="flex-shrink-0">
-                        <i class="fas fa-{{ $asset->type === 'Server' ? 'server' : ($asset->type === 'Desktop' ? 'desktop' : 'laptop') }} text-2xl text-gray-400 dark:text-gray-500"></i>
-                    </div>
-                    <div>
-                        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ $asset->name }}</h2>
-                        <p class="text-sm text-gray-600 dark:text-gray-400">{{ $asset->type }} • {{ $asset->make }} {{ $asset->model }}</p>
-                    </div>
+    {{-- Asset Overview Card --}}
+    <flux:card class="mb-6">
+        {{-- Card Header with Asset Info and Status --}}
+        <div class="flex items-start justify-between pb-6 mb-6 border-b border-zinc-200 dark:border-zinc-700">
+            <div class="flex items-start gap-4">
+                <div class="p-3 rounded-lg bg-zinc-100 dark:bg-zinc-800">
+                    <flux:icon.{{ $asset->type === 'Server' ? 'server' : ($asset->type === 'Desktop' ? 'computer-desktop' : 'device-phone-mobile') }} class="size-8 text-zinc-600 dark:text-zinc-400" />
                 </div>
-                <div class="flex items-center space-x-4">
-                    <!-- Status Badge -->
-                    @php
-                        $statusColors = [
-                            'active' => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
-                            'inactive' => 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
-                            'maintenance' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
-                            'retired' => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
-                        ];
-                        $statusColor = $statusColors[$asset->status] ?? $statusColors['inactive'];
-                    @endphp
-                    <span class="inline-flex items-center px-6 py-1 rounded-full text-xs font-medium {{ $statusColor }}">
-                        <span class="w-1.5 h-1.5 mr-1.5 rounded-full {{ str_replace(['100', '800', '700', '300'], ['500', '500', '400', '500'], $statusColor) }}"></span>
-                        {{ ucfirst($asset->status) }}
-                    </span>
+                <div>
+                    <flux:heading size="lg">{{ $asset->name }}</flux:heading>
+                    <flux:text variant="subtle" class="mt-1">{{ $asset->type }} • {{ $asset->make }} {{ $asset->model }}</flux:text>
                 </div>
             </div>
+            <div>
+                @php
+                    $statusColors = [
+                        'active' => 'green',
+                        'inactive' => 'zinc',
+                        'maintenance' => 'yellow',
+                        'retired' => 'red',
+                        'Ready To Deploy' => 'emerald',
+                        'Deployed' => 'blue',
+                        'Archived' => 'zinc',
+                        'Broken - Pending Repair' => 'amber',
+                        'Broken - Not Repairable' => 'red',
+                        'Out for Repair' => 'amber',
+                        'Lost/Stolen' => 'red',
+                        'Unknown' => 'zinc',
+                    ];
+                    $statusColor = $statusColors[$asset->status] ?? 'zinc';
+                @endphp
+                <flux:badge color="{{ $statusColor }}" size="lg">
+                    {{ ucfirst($asset->status) }}
+                </flux:badge>
+            </div>
         </div>
-        
-        <div class="p-6">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Basic Information -->
-                <div class="lg:flex-1 px-6-span-2 space-y-4">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <dl>
-                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Client</dt>
-                            <dd class="mt-1">
-                                <a href="{{ route('clients.show', $asset->client) }}" 
-                                   class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium">
-                                    {{ $asset->client->name }}
-                                </a>
-                            </dd>
-                        </dl>
-                        <dl>
-                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Serial Number</dt>
-                            <dd class="mt-1">
-                                <code class="px-2 py-1 text-xs font-mono bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded">
-                                    {{ $asset->serial ?: 'N/A' }}
-                                </code>
-                            </dd>
-                        </dl>
-                        @if($asset->asset_tag)
-                        <dl>
-                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Asset Tag</dt>
-                            <dd class="mt-1">
-                                <span class="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-300 rounded-full">
-                                    {{ $asset->asset_tag }}
-                                </span>
-                            </dd>
-                        </dl>
-                        @endif
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {{-- Basic Information --}}
+            <div class="lg:col-span-2 space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div>
+                        <flux:text variant="subtle" class="text-sm mb-1">Client</flux:text>
+                        <flux:link href="{{ route('clients.show', $asset->client) }}" class="text-base">
+                            {{ $asset->client->name }}
+                        </flux:link>
                     </div>
-                    
-                    @if($asset->description)
-                    <div class="pt-2 border-t border-gray-200 dark:border-gray-700">
-                        <dl>
-                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Description</dt>
-                            <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $asset->description }}</dd>
-                        </dl>
+                    <div>
+                        <flux:text variant="subtle" class="text-sm mb-1">Serial Number</flux:text>
+                        <flux:text class="font-mono">
+                            {{ $asset->serial ?: 'N/A' }}
+                        </flux:text>
+                    </div>
+                </div>
+                
+                @if($asset->description)
+                <div class="pt-4 border-t border-zinc-100 dark:border-zinc-800">
+                    <flux:text variant="subtle" class="text-sm mb-1">Description</flux:text>
+                    <flux:text>{{ $asset->description }}</flux:text>
+                </div>
+                @endif
+            </div>
+            
+            {{-- QR Code --}}
+            <div class="flex flex-col items-center justify-center p-6 bg-zinc-50 dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-700">
+                <div class="mb-3 bg-white p-3 rounded">
+                    {!! $qrCode !!}
+                </div>
+                <flux:text variant="subtle" class="text-xs">
+                    Asset ID: {{ $asset->id }}
+                </flux:text>
+            </div>
+        </div>
+    </flux:card>
+
+    {{-- Main Content Grid --}}
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {{-- Left Column --}}
+        <div class="space-y-6">
+            {{-- Hardware Information --}}
+            <flux:card>
+                <flux:heading class="flex items-center gap-2 mb-4">
+                    <flux:icon.cpu-chip class="size-5" />
+                    Hardware Information
+                </flux:heading>
+                
+                @php
+                    $rmmData = null;
+                    if ($asset->notes) {
+                        try {
+                            $rmmData = json_decode($asset->notes, true);
+                        } catch (Exception $e) {
+                            $rmmData = null;
+                        }
+                    }
+                @endphp
+                
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <flux:text variant="subtle">Make</flux:text>
+                        <flux:text variant="strong">{{ $asset->make ?: 'N/A' }}</flux:text>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <flux:text variant="subtle">Model</flux:text>
+                        <flux:text variant="strong">{{ $asset->model ?: 'N/A' }}</flux:text>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <flux:text variant="subtle">Operating System</flux:text>
+                        <flux:text variant="strong">
+                            @if($asset->os)
+                                {{ $asset->os }}
+                            @elseif($asset->model && str_contains($asset->model, 'Windows'))
+                                {{ $asset->model }}
+                            @else
+                                N/A
+                            @endif
+                        </flux:text>
+                    </div>
+                    @if($rmmData && isset($rmmData['rmm_platform']))
+                    <div class="flex justify-between items-center">
+                        <flux:text variant="subtle">Platform</flux:text>
+                        <flux:text variant="strong">{{ ucfirst($rmmData['rmm_platform']) }}</flux:text>
+                    </div>
+                    @endif
+                    @if($rmmData && isset($rmmData['rmm_version']))
+                    <div class="flex justify-between items-center">
+                        <flux:text variant="subtle">RMM Version</flux:text>
+                        <flux:text variant="strong">{{ $rmmData['rmm_version'] }}</flux:text>
+                    </div>
+                    @endif
+                    @if($asset->vendor)
+                    <div class="flex justify-between items-center">
+                        <flux:text variant="subtle">Vendor</flux:text>
+                        <flux:text variant="strong">{{ $asset->vendor->name }}</flux:text>
                     </div>
                     @endif
                 </div>
+            </flux:card>
+
+            {{-- Network Information --}}
+            <flux:card>
+                <flux:heading class="flex items-center gap-2 mb-4">
+                    <flux:icon.signal class="size-5" />
+                    Network Information
+                </flux:heading>
                 
-                <!-- QR Code -->
-                <div class="flex flex-flex-1 px-6 items-center justify-center p-6 bg-gray-50 dark:bg-gray-900 rounded-lg">
-                    <div class="mb-6">
-                        {!! $qrCode !!}
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <flux:text variant="subtle">Local IP Address</flux:text>
+                        @if($asset->ip)
+                            <flux:text variant="strong" class="font-mono">{{ $asset->ip }}</flux:text>
+                        @else
+                            <flux:text variant="subtle">N/A</flux:text>
+                        @endif
                     </div>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 text-center">
-                        Asset ID: {{ $asset->id }}
-                    </p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Main Content Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Left Column -->
-        <div class="space-y-6">
-            <!-- Hardware Information -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <div class="px-6 py-6 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
-                    <h3 class="text-lg font-medium text-gray-900 dark:text-white flex items-center">
-                        <i class="fas fa-microchip text-gray-400 dark:text-gray-500 mr-2"></i>
-                        Hardware Information
-                    </h3>
-                </div>
-                <div class="p-6">
-                    @php
-                        $rmmData = null;
-                        if ($asset->notes) {
-                            try {
-                                $rmmData = json_decode($asset->notes, true);
-                            } catch (Exception $e) {
-                                $rmmData = null;
-                            }
-                        }
-                    @endphp
-                    
-                    <dl class="space-y-4">
-                        <div class="flex justify-between">
-                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Make</dt>
-                            <dd class="text-sm text-gray-900 dark:text-gray-100 font-medium">{{ $asset->make ?: 'N/A' }}</dd>
-                        </div>
-                        <div class="flex justify-between">
-                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Model</dt>
-                            <dd class="text-sm text-gray-900 dark:text-gray-100 font-medium">{{ $asset->model ?: 'N/A' }}</dd>
-                        </div>
-                        <div class="flex justify-between">
-                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Operating System</dt>
-                            <dd class="text-sm text-gray-900 dark:text-gray-100 font-medium">
-                                @if($asset->os)
-                                    {{ $asset->os }}
-                                @elseif($asset->model && str_contains($asset->model, 'Windows'))
-                                    {{ $asset->model }}
-                                @else
-                                    N/A
-                                @endif
-                            </dd>
-                        </div>
-                        @if($rmmData && isset($rmmData['rmm_platform']))
-                        <div class="flex justify-between">
-                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Platform</dt>
-                            <dd class="text-sm text-gray-900 dark:text-gray-100 font-medium">{{ ucfirst($rmmData['rmm_platform']) }}</dd>
-                        </div>
-                        @endif
-                        @if($rmmData && isset($rmmData['rmm_version']))
-                        <div class="flex justify-between">
-                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">RMM Version</dt>
-                            <dd class="text-sm text-gray-900 dark:text-gray-100 font-medium">{{ $rmmData['rmm_version'] }}</dd>
-                        </div>
-                        @endif
-                        @if($asset->vendor)
-                        <div class="flex justify-between">
-                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Vendor</dt>
-                            <dd class="text-sm text-gray-900 dark:text-gray-100 font-medium">{{ $asset->vendor->name }}</dd>
-                        </div>
-                        @endif
-                    </dl>
-                </div>
-            </div>
-
-            <!-- Network Information -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <div class="px-6 py-6 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
-                    <h3 class="text-lg font-medium text-gray-900 dark:text-white flex items-center">
-                        <i class="fas fa-network-wired text-gray-400 dark:text-gray-500 mr-2"></i>
-                        Network Information
-                    </h3>
-                </div>
-                <div class="p-6">
-                    <dl class="space-y-4">
-                        <div class="flex justify-between">
-                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Local IP Address</dt>
-                            <dd class="text-sm font-medium">
-                                @if($asset->ip)
-                                    <code class="px-2 py-1 text-xs font-mono bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded">{{ $asset->ip }}</code>
-                                @else
-                                    <span class="text-gray-400 dark:text-gray-500">N/A</span>
-                                @endif
-                            </dd>
-                        </div>
-                        @if($rmmData && isset($rmmData['rmm_public_ip']))
-                        <div class="flex justify-between">
-                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Public IP Address</dt>
-                            <dd class="text-sm font-medium">
-                                <code class="px-2 py-1 text-xs font-mono bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200 rounded">{{ $rmmData['rmm_public_ip'] }}</code>
-                            </dd>
-                        </div>
-                        @endif
-                        @if($asset->nat_ip)
-                        <div class="flex justify-between">
-                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">NAT IP</dt>
-                            <dd class="text-sm font-medium">
-                                <code class="px-2 py-1 text-xs font-mono bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded">{{ $asset->nat_ip }}</code>
-                            </dd>
-                        </div>
-                        @endif
-                        @if($asset->mac)
-                        <div class="flex justify-between">
-                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">MAC Address</dt>
-                            <dd class="text-sm font-medium">
-                                <code class="px-2 py-1 text-xs font-mono bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded">{{ $asset->mac }}</code>
-                            </dd>
-                        </div>
-                        @endif
-                        @if($rmmData && (isset($rmmData['rmm_last_seen']) || isset($rmmData['rmm_online'])))
-                        <div class="flex justify-between">
-                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">RMM Status</dt>
-                            <dd class="text-sm text-gray-900 dark:text-gray-100 font-medium">
-                                @php
-                                    $lastSeen = null;
-                                    $isOnline = false;
-                                    
-                                    if (isset($rmmData['rmm_last_seen'])) {
-                                        try {
-                                            $lastSeen = \Carbon\Carbon::parse($rmmData['rmm_last_seen']);
-                                            // Consider online if last seen within 4 hours (business environment)
-                                            $isOnline = $lastSeen->diffInMinutes() < 240;
-                                        } catch (Exception $e) {
-                                            $lastSeen = null;
-                                            $isOnline = false;
-                                        }
-                                    } else {
-                                        // Fallback to stored rmm_online value if last_seen not available
-                                        $isOnline = $rmmData['rmm_online'] ?? false;
+                    @if($rmmData && isset($rmmData['rmm_public_ip']))
+                    <div class="flex justify-between items-center">
+                        <flux:text variant="subtle">Public IP Address</flux:text>
+                        <flux:text variant="strong" class="font-mono">{{ $rmmData['rmm_public_ip'] }}</flux:text>
+                    </div>
+                    @endif
+                    @if($asset->nat_ip)
+                    <div class="flex justify-between items-center">
+                        <flux:text variant="subtle">NAT IP</flux:text>
+                        <flux:text variant="strong" class="font-mono">{{ $asset->nat_ip }}</flux:text>
+                    </div>
+                    @endif
+                    @if($asset->mac)
+                    <div class="flex justify-between items-center">
+                        <flux:text variant="subtle">MAC Address</flux:text>
+                        <flux:text variant="strong" class="font-mono">{{ $asset->mac }}</flux:text>
+                    </div>
+                    @endif
+                    @if($rmmData && (isset($rmmData['rmm_last_seen']) || isset($rmmData['rmm_online'])))
+                    <div class="flex justify-between items-center">
+                        <flux:text variant="subtle">RMM Status</flux:text>
+                        <div>
+                            @php
+                                $lastSeen = null;
+                                $isOnline = false;
+                                
+                                if (isset($rmmData['rmm_last_seen'])) {
+                                    try {
+                                        $lastSeen = \Carbon\Carbon::parse($rmmData['rmm_last_seen']);
+                                        $isOnline = $lastSeen->diffInMinutes() < 240;
+                                    } catch (Exception $e) {
+                                        $lastSeen = null;
+                                        $isOnline = false;
                                     }
-                                @endphp
-                                <div class="flex items-center space-x-2">
-                                    <span class="w-2 h-2 rounded-full {{ $isOnline ? 'bg-green-400' : 'bg-red-400' }}"></span>
-                                    <span class="px-2 py-1 text-xs font-medium rounded-full {{ $isOnline ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200' }}">
-                                        {{ $isOnline ? 'Online' : 'Offline' }}
-                                    </span>
-                                    @if($lastSeen)
-                                        <span class="text-xs text-gray-500 dark:text-gray-400">
-                                            Last seen {{ $lastSeen->diffForHumans() }}
-                                        </span>
-                                    @endif
-                                </div>
-                            </dd>
+                                } else {
+                                    $isOnline = $rmmData['rmm_online'] ?? false;
+                                }
+                            @endphp
+                            <div class="flex items-center gap-2">
+                                <flux:badge color="{{ $isOnline ? 'green' : 'red' }}">
+                                    {{ $isOnline ? 'Online' : 'Offline' }}
+                                </flux:badge>
+                                @if($lastSeen)
+                                    <flux:text variant="subtle" class="text-xs">
+                                        Last seen {{ $lastSeen->diffForHumans() }}
+                                    </flux:text>
+                                @endif
+                            </div>
                         </div>
-                        @endif
-                        @if($asset->network)
-                        <div class="flex justify-between">
-                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Network</dt>
-                            <dd class="text-sm text-gray-900 dark:text-gray-100 font-medium">{{ $asset->network->name }} ({{ $asset->network->network }})</dd>
-                        </div>
-                        @endif
-                        @if($asset->uri)
-                        <div class="flex justify-between">
-                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">URI/URL</dt>
-                            <dd class="text-sm font-medium">
-                                <a href="{{ $asset->uri }}" target="_blank" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 break-all">{{ $asset->uri }}</a>
-                            </dd>
-                        </div>
-                        @endif
-                        @if($asset->uri_2)
-                        <div class="flex justify-between">
-                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Secondary URI</dt>
-                            <dd class="text-sm font-medium">
-                                <a href="{{ $asset->uri_2 }}" target="_blank" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 break-all">{{ $asset->uri_2 }}</a>
-                            </dd>
-                        </div>
-                        @endif
-                    </dl>
+                    </div>
+                    @endif
+                    @if($asset->network)
+                    <div class="flex justify-between items-center">
+                        <flux:text variant="subtle">Network</flux:text>
+                        <flux:text variant="strong">{{ $asset->network->name }} ({{ $asset->network->network }})</flux:text>
+                    </div>
+                    @endif
+                    @if($asset->uri)
+                    <div class="flex justify-between items-center">
+                        <flux:text variant="subtle">URI/URL</flux:text>
+                        <flux:link href="{{ $asset->uri }}" target="_blank" class="text-sm break-all">
+                            {{ $asset->uri }}
+                        </flux:link>
+                    </div>
+                    @endif
+                    @if($asset->uri_2)
+                    <div class="flex justify-between items-center">
+                        <flux:text variant="subtle">Secondary URI</flux:text>
+                        <flux:link href="{{ $asset->uri_2 }}" target="_blank" class="text-sm break-all">
+                            {{ $asset->uri_2 }}
+                        </flux:link>
+                    </div>
+                    @endif
                 </div>
-            </div>
+            </flux:card>
 
-            <!-- Important Dates -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <div class="px-6 py-6 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
-                    <h3 class="text-lg font-medium text-gray-900 dark:text-white flex items-center">
-                        <i class="fas fa-calendar-alt text-gray-400 dark:text-gray-500 mr-2"></i>
-                        Important Dates
-                    </h3>
+            {{-- Important Dates --}}
+            <flux:card>
+                <flux:heading class="flex items-center gap-2 mb-4">
+                    <flux:icon.calendar class="size-5" />
+                    Important Dates
+                </flux:heading>
+                
+                <div class="space-y-3">
+                    @if($asset->purchase_date)
+                    <div class="flex justify-between items-center">
+                        <flux:text variant="subtle">Purchase Date</flux:text>
+                        <div class="text-right">
+                            <flux:text variant="strong">{{ $asset->purchase_date->format('M d, Y') }}</flux:text>
+                            @if(method_exists($asset, 'age_in_years') && $asset->age_in_years !== null)
+                                <flux:text variant="subtle" class="text-xs block">({{ $asset->age_in_years }} years old)</flux:text>
+                            @endif
+                        </div>
+                    </div>
+                    @endif
+                    @if($asset->warranty_expire)
+                    <div class="flex justify-between items-center">
+                        <flux:text variant="subtle">Warranty Expires</flux:text>
+                        <div class="flex items-center gap-2">
+                            <flux:text variant="strong">{{ $asset->warranty_expire->format('M d, Y') }}</flux:text>
+                            @php
+                                $isExpired = $asset->warranty_expire < now();
+                                $isExpiringSoon = !$isExpired && $asset->warranty_expire->diffInDays() <= 30;
+                            @endphp
+                            @if($isExpired)
+                                <flux:badge color="red">Expired</flux:badge>
+                            @elseif($isExpiringSoon)
+                                <flux:badge color="yellow">Expiring Soon</flux:badge>
+                            @else
+                                <flux:badge color="green">Active</flux:badge>
+                            @endif
+                        </div>
+                    </div>
+                    @endif
+                    @if($asset->install_date)
+                    <div class="flex justify-between items-center">
+                        <flux:text variant="subtle">Install Date</flux:text>
+                        <flux:text variant="strong">{{ $asset->install_date->format('M d, Y') }}</flux:text>
+                    </div>
+                    @endif
                 </div>
-                <div class="p-6">
-                    <dl class="space-y-4">
-                        @if($asset->purchase_date)
-                        <div class="flex justify-between">
-                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Purchase Date</dt>
-                            <dd class="text-sm text-gray-900 dark:text-gray-100 font-medium">
-                                {{ $asset->purchase_date->format('M d, Y') }}
-                                @if(method_exists($asset, 'age_in_years') && $asset->age_in_years !== null)
-                                    <span class="text-xs text-gray-500 dark:text-gray-400 ml-2">({{ $asset->age_in_years }} years old)</span>
-                                @endif
-                            </dd>
-                        </div>
-                        @endif
-                        @if($asset->warranty_expire)
-                        <div class="flex justify-between items-center">
-                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Warranty Expires</dt>
-                            <dd class="text-sm font-medium flex items-center space-x-2">
-                                <span class="text-gray-900 dark:text-gray-100">{{ $asset->warranty_expire->format('M d, Y') }}</span>
-                                @php
-                                    $isExpired = $asset->warranty_expire < now();
-                                    $isExpiringSoon = !$isExpired && $asset->warranty_expire->diffInDays() <= 30;
-                                @endphp
-                                @if($isExpired)
-                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300">Expired</span>
-                                @elseif($isExpiringSoon)
-                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300">Expiring Soon</span>
-                                @else
-                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">Active</span>
-                                @endif
-                            </dd>
-                        </div>
-                        @endif
-                        @if($asset->install_date)
-                        <div class="flex justify-between">
-                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Install Date</dt>
-                            <dd class="text-sm text-gray-900 dark:text-gray-100 font-medium">{{ $asset->install_date->format('M d, Y') }}</dd>
-                        </div>
-                        @endif
-                    </dl>
-                </div>
-            </div>
+            </flux:card>
 
             @if($rmmData)
-            <!-- RMM Information -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <div class="px-6 py-6 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
-                    <h3 class="text-lg font-medium text-gray-900 dark:text-white flex items-center">
-                        <i class="fas fa-server text-gray-400 dark:text-gray-500 mr-2"></i>
-                        Remote Monitoring
-                    </h3>
+            {{-- RMM Information --}}
+            <flux:card>
+                <flux:heading class="flex items-center gap-2 mb-4">
+                    <flux:icon.server class="size-5" />
+                    Remote Monitoring
+                </flux:heading>
+                
+                <div class="space-y-3">
+                    @if(isset($rmmData['rmm_agent_id']))
+                    <div class="flex justify-between items-center">
+                        <flux:text variant="subtle">Agent ID</flux:text>
+                        <flux:text variant="strong" class="font-mono">{{ $rmmData['rmm_agent_id'] }}</flux:text>
+                    </div>
+                    @endif
+                    @if(isset($rmmData['rmm_monitoring_type']))
+                    <div class="flex justify-between items-center">
+                        <flux:text variant="subtle">Monitoring Type</flux:text>
+                        <flux:text variant="strong">{{ ucfirst($rmmData['rmm_monitoring_type']) }}</flux:text>
+                    </div>
+                    @endif
+                    @if(isset($rmmData['rmm_timezone']))
+                    <div class="flex justify-between items-center">
+                        <flux:text variant="subtle">Timezone</flux:text>
+                        <flux:text variant="strong">{{ $rmmData['rmm_timezone'] ?: 'N/A' }}</flux:text>
+                    </div>
+                    @endif
+                    @if(isset($rmmData['sync_timestamp']))
+                    <div class="flex justify-between items-center">
+                        <flux:text variant="subtle">Last Sync</flux:text>
+                        <div class="text-right">
+                            @php
+                                try {
+                                    $syncTime = \Carbon\Carbon::parse($rmmData['sync_timestamp']);
+                                } catch (Exception $e) {
+                                    $syncTime = null;
+                                }
+                            @endphp
+                            @if($syncTime)
+                                <flux:text variant="strong">{{ $syncTime->format('M d, Y H:i') }}</flux:text>
+                                <flux:text variant="subtle" class="text-xs block">({{ $syncTime->diffForHumans() }})</flux:text>
+                            @else
+                                <flux:text variant="subtle">N/A</flux:text>
+                            @endif
+                        </div>
+                    </div>
+                    @endif
                 </div>
-                <div class="p-6">
-                    <dl class="space-y-4">
-                        @if(isset($rmmData['rmm_agent_id']))
-                        <div class="flex justify-between">
-                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Agent ID</dt>
-                            <dd class="text-sm font-medium">
-                                <code class="px-2 py-1 text-xs font-mono bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded">{{ $rmmData['rmm_agent_id'] }}</code>
-                            </dd>
-                        </div>
-                        @endif
-                        @if(isset($rmmData['rmm_monitoring_type']))
-                        <div class="flex justify-between">
-                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Monitoring Type</dt>
-                            <dd class="text-sm text-gray-900 dark:text-gray-100 font-medium">{{ ucfirst($rmmData['rmm_monitoring_type']) }}</dd>
-                        </div>
-                        @endif
-                        @if(isset($rmmData['rmm_timezone']))
-                        <div class="flex justify-between">
-                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Timezone</dt>
-                            <dd class="text-sm text-gray-900 dark:text-gray-100 font-medium">{{ $rmmData['rmm_timezone'] ?: 'N/A' }}</dd>
-                        </div>
-                        @endif
-                        @if(isset($rmmData['sync_timestamp']))
-                        <div class="flex justify-between">
-                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Last Sync</dt>
-                            <dd class="text-sm text-gray-900 dark:text-gray-100 font-medium">
-                                @php
-                                    try {
-                                        $syncTime = \Carbon\Carbon::parse($rmmData['sync_timestamp']);
-                                    } catch (Exception $e) {
-                                        $syncTime = null;
-                                    }
-                                @endphp
-                                @if($syncTime)
-                                    {{ $syncTime->format('M d, Y H:i') }}
-                                    <span class="text-xs text-gray-500 dark:text-gray-400">({{ $syncTime->diffForHumans() }})</span>
-                                @else
-                                    N/A
-                                @endif
-                            </dd>
-                        </div>
-                        @endif
-                    </dl>
-                </div>
-            </div>
+            </flux:card>
             @endif
         </div>
 
-        <!-- Right Column -->
+        {{-- Right Column --}}
         <div class="space-y-6">
-            <!-- Assignment & Location -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <div class="px-6 py-6 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
-                    <h3 class="text-lg font-medium text-gray-900 dark:text-white flex items-center">
-                        <i class="fas fa-map-marker-alt text-gray-400 dark:text-gray-500 mr-2"></i>
-                        Assignment & Location
-                    </h3>
+            {{-- Assignment & Location --}}
+            <flux:card>
+                <flux:heading class="flex items-center gap-2 mb-4">
+                    <flux:icon.map-pin class="size-5" />
+                    Assignment & Location
+                </flux:heading>
+                
+                @if($asset->location || $asset->contact)
+                <div class="space-y-3">
+                    @if($asset->location)
+                    <div class="flex justify-between items-center">
+                        <flux:text variant="subtle">Location</flux:text>
+                        <flux:text variant="strong">{{ $asset->location->name }}</flux:text>
+                    </div>
+                    @endif
+                    @if($asset->contact)
+                    <div class="flex justify-between items-center">
+                        <flux:text variant="subtle">Assigned To</flux:text>
+                        <flux:link href="{{ route('contacts.show', $asset->contact) }}">
+                            {{ $asset->contact->name }}
+                        </flux:link>
+                    </div>
+                    @endif
                 </div>
-                <div class="p-6">
-                    <dl class="space-y-4">
-                        @if($asset->location)
-                        <div class="flex justify-between">
-                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Location</dt>
-                            <dd class="text-sm text-gray-900 dark:text-gray-100 font-medium">{{ $asset->location->name }}</dd>
-                        </div>
-                        @endif
-                        @if($asset->contact)
-                        <div class="flex justify-between">
-                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Assigned To</dt>
-                            <dd class="text-sm font-medium">
-                                <a href="{{ route('contacts.show', $asset->contact) }}" 
-                                   class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">
-                                    {{ $asset->contact->name }}
-                                </a>
-                            </dd>
-                        </div>
-                        @endif
-                        @if(!$asset->location && !$asset->contact)
-                        <div class="text-center py-6">
-                            <i class="fas fa-box-open text-gray-300 dark:text-gray-600 text-3xl mb-2"></i>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">No assignment or location set</p>
-                        </div>
-                        @endif
-                    </dl>
+                @else
+                <div class="text-center py-8">
+                    <flux:icon.inbox class="size-12 mx-auto mb-2 text-zinc-300 dark:text-zinc-600" />
+                    <flux:text variant="subtle">No assignment or location set</flux:text>
                 </div>
-            </div>
+                @endif
+            </flux:card>
 
             @if($asset->notes && !$rmmData)
-            <!-- Notes (only show if not RMM JSON data) -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <div class="px-6 py-6 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
-                    <h3 class="text-lg font-medium text-gray-900 dark:text-white flex items-center">
-                        <i class="fas fa-sticky-note text-gray-400 dark:text-gray-500 mr-2"></i>
-                        Notes
-                    </h3>
-                </div>
-                <div class="p-6">
-                    <div class="prose prose-sm dark:prose-invert max-w-none">
-                        <p class="text-sm text-gray-900 dark:text-gray-100 leading-relaxed">{!! nl2br(e($asset->notes)) !!}</p>
-                    </div>
-                </div>
-            </div>
+            {{-- Notes (only show if not RMM JSON data) --}}
+            <flux:card>
+                <flux:heading class="flex items-center gap-2 mb-4">
+                    <flux:icon.document-text class="size-5" />
+                    Notes
+                </flux:heading>
+                
+                <flux:text>{!! nl2br(e($asset->notes)) !!}</flux:text>
+            </flux:card>
             @endif
 
             @if($asset->files && $asset->files->count() > 0)
-            <!-- Files -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <div class="px-6 py-6 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
-                    <h3 class="text-lg font-medium text-gray-900 dark:text-white flex items-center">
-                        <i class="fas fa-paperclip text-gray-400 dark:text-gray-500 mr-2"></i>
+            {{-- Files --}}
+            <flux:card>
+                <div class="flex items-center gap-2 mb-4">
+                    <flux:heading class="flex items-center gap-2">
+                        <flux:icon.paper-clip class="size-5" />
                         Attachments
-                        <span class="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
-                            {{ $asset->files->count() }}
-                        </span>
-                    </h3>
+                    </flux:heading>
+                    <flux:badge color="blue">{{ $asset->files->count() }}</flux:badge>
                 </div>
-                <div class="p-6">
-                    <div class="space-y-3">
-                        @foreach($asset->files as $file)
-                        <div class="flex items-center justify-between p-6 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-600">
-                            <div class="flex items-center space-x-3">
-                                <div class="flex-shrink-0">
-                                    @php
-                                        $fileIcon = 'fa-file';
-                                        if(method_exists($file, 'file_type') && $file->file_type === 'image') $fileIcon = 'fa-image';
-                                        elseif(method_exists($file, 'file_type') && $file->file_type === 'pdf') $fileIcon = 'fa-file-pdf';
-                                        elseif(method_exists($file, 'file_type') && $file->file_type === 'document') $fileIcon = 'fa-file-word';
-                                        elseif(method_exists($file, 'file_type') && $file->file_type === 'spreadsheet') $fileIcon = 'fa-file-excel';
-                                        elseif(method_exists($file, 'file_type') && $file->file_type === 'archive') $fileIcon = 'fa-file-archive';
-                                    @endphp
-                                    <i class="fas {{ $fileIcon }} text-gray-400 dark:text-gray-500"></i>
-                                </div>
-                                <div class="min-w-0 flex-1">
-                                    <p class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{{ $file->name }}</p>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400">
-                                        @if(method_exists($file, 'getFormattedSize'))
-                                            {{ $file->getFormattedSize() }}
-                                        @else
-                                            {{ number_format(($file->file_size ?? $file->size ?? 0) / 1024, 2) }} KB
-                                        @endif
-                                    </p>
-                                </div>
+                
+                <div class="space-y-2">
+                    @foreach($asset->files as $file)
+                    <div class="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
+                        <div class="flex items-center gap-3 min-w-0 flex-1">
+                            @php
+                                $fileIcon = 'document';
+                                if(method_exists($file, 'file_type')) {
+                                    $fileIcon = match($file->file_type) {
+                                        'image' => 'photo',
+                                        'pdf' => 'document-text',
+                                        'document' => 'document-text',
+                                        'spreadsheet' => 'document-text',
+                                        'archive' => 'archive-box',
+                                        default => 'document'
+                                    };
+                                }
+                            @endphp
+                            <flux:icon.{{ $fileIcon }} class="size-5 text-zinc-400" />
+                            <div class="min-w-0 flex-1">
+                                <flux:text class="truncate">{{ $file->name }}</flux:text>
+                                <flux:text variant="subtle" class="text-xs">
+                                    @if(method_exists($file, 'getFormattedSize'))
+                                        {{ $file->getFormattedSize() }}
+                                    @else
+                                        {{ number_format(($file->file_size ?? $file->size ?? 0) / 1024, 2) }} KB
+                                    @endif
+                                </flux:text>
                             </div>
-                            <a href="{{ route('files.download', $file) }}" 
-                               class="inline-flex items-center px-6 py-1 border border-gray-300 dark:border-gray-600 rounded-md text-xs font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                <i class="fas fa-download mr-1"></i>
-                                Download
-                            </a>
                         </div>
-                        @endforeach
+                        <flux:button 
+                            href="{{ route('files.download', $file) }}" 
+                            size="sm" 
+                            variant="ghost"
+                            icon="arrow-down-tray"
+                        >
+                            Download
+                        </flux:button>
                     </div>
+                    @endforeach
                 </div>
-            </div>
+            </flux:card>
             @endif
 
             @if($asset->tickets && $asset->tickets->count() > 0)
-            <!-- Related Tickets -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <div class="px-6 py-6 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
-                    <h3 class="text-lg font-medium text-gray-900 dark:text-white flex items-center">
-                        <i class="fas fa-ticket-alt text-gray-400 dark:text-gray-500 mr-2"></i>
+            {{-- Related Tickets --}}
+            <flux:card>
+                <div class="flex items-center gap-2 mb-4">
+                    <flux:heading class="flex items-center gap-2">
+                        <flux:icon.ticket class="size-5" />
                         Related Tickets
-                        <span class="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
-                            {{ $asset->tickets->count() }}
-                        </span>
-                    </h3>
+                    </flux:heading>
+                    <flux:badge color="blue">{{ $asset->tickets->count() }}</flux:badge>
                 </div>
-                <div class="p-6">
-                    <div class="space-y-3">
-                        @foreach($asset->tickets->take(5) as $ticket)
-                        <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-6 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors duration-150">
-                            <div class="flex items-start justify-between">
-                                <div class="min-w-0 flex-1">
-                                    <div class="flex items-center space-x-2 mb-2">
-                                        <span class="text-sm font-medium text-gray-500 dark:text-gray-400">#{{ $ticket->number }}</span>
-                                        <div class="flex space-x-1">
-                                            @php
-                                                $priorityColors = [
-                                                    'low' => 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
-                                                    'medium' => 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
-                                                    'high' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
-                                                    'critical' => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
-                                                ];
-                                                $statusColors = [
-                                                    'open' => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
-                                                    'in_progress' => 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
-                                                    'pending' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
-                                                    'resolved' => 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300',
-                                                    'closed' => 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
-                                                ];
-                                                $priorityColor = $priorityColors[$ticket->priority] ?? $priorityColors['medium'];
-                                                $statusColor = $statusColors[$ticket->status] ?? $statusColors['open'];
-                                            @endphp
-                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {{ $priorityColor }}">
-                                                {{ ucfirst($ticket->priority) }}
-                                            </span>
-                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {{ $statusColor }}">
-                                                {{ ucfirst(str_replace('_', ' ', $ticket->status)) }}
-                                            </span>
-                                        </div>
+                
+                <div class="space-y-2">
+                    @foreach($asset->tickets->take(5) as $ticket)
+                    <div class="p-3 border border-zinc-200 dark:border-zinc-700 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors">
+                        <div class="flex items-start justify-between mb-2">
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <flux:text variant="subtle" class="text-sm">#{{ $ticket->number }}</flux:text>
+                                    <div class="flex gap-1">
+                                        @php
+                                            $priorityColors = [
+                                                'low' => 'zinc',
+                                                'medium' => 'blue',
+                                                'high' => 'yellow',
+                                                'critical' => 'red'
+                                            ];
+                                            $statusColors = [
+                                                'open' => 'green',
+                                                'in_progress' => 'blue',
+                                                'pending' => 'yellow',
+                                                'resolved' => 'purple',
+                                                'closed' => 'zinc'
+                                            ];
+                                            $priorityColor = $priorityColors[$ticket->priority] ?? 'zinc';
+                                            $statusColor = $statusColors[$ticket->status] ?? 'zinc';
+                                        @endphp
+                                        <flux:badge size="sm" color="{{ $priorityColor }}">
+                                            {{ ucfirst($ticket->priority) }}
+                                        </flux:badge>
+                                        <flux:badge size="sm" color="{{ $statusColor }}">
+                                            {{ ucfirst(str_replace('_', ' ', $ticket->status)) }}
+                                        </flux:badge>
                                     </div>
-                                    <h4 class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
-                                        <a href="{{ route('tickets.show', $ticket) }}" 
-                                           class="hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-150">
-                                            {{ $ticket->subject }}
-                                        </a>
-                                    </h4>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400">
-                                        {{ $ticket->created_at->diffForHumans() }}
-                                    </p>
                                 </div>
+                                <flux:link href="{{ route('tickets.show', $ticket) }}" class="font-medium">
+                                    {{ $ticket->subject }}
+                                </flux:link>
+                                <flux:text variant="subtle" class="text-xs block mt-1">
+                                    {{ $ticket->created_at->diffForHumans() }}
+                                </flux:text>
                             </div>
                         </div>
-                        @endforeach
                     </div>
-                    
-                    @if($asset->tickets->count() > 5)
-                    <div class="mt-6 text-center">
-                        <a href="{{ route('tickets.index', ['asset_id' => $asset->id]) }}" 
-                           class="inline-flex items-center px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                            <i class="fas fa-external-link-alt mr-2"></i>
-                            View All {{ $asset->tickets->count() }} Tickets
-                        </a>
-                    </div>
-                    @endif
+                    @endforeach
                 </div>
-            </div>
+                
+                @if($asset->tickets->count() > 5)
+                <div class="mt-4 text-center">
+                    <flux:button 
+                        href="{{ route('tickets.index', ['asset_id' => $asset->id]) }}" 
+                        variant="ghost"
+                        icon="arrow-top-right-on-square"
+                    >
+                        View All {{ $asset->tickets->count() }} Tickets
+                    </flux:button>
+                </div>
+                @endif
+            </flux:card>
             @endif
         </div>
     </div>
 
-    <!-- Metadata -->
-    <div class="mt-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <div class="px-6 py-6 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
-            <h3 class="text-lg font-medium text-gray-900 dark:text-white flex items-center">
-                <i class="fas fa-info-circle text-gray-400 dark:text-gray-500 mr-2"></i>
-                Metadata
-            </h3>
-        </div>
-        <div class="p-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="space-y-3">
-                    <div>
-                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Created</dt>
-                        <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100 font-medium">
-                            {{ $asset->created_at->format('M d, Y g:i A') }}
-                            <span class="text-xs text-gray-500 dark:text-gray-400 block">
-                                {{ $asset->created_at->diffForHumans() }}
-                            </span>
-                        </dd>
-                    </div>
-                    <div>
-                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Last Updated</dt>
-                        <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100 font-medium">
-                            {{ $asset->updated_at->format('M d, Y g:i A') }}
-                            <span class="text-xs text-gray-500 dark:text-gray-400 block">
-                                {{ $asset->updated_at->diffForHumans() }}
-                            </span>
-                        </dd>
-                    </div>
+    {{-- Metadata --}}
+    <flux:card class="mt-6">
+        <flux:heading class="flex items-center gap-2 mb-4">
+            <flux:icon.information-circle class="size-5" />
+            Metadata
+        </flux:heading>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="space-y-3">
+                <div>
+                    <flux:text variant="subtle" class="text-sm">Created</flux:text>
+                    <flux:text variant="strong" class="block mt-1">
+                        {{ $asset->created_at->format('M d, Y g:i A') }}
+                    </flux:text>
+                    <flux:text variant="subtle" class="text-xs block">
+                        {{ $asset->created_at->diffForHumans() }}
+                    </flux:text>
                 </div>
-                <div class="space-y-3">
-                    @if($asset->accessed_at)
-                    <div>
-                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Last Accessed</dt>
-                        <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100 font-medium">
-                            {{ $asset->accessed_at->format('M d, Y g:i A') }}
-                            <span class="text-xs text-gray-500 dark:text-gray-400 block">
-                                {{ $asset->accessed_at->diffForHumans() }}
-                            </span>
-                        </dd>
-                    </div>
-                    @endif
-                    @if($asset->rmm_id)
-                    <div>
-                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">RMM ID</dt>
-                        <dd class="mt-1 text-sm font-medium">
-                            <code class="px-2 py-1 text-xs font-mono bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded">{{ $asset->rmm_id }}</code>
-                        </dd>
-                    </div>
-                    @endif
+                <div>
+                    <flux:text variant="subtle" class="text-sm">Last Updated</flux:text>
+                    <flux:text variant="strong" class="block mt-1">
+                        {{ $asset->updated_at->format('M d, Y g:i A') }}
+                    </flux:text>
+                    <flux:text variant="subtle" class="text-xs block">
+                        {{ $asset->updated_at->diffForHumans() }}
+                    </flux:text>
                 </div>
             </div>
+            <div class="space-y-3">
+                @if($asset->accessed_at)
+                <div>
+                    <flux:text variant="subtle" class="text-sm">Last Accessed</flux:text>
+                    <flux:text variant="strong" class="block mt-1">
+                        {{ $asset->accessed_at->format('M d, Y g:i A') }}
+                    </flux:text>
+                    <flux:text variant="subtle" class="text-xs block">
+                        {{ $asset->accessed_at->diffForHumans() }}
+                    </flux:text>
+                </div>
+                @endif
+                @if($asset->rmm_id)
+                <div>
+                    <flux:text variant="subtle" class="text-sm">RMM ID</flux:text>
+                    <flux:text variant="strong" class="font-mono block mt-1">{{ $asset->rmm_id }}</flux:text>
+                </div>
+                @endif
+            </div>
         </div>
-    </div>
+    </flux:card>
+</div>
 
-<!-- Check In/Out Modal -->
-<div x-data="{ open: false }" 
-     x-show="open" 
-     @open-modal.window="if ($event.detail === 'checkInOutModal') open = true"
-     @close-modal.window="open = false"
-     @keydown.escape.window="open = false"
-     x-transition:enter="transition ease-out duration-300"
-     x-transition:enter-start="opacity-0"
-     x-transition:enter-end="opacity-100"
-     x-transition:leave="transition ease-in duration-200"
-     x-transition:leave-start="opacity-100"
-     x-transition:leave-end="opacity-0"
-     class="fixed inset-0 z-50 overflow-y-auto"
-     style="display: none;">
-    
-    <!-- Background overlay -->
-    <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity" @click="open = false"></div>
-    
-    <!-- Modal -->
-    <div class="flex items-center justify-center min-h-screen p-6">
-        <div x-show="open"
-             x-transition:enter="transition ease-out duration-300"
-             x-transition:enter-start="opacity-0 transform scale-95"
-             x-transition:enter-end="opacity-100 transform scale-100"
-             x-transition:leave="transition ease-in duration-200"
-             x-transition:leave-start="opacity-100 transform scale-100"
-             x-transition:leave-end="opacity-0 transform scale-95"
-             @click.stop
-             class="relative w-full max-w-md bg-white dark:bg-gray-800 rounded-lg shadow-xl">
-            
-            <form action="{{ route('assets.check-in-out', $asset) }}" method="POST">
-                @csrf
-                <!-- Header -->
-                <div class="px-6 py-6 border-b border-gray-200 dark:border-gray-700">
-                    <h3 class="text-lg font-medium text-gray-900 dark:text-white">Check In/Out Asset</h3>
-                    <button type="button" @click="open = false" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                
-                <!-- Body -->
-                <div class="px-6 py-6 space-y-4">
-                    <!-- Action Selection -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-6">Action</label>
-                        <div class="space-y-2">
-                            <label class="flex items-center">
-                                <input type="radio" name="action" value="check_out" 
-                                       class="mr-3 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-                                       {{ !$asset->contact_id ? 'checked' : '' }}
-                                       x-on:change="document.getElementById('contactSelect').style.display = $event.target.checked ? 'block' : 'none'">
-                                <span class="text-sm text-gray-900 dark:text-gray-100">Check Out (Assign to someone)</span>
-                            </label>
-                            <label class="flex items-center">
-                                <input type="radio" name="action" value="check_in"
-                                       class="mr-3 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-                                       {{ $asset->contact_id ? 'checked' : '' }}
-                                       x-on:change="document.getElementById('contactSelect').style.display = $event.target.checked ? 'none' : 'block'">
-                                <span class="text-sm text-gray-900 dark:text-gray-100">Check In (Return to inventory)</span>
-                            </label>
-                        </div>
-                    </div>
+{{-- Check In/Out Modal --}}
+<flux:modal name="check-in-out-{{ $asset->id }}" class="md:w-96">
+    <form action="{{ route('assets.check-in-out', $asset) }}" method="POST">
+        @csrf
+        
+        <div class="space-y-6">
+            <div>
+                <flux:heading size="lg">Check In/Out Asset</flux:heading>
+                <flux:text class="mt-2">Manage asset assignment and tracking.</flux:text>
+            </div>
 
-                    <!-- Contact Selection -->
-                    <div id="contactSelect" style="{{ $asset->contact_id ? 'display: none;' : '' }}">
-                        <label for="contact_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Assign To</label>
-                        <select name="contact_id" id="contact_id" 
-                                class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                            <option value="">Select Contact</option>
-                            @foreach($asset->client->contacts as $contact)
-                                <option value="{{ $contact->id }}">{{ $contact->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
+            <div>
+                <flux:text variant="subtle" class="text-sm mb-3">Action</flux:text>
+                <div class="space-y-2">
+                    <flux:radio 
+                        name="action" 
+                        value="check_out" 
+                        label="Check Out (Assign to someone)"
+                        {{ !$asset->contact_id ? 'checked' : '' }}
+                        x-on:change="document.getElementById('contactSelect').style.display = $event.target.checked ? 'block' : 'none'"
+                    />
+                    <flux:radio 
+                        name="action" 
+                        value="check_in"
+                        label="Check In (Return to inventory)"
+                        {{ $asset->contact_id ? 'checked' : '' }}
+                        x-on:change="document.getElementById('contactSelect').style.display = $event.target.checked ? 'none' : 'block'"
+                    />
+                </div>
+            </div>
 
-                    <!-- Notes -->
-                    <div>
-                        <label for="notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
-                        <textarea name="notes" id="notes" rows="3"
-                                  class="block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
-                                  placeholder="Optional notes about this check in/out"></textarea>
-                    </div>
-                </div>
-                
-                <!-- Footer -->
-                <div class="px-6 py-6 border-t border-gray-200 dark:border-gray-700 flex justify-end space-x-3">
-                    <button type="button" @click="open = false"
-                            class="inline-flex items-center px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                        Cancel
-                    </button>
-                    <button type="submit" 
-                            class="inline-flex items-center px-6 py-2 bg-blue-600 dark:bg-blue-700 text-white text-sm font-medium rounded-md shadow-sm hover:bg-blue-700 dark:hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                        Submit
-                    </button>
-                </div>
-            </form>
+            <div id="contactSelect" style="{{ $asset->contact_id ? 'display: none;' : '' }}">
+                <flux:select name="contact_id" label="Assign To" placeholder="Select Contact">
+                    @foreach($asset->client->contacts as $contact)
+                        <option value="{{ $contact->id }}">{{ $contact->name }}</option>
+                    @endforeach
+                </flux:select>
+            </div>
+
+            <flux:textarea 
+                name="notes" 
+                label="Notes" 
+                rows="3"
+                placeholder="Optional notes about this check in/out"
+            />
+
+            <div class="flex gap-2">
+                <flux:spacer />
+                <flux:modal.close>
+                    <flux:button variant="ghost">Cancel</flux:button>
+                </flux:modal.close>
+                <flux:button type="submit" variant="primary">Submit</flux:button>
+            </div>
         </div>
-    </div>
-</div>
-</div>
+    </form>
+</flux:modal>
 @endsection

@@ -3,6 +3,14 @@
 namespace App\Domains\Asset\Models;
 
 use App\Domains\Client\Models\Client;
+use App\Domains\Client\Models\Contact;
+use App\Domains\Client\Models\Location;
+use App\Domains\Client\Models\Network;
+use App\Domains\Contract\Models\Contract;
+use App\Domains\Contract\Models\ContractSchedule;
+use App\Domains\Core\Models\Document;
+use App\Domains\Core\Models\File;
+use App\Domains\Core\Models\User;
 use App\Domains\Project\Models\Vendor;
 use App\Domains\Ticket\Models\Ticket;
 use App\Traits\BelongsToCompany;
