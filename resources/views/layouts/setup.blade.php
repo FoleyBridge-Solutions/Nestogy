@@ -110,6 +110,9 @@
     <!-- Additional Scripts -->
     @stack('scripts')
 
+    <!-- Livewire Scripts -->
+    @livewireScripts
+
     <!-- Flux Scripts -->
     @fluxScripts
 
