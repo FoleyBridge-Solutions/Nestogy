@@ -2,7 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Domains\Ticket\Models\SLA;
 use App\Domains\Client\Models\Client;
+use App\Domains\Company\Models\Company;
 use Illuminate\Database\Seeder;
 
 class ClientSeeder extends Seeder
@@ -12,118 +14,91 @@ class ClientSeeder extends Seeder
      */
     public function run(): void
     {
-        $clients = [
-            [
-                'company_id' => 1,
-                'name' => 'Acme Corporation',
-                'company_name' => 'Acme Corp',
-                'type' => 'company',
-                'email' => 'contact@acmecorp.com',
-                'phone' => '555-0101',
-                'address' => '123 Business Ave',
-                'city' => 'New York',
-                'state' => 'NY',
-                'zip_code' => '10001',
-                'country' => 'United States',
-                'website' => 'https://acmecorp.example.com',
-                'status' => 'active',
-                'lead' => false,
-                'hourly_rate' => 150.00,
-                'notes' => 'Premium client with 24/7 support contract',
-            ],
-            [
-                'company_id' => 1,
-                'name' => 'Tech Startup Inc',
-                'company_name' => 'Tech Startup Inc',
-                'type' => 'company',
-                'type' => 'company',
-                'email' => 'info@techstartup.com',
-                'phone' => '555-0102',
-                'address' => '456 Innovation Drive',
-                'city' => 'San Francisco',
-                'state' => 'CA',
-                'zip_code' => '94105',
-                'country' => 'United States',
-                'website' => 'https://techstart.example.com',
-                'status' => 'active',
-                'lead' => false,
-                'hourly_rate' => 125.00,
-                'notes' => 'Growing startup, monthly maintenance',
-            ],
-            [
-                'company_id' => 1,
-                'name' => 'Global Logistics Co',
-                'company_name' => 'Global Logistics',
-                'type' => 'company',
-                'email' => 'support@globallogistics.com',
-                'phone' => '555-0103',
-                'address' => '789 Shipping Blvd',
-                'city' => 'Chicago',
-                'state' => 'IL',
-                'zip_code' => '60601',
-                'country' => 'United States',
-                'website' => 'https://globallogistics.example.com',
-                'status' => 'active',
-                'lead' => false,
-                'hourly_rate' => 100.00,
-                'notes' => 'Large enterprise client',
-            ],
-            [
-                'company_id' => 1,
-                'name' => 'Healthcare Partners',
-                'company_name' => 'Healthcare Partners LLC',
-                'type' => 'company',
-                'email' => 'it@healthcarepartners.com',
-                'phone' => '555-0104',
-                'address' => '321 Medical Plaza',
-                'city' => 'Boston',
-                'state' => 'MA',
-                'zip_code' => '02108',
-                'country' => 'United States',
-                'status' => 'active',
-                'lead' => false,
-                'hourly_rate' => 175.00,
-                'notes' => 'HIPAA compliance required',
-            ],
-            [
-                'company_id' => 1,
-                'name' => 'Retail Solutions Ltd',
-                'company_name' => 'Retail Solutions',
-                'type' => 'company',
-                'email' => 'admin@retailsolutions.com',
-                'phone' => '555-0105',
-                'address' => '555 Commerce Street',
-                'city' => 'Dallas',
-                'state' => 'TX',
-                'zip_code' => '75201',
-                'country' => 'United States',
-                'status' => 'inactive',
-                'lead' => false,
-                'hourly_rate' => 90.00,
-                'notes' => 'Currently on hold',
-            ],
-            [
-                'company_id' => 1,
-                'name' => 'Future Tech Innovations',
-                'company_name' => 'Future Tech',
-                'type' => 'company',
-                'email' => 'contact@futuretech.com',
-                'phone' => '555-0106',
-                'city' => 'Austin',
-                'state' => 'TX',
-                'zip_code' => '78701',
-                'country' => 'United States',
-                'status' => 'active',
-                'lead' => true, // This is a lead, not a customer yet
-                'notes' => 'Potential client - in negotiation',
-            ],
-        ];
+        $this->command->info('Creating enhanced client dataset...');
 
-        foreach ($clients as $clientData) {
-            Client::firstOrCreate(
-                ['email' => $clientData['email']],
-                $clientData
-            );
+        // Skip the root company (ID 1)
+        $companies = Company::where('id', '>', 1)->get();
+
+        foreach ($companies as $company) {
+            $companySize = $company->size ?? 'medium';
+            $this->command->info("  Creating clients for {$company->name} ({$companySize} company)...");
+
+            // Get default SLA for this company
+            $defaultSla = SLA::where('company_id', $company->id)->first();
+
+            // Determine number of clients based on company size - more realistic ratios
+            switch ($companySize) {
+                case 'solo':
+                    $numClients = rand(3, 8);  // Solo operators have very few clients
+                    break;
+                case 'small':
+                    $numClients = rand(10, 20);  // Small shops manage 10-20 clients
+                    break;
+                case 'medium':
+                    $numClients = rand(30, 60); // Mid-market MSPs manage 30-60 clients
+                    break;
+                case 'medium-large':
+                    $numClients = rand(50, 80); // Larger mid-market manage 50-80 clients
+                    break;
+                case 'large':
+                    $numClients = rand(70, 100); // Upper mid-market manage 70-100 clients
+                    break;
+                default:
+                    $numClients = rand(25, 45);
+                    break;
+            }
+
+            // Create a mix of client sizes and statuses
+            $clientTypes = [
+                ['size' => 'enterprise', 'rate_range' => [200, 300], 'count' => (int) ($numClients * 0.15)],
+                ['size' => 'medium', 'rate_range' => [150, 200], 'count' => (int) ($numClients * 0.35)],
+                ['size' => 'small', 'rate_range' => [100, 150], 'count' => (int) ($numClients * 0.50)],
+            ];
+
+            $totalCreated = 0;
+            foreach ($clientTypes as $type) {
+                for ($i = 0; $i < $type['count']; $i++) {
+                    $createdDate = fake()->dateTimeBetween('-2 years', 'now');
+
+                    // Older clients more likely to be active
+                    $daysSinceCreation = now()->diffInDays($createdDate);
+                    if ($daysSinceCreation > 365) {
+                        $status = fake()->randomElement(['active', 'active', 'active', 'active', 'inactive']);
+                    } elseif ($daysSinceCreation > 90) {
+                        $status = fake()->randomElement(['active', 'active', 'active', 'suspended', 'inactive']);
+                    } else {
+                        $status = fake()->randomElement(['active', 'active', 'suspended']);
+                    }
+
+                    Client::factory()
+                        ->forCompany($company)
+                        ->state([
+                            'sla_id' => $defaultSla?->id,
+                            'hourly_rate' => fake()->numberBetween($type['rate_range'][0], $type['rate_range'][1]),
+                            'status' => $status,
+                            'created_at' => $createdDate,
+                            'updated_at' => fake()->dateTimeBetween($createdDate, 'now'),
+                            'notes' => fake()->optional(0.3)->paragraph(),
+                            'industry' => fake()->randomElement([
+                                'Healthcare', 'Finance', 'Manufacturing', 'Retail', 'Education',
+                                'Technology', 'Legal', 'Real Estate', 'Non-Profit', 'Government',
+                                'Construction', 'Hospitality', 'Transportation', 'Energy',
+                            ]),
+                            'employee_count' => match ($type['size']) {
+                                'enterprise' => fake()->numberBetween(500, 5000),
+                                'medium' => fake()->numberBetween(50, 500),
+                                'small' => fake()->numberBetween(1, 50),
+                            },
+                        ])
+                        ->create();
+
+                    $totalCreated++;
+                }
+            }
+
+            $this->command->info("    ✓ Created {$totalCreated} clients with varied sizes and histories");
         }
+
+        $this->command->info('Enhanced client dataset created successfully.');
     }
 }

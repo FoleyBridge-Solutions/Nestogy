@@ -28,7 +28,7 @@
         "league/flysystem-aws-s3-v3": "^3.29",
         "livewire/flux": "dev-main",
         "livewire/flux-pro": "^2.6",
-        "livewire/livewire": "^3.0",
+        "livewire/livewire": "3.6.4",
         "maatwebsite/excel": "^3.1",
         "pragmarx/google2fa-laravel": "^2.3",
         "silber/bouncer": "^1.0",
@@ -113,23 +113,16 @@
         "sort-packages": true,
         "allow-plugins": {
             "pestphp/pest-plugin": true,
-            "php-http/discovery": true
+            "php-http/discovery": true,
+            "symfony/runtime": true
         }
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
     "repositories": {
-        "flux": {
-            "type": "vcs",
-            "url": "https://github.com/FoleyBridge-Solutions/flux.git"
-        },
         "flux-pro": {
             "type": "composer",
             "url": "https://composer.fluxui.dev"
-        },
-        "blaze": {
-            "type": "vcs",
-            "url": "https://github.com/livewire/blaze"
         }
     }
 }

@@ -48,21 +48,17 @@ self.addEventListener('activate', (event) => {
 self.addEventListener("fetch", (event) => {
     const url = new URL(event.request.url);
     
-    // Skip Vite dev server requests (port 5173)
-    if (url.port === '5173') {
-        return; // Let the browser handle Vite requests directly
+    // Skip ALL cross-origin requests (including different ports)
+    if (url.origin !== self.location.origin) {
+        return; // Don't intercept Vite dev server or external resources
     }
     
     // Skip Vite-specific paths
     if (url.pathname.includes('/@vite/') || 
         url.pathname.includes('/@fs/') ||
         url.pathname.includes('/__vite_ping') ||
-        url.pathname.includes('/node_modules/')) {
-        return;
-    }
-    
-    // Skip cross-origin requests (different domain/port than app)
-    if (url.origin !== self.location.origin) {
+        url.pathname.includes('/node_modules/') ||
+        url.pathname.includes('/resources/')) { // Don't cache source files
         return;
     }
     
@@ -78,22 +74,24 @@ self.addEventListener("fetch", (event) => {
         return; // Don't cache dynamic content
     }
 
+    // Only handle navigation requests and static assets
     if (event.request.mode === 'navigate') {
         event.respondWith(
             fetch(event.request)
                 .catch(() => caches.match(OFFLINE_URL))
         );
     } else {
-        // Only cache static assets (CSS, JS, images, fonts)
-        const isStaticAsset = url.pathname.match(/\.(css|js|jpg|jpeg|png|gif|svg|woff|woff2|ttf|eot|ico)$/);
+        // Only cache built static assets from /build/ directory
+        const isBuiltAsset = url.pathname.startsWith('/build/') && 
+            url.pathname.match(/\.(css|js|jpg|jpeg|png|gif|svg|woff|woff2|ttf|eot|ico)$/);
         
-        if (isStaticAsset) {
+        if (isBuiltAsset) {
             event.respondWith(
                 caches.match(event.request)
                     .then((response) => response || fetch(event.request))
             );
         }
-        // For everything else, always fetch fresh
+        // For everything else (including dev assets), always fetch fresh
     }
 });
 

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Force Refresh - Clear All Caches</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f3f4f6;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1f2937;
+            margin-bottom: 20px;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        .success {
+            background: #10b981;
+            padding: 12px;
+            border-radius: 6px;
+            color: white;
+            margin-top: 20px;
+            display: none;
+        }
+        .steps {
+            background: #fef3c7;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+            border-left: 4px solid #f59e0b;
+        }
+        code {
+            background: #e5e7eb;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 Force Refresh & Clear All Caches</h1>
+        
+        <div class="steps">
+            <p><strong>You're seeing @blaze markers because:</strong></p>
+            <ul>
+                <li>Service Worker cached old HTML responses</li>
+                <li>Browser cached Livewire's old JavaScript</li>
+            </ul>
+        </div>
+        
+        <p>Click the button below to clear everything:</p>
+        
+        <button onclick="clearEverything()">Clear All Caches & Reload</button>
+        <button onclick="window.location.href='/tickets'">Go to Tickets</button>
+        
+        <div class="success" id="success">
+            ✅ All caches cleared! Redirecting...
+        </div>
+        
+        <div class="steps" style="margin-top: 30px;">
+            <h3>Manual Steps (if button doesn't work):</h3>
+            <ol>
+                <li>Press <code>F12</code> to open DevTools</li>
+                <li>Go to <strong>Application</strong> tab</li>
+                <li>Click <strong>Service Workers</strong> → Unregister all</li>
+                <li>Click <strong>Cache Storage</strong> → Delete all</li>
+                <li>Press <code>Ctrl+Shift+R</code> (Windows) or <code>Cmd+Shift+R</code> (Mac)</li>
+            </ol>
+        </div>
+    </div>
+    
+    <script>
+        async function clearEverything() {
+            try {
+                // Unregister all service workers
+                if ('serviceWorker' in navigator) {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    for (const registration of registrations) {
+                        await registration.unregister();
+                        console.log('Unregistered service worker');
+                    }
+                }
+                
+                // Clear all caches
+                if ('caches' in window) {
+                    const cacheNames = await caches.keys();
+                    for (const name of cacheNames) {
+                        await caches.delete(name);
+                        console.log('Deleted cache:', name);
+                    }
+                }
+                
+                // Clear browser cache
+                if ('storage' in navigator && 'estimate' in navigator.storage) {
+                    console.log('Clearing storage...');
+                }
+                
+                // Show success message
+                document.getElementById('success').style.display = 'block';
+                
+                // Wait 2 seconds then hard reload
+                setTimeout(() => {
+                    window.location.href = '/tickets?nocache=' + Date.now();
+                    // Force reload from server
+                    window.location.reload(true);
+                }, 2000);
+                
+            } catch (error) {
+                alert('Error clearing caches: ' + error.message + '\n\nPlease use manual steps below.');
+                console.error(error);
+            }
+        }
+    </script>
+</body>
+</html>

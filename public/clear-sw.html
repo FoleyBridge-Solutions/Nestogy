@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear Service Worker</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .box {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        #status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        button {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h1>🔧 Service Worker Manager</h1>
+        <p>This tool will unregister old Service Workers and clear all caches.</p>
+        
+        <button onclick="clearServiceWorker()">Clear Service Worker & Caches</button>
+        <button onclick="checkStatus()">Check Status</button>
+        
+        <div id="status"></div>
+    </div>
+
+    <script>
+        async function clearServiceWorker() {
+            const status = document.getElementById('status');
+            status.className = 'info';
+            status.innerHTML = '⏳ Working...';
+
+            try {
+                // Unregister all service workers
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                
+                if (registrations.length === 0) {
+                    status.className = 'info';
+                    status.innerHTML = '✓ No Service Workers found';
+                } else {
+                    for (let registration of registrations) {
+                        await registration.unregister();
+                    }
+                    status.className = 'success';
+                    status.innerHTML = `✓ Unregistered ${registrations.length} Service Worker(s)`;
+                }
+
+                // Clear all caches
+                const cacheNames = await caches.keys();
+                if (cacheNames.length > 0) {
+                    for (let cacheName of cacheNames) {
+                        await caches.delete(cacheName);
+                    }
+                    status.innerHTML += `<br>✓ Cleared ${cacheNames.length} cache(s): ${cacheNames.join(', ')}`;
+                } else {
+                    status.innerHTML += '<br>✓ No caches to clear';
+                }
+
+                status.innerHTML += '<br><br><strong>✅ Done! Now refresh your app.</strong>';
+                
+            } catch (error) {
+                status.className = 'error';
+                status.innerHTML = `❌ Error: ${error.message}`;
+                console.error('Error:', error);
+            }
+        }
+
+        async function checkStatus() {
+            const status = document.getElementById('status');
+            status.className = 'info';
+            
+            try {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                const cacheNames = await caches.keys();
+                
+                status.innerHTML = `
+                    <strong>Current Status:</strong><br>
+                    • Service Workers: ${registrations.length}<br>
+                    • Caches: ${cacheNames.length}
+                `;
+                
+                if (registrations.length > 0) {
+                    status.innerHTML += '<br><br><strong>Registered Service Workers:</strong>';
+                    registrations.forEach((reg, i) => {
+                        status.innerHTML += `<br>${i + 1}. ${reg.scope}`;
+                    });
+                }
+                
+                if (cacheNames.length > 0) {
+                    status.innerHTML += '<br><br><strong>Active Caches:</strong><br>' + cacheNames.join('<br>');
+                }
+            } catch (error) {
+                status.className = 'error';
+                status.innerHTML = `❌ Error: ${error.message}`;
+            }
+        }
+
+        // Auto-check on load
+        window.onload = checkStatus;
+    </script>
+</body>
+</html>

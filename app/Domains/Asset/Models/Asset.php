@@ -3,7 +3,7 @@
 namespace App\Domains\Asset\Models;
 
 use App\Domains\Client\Models\Client;
-
+use App\Domains\Project\Models\Vendor;
 use App\Domains\Ticket\Models\Ticket;
 use App\Traits\BelongsToCompany;
 use App\Traits\HasArchive;

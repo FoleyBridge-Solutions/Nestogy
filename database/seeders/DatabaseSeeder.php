@@ -11,9 +11,18 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Use production seeder by default (no test data)
-        $this->call([
-            ProductionDatabaseSeeder::class,
-        ]);
+        // Check environment to determine which seeder to run
+        if (app()->environment('local', 'development', 'testing')) {
+            // Development/Local/Testing: Run dev seeder with test data
+            $this->call([
+                Dev\DevDatabaseSeeder::class,
+            ]);
+        } else {
+            // Production/Staging: Run essential seeders only
+            $this->call([
+                SubscriptionPlansSeeder::class,
+                RolesAndPermissionsSeeder::class,
+            ]);
+        }
     }
 }

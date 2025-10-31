@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Domains\Financial\Models\Category;
 use App\Domains\Client\Models\Client;
-use App\Domains\Company\Models\Company;
 use App\Domains\Financial\Models\Invoice;
 use App\Domains\Financial\Models\InvoiceItem;
 use Carbon\Carbon;
@@ -11,217 +11,180 @@ use Illuminate\Database\Seeder;
 
 class InvoiceSeeder extends Seeder
 {
-    public function run()
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
     {
-        // Skip if invoices already exist
-        if (Invoice::count() > 0) {
-            $this->command->info('Invoices already exist, skipping seeder.');
+        $this->command->info('Creating 2 years of invoice history...');
 
-            return;
-        }
+        $clients = Client::all();
+        $totalInvoices = 0;
 
-        // Get the first company (or create one if none exists)
-        $company = Company::first();
-        if (! $company) {
-            $company = Company::create([
-                'name' => 'Demo Company',
-                'email' => 'demo@company.com',
-                'phone' => '555-0100',
-                'address' => '123 Business St',
-                'city' => 'New York',
-                'state' => 'NY',
-                'zip' => '10001',
-                'country' => 'USA',
-            ]);
-        }
+        // Create income categories if they don't exist
+        $companies = \App\Domains\Company\Models\Company::all();
+        foreach ($companies as $company) {
+            if (! Category::where('company_id', $company->id)->whereJsonContains('type', 'income')->exists()) {
+                $categories = [
+                    ['name' => 'Managed Services', 'color' => '#4A90E2'],
+                    ['name' => 'Professional Services', 'color' => '#7C4DFF'],
+                    ['name' => 'Hardware', 'color' => '#00BCD4'],
+                    ['name' => 'Software Licenses', 'color' => '#FFC107'],
+                    ['name' => 'Cloud Services', 'color' => '#8BC34A'],
+                    ['name' => 'Support & Maintenance', 'color' => '#FF5722'],
+                ];
 
-        // Get or create some clients
-        $clients = Client::where('company_id', $company->id)->take(3)->get();
-
-        if ($clients->count() < 3) {
-            // Create some demo clients if we don't have enough
-            $clientData = [
-                ['name' => 'Acme Corporation', 'email' => 'billing@acme.com', 'phone' => '555-0101'],
-                ['name' => 'TechCo Industries', 'email' => 'accounts@techco.com', 'phone' => '555-0102'],
-                ['name' => 'Global Solutions LLC', 'email' => 'finance@globalsolutions.com', 'phone' => '555-0103'],
-            ];
-
-            foreach ($clientData as $data) {
-                $client = Client::firstOrCreate(
-                    ['email' => $data['email'], 'company_id' => $company->id],
-                    array_merge($data, [
+                foreach ($categories as $cat) {
+                    Category::create([
                         'company_id' => $company->id,
-                        'address' => '456 Client Ave',
-                        'city' => 'Los Angeles',
-                        'state' => 'CA',
-                        'zip' => '90001',
-                        'country' => 'USA',
-                        'status' => 'active',
-                    ])
-                );
-                $clients->push($client);
+                        'name' => $cat['name'],
+                        'type' => ['income'],
+                        'color' => $cat['color'],
+                    ]);
+                }
+            }
+        }
+
+        foreach ($clients as $clientIndex => $client) {
+            // Only active clients get regular invoices
+            if ($client->status !== 'active') {
+                continue;
             }
 
-            $clients = $clients->take(3);
+            // Determine invoice frequency based on client size
+            $employeeCount = $client->employee_count ?? 50;
+            if ($employeeCount > 500) {
+                // Enterprise clients - monthly invoicing
+                $invoicesPerYear = 12;
+            } elseif ($employeeCount > 50) {
+                // Medium clients - quarterly or monthly
+                $invoicesPerYear = fake()->randomElement([4, 6, 12]);
+            } else {
+                // Small clients - irregular invoicing
+                $invoicesPerYear = fake()->randomElement([2, 4, 6]);
+            }
+
+            // Generate invoices for the past 2 years
+            $startDate = Carbon::now()->subYears(2);
+            $endDate = Carbon::now();
+
+            // Calculate invoice interval in days
+            $intervalDays = (int) (365 / $invoicesPerYear);
+
+            $currentDate = $startDate->copy();
+            while ($currentDate <= $endDate) {
+                // Add some randomness to invoice dates
+                $invoiceDate = $currentDate->copy()->addDays(rand(-3, 3));
+
+                // Determine status based on age
+                $daysOld = $invoiceDate->diffInDays(Carbon::now());
+                if ($daysOld > 90) {
+                    $status = fake()->randomElement(['paid', 'paid', 'paid', 'paid', 'paid', 'cancelled']);
+                } elseif ($daysOld > 45) {
+                    $status = fake()->randomElement(['paid', 'paid', 'paid', 'overdue']);
+                } elseif ($daysOld > 30) {
+                    $status = fake()->randomElement(['paid', 'sent', 'viewed', 'overdue']);
+                } else {
+                    $status = fake()->randomElement(['sent', 'draft', 'viewed', 'sent']);
+                }
+
+                $invoice = Invoice::factory()
+                    ->create([
+                        'company_id' => $client->company_id,
+                        'client_id' => $client->id,
+                        'date' => $invoiceDate,
+                        'due_date' => $invoiceDate->copy()->addDays(30),
+                        'status' => $status,
+                        'category_id' => Category::where('company_id', $client->company_id)
+                            ->whereJsonContains('type', 'income')
+                            ->inRandomOrder()
+                            ->first()?->id,
+                        'created_at' => $invoiceDate,
+                        'updated_at' => fake()->dateTimeBetween($invoiceDate, 'now'),
+                    ]);
+
+                // Create invoice items based on client size
+                $itemCount = match (true) {
+                    $employeeCount > 500 => rand(5, 15),  // Enterprise
+                    $employeeCount > 50 => rand(3, 8),    // Medium
+                    default => rand(1, 5),                // Small
+                };
+
+                $subtotal = 0;
+
+                for ($j = 0; $j < $itemCount; $j++) {
+                    $quantity = fake()->randomFloat(2, 1, 40);
+
+                    // Price varies by client size
+                    $price = match (true) {
+                        $employeeCount > 500 => fake()->randomFloat(2, 100, 1000),
+                        $employeeCount > 50 => fake()->randomFloat(2, 50, 500),
+                        default => fake()->randomFloat(2, 25, 250),
+                    };
+
+                    $total = $quantity * $price;
+                    $subtotal += $total;
+
+                    $tax = fake()->boolean(80) ? $total * 0.08 : 0;
+                    $itemDescription = $this->getItemDescription();
+                    InvoiceItem::create([
+                        'company_id' => $invoice->company_id,
+                        'invoice_id' => $invoice->id,
+                        'name' => $itemDescription,
+                        'description' => $itemDescription.' - '.fake()->sentence(),
+                        'quantity' => $quantity,
+                        'price' => $price,
+                        'subtotal' => $total,
+                        'tax' => $tax,
+                        'total' => $total + $tax,
+                        'category_id' => $invoice->category_id,
+                    ]);
+                }
+
+                // Update invoice amount to match items
+                $invoice->update(['amount' => $subtotal]);
+
+                $totalInvoices++;
+                $currentDate->addDays($intervalDays);
+            }
+
+            // Show progress every 10 clients
+            if ($clientIndex % 10 == 0) {
+                $this->command->info("  Processed {$clientIndex} clients...");
+            }
         }
 
-        // Create invoices with different statuses
-        $invoiceData = [
-            // Overdue invoices
-            [
-                'client' => $clients[0],
-                'invoice_number' => 'INV-2024-001',
-                'status' => 'sent',
-                'issue_date' => Carbon::now()->subDays(45),
-                'due_date' => Carbon::now()->subDays(15),
-                'items' => [
-                    ['description' => 'Monthly Managed Services', 'quantity' => 1, 'price' => 2500.00],
-                    ['description' => 'Emergency Support (3 hours)', 'quantity' => 3, 'price' => 150.00],
-                ],
-            ],
-            [
-                'client' => $clients[1],
-                'invoice_number' => 'INV-2024-002',
-                'status' => 'sent',
-                'issue_date' => Carbon::now()->subDays(35),
-                'due_date' => Carbon::now()->subDays(5),
-                'items' => [
-                    ['description' => 'Server Maintenance', 'quantity' => 1, 'price' => 1800.00],
-                    ['description' => 'Backup Solution Setup', 'quantity' => 1, 'price' => 750.00],
-                ],
-            ],
+        $this->command->info("Created {$totalInvoices} invoices with 2 years of history.");
+    }
 
-            // Current/recent invoices
-            [
-                'client' => $clients[2],
-                'invoice_number' => 'INV-2024-003',
-                'status' => 'paid',
-                'issue_date' => Carbon::now()->subDays(20),
-                'due_date' => Carbon::now()->addDays(10),
-                'paid_date' => Carbon::now()->subDays(5),
-                'items' => [
-                    ['description' => 'Network Security Audit', 'quantity' => 1, 'price' => 3500.00],
-                    ['description' => 'Firewall Configuration', 'quantity' => 1, 'price' => 850.00],
-                ],
-            ],
-            [
-                'client' => $clients[0],
-                'invoice_number' => 'INV-2024-004',
-                'status' => 'sent',
-                'issue_date' => Carbon::now()->subDays(10),
-                'due_date' => Carbon::now()->addDays(20),
-                'items' => [
-                    ['description' => 'Cloud Migration Services', 'quantity' => 40, 'price' => 125.00],
-                    ['description' => 'Training Session', 'quantity' => 2, 'price' => 500.00],
-                ],
-            ],
-
-            // Draft invoices
-            [
-                'client' => $clients[1],
-                'invoice_number' => 'INV-2024-005',
-                'status' => 'draft',
-                'issue_date' => Carbon::now(),
-                'due_date' => Carbon::now()->addDays(30),
-                'items' => [
-                    ['description' => 'Software License Renewal', 'quantity' => 25, 'price' => 45.00],
-                    ['description' => 'Implementation Support', 'quantity' => 8, 'price' => 175.00],
-                ],
-            ],
-            [
-                'client' => $clients[2],
-                'invoice_number' => 'INV-2024-006',
-                'status' => 'draft',
-                'issue_date' => Carbon::now(),
-                'due_date' => Carbon::now()->addDays(30),
-                'items' => [
-                    ['description' => 'Quarterly IT Review', 'quantity' => 1, 'price' => 950.00],
-                    ['description' => 'Hardware Procurement', 'quantity' => 1, 'price' => 4200.00],
-                ],
-            ],
-
-            // More paid invoices
-            [
-                'client' => $clients[0],
-                'invoice_number' => 'INV-2024-007',
-                'status' => 'paid',
-                'issue_date' => Carbon::now()->subDays(60),
-                'due_date' => Carbon::now()->subDays(30),
-                'paid_date' => Carbon::now()->subDays(35),
-                'items' => [
-                    ['description' => 'Annual Support Contract', 'quantity' => 1, 'price' => 12000.00],
-                ],
-            ],
-            [
-                'client' => $clients[1],
-                'invoice_number' => 'INV-2024-008',
-                'status' => 'paid',
-                'issue_date' => Carbon::now()->subDays(50),
-                'due_date' => Carbon::now()->subDays(20),
-                'paid_date' => Carbon::now()->subDays(25),
-                'items' => [
-                    ['description' => 'Email Migration Project', 'quantity' => 1, 'price' => 3750.00],
-                    ['description' => 'User Training', 'quantity' => 15, 'price' => 85.00],
-                ],
-            ],
+    /**
+     * Get random item description
+     */
+    private function getItemDescription(): string
+    {
+        $descriptions = [
+            'On-site support visit',
+            'Remote support hours',
+            'Emergency response',
+            'System maintenance',
+            'Security assessment',
+            'Network configuration',
+            'Server administration',
+            'Help desk support',
+            'Antivirus license',
+            'Backup software',
+            'Microsoft Office license',
+            'Cloud storage subscription',
+            'Email hosting',
+            'Domain registration',
+            'SSL certificate',
+            'Firewall configuration',
+            'Data recovery service',
+            'Hardware installation',
+            'Software deployment',
+            'Training session',
         ];
 
-        foreach ($invoiceData as $data) {
-            $subtotal = 0;
-            foreach ($data['items'] as $item) {
-                $subtotal += $item['quantity'] * $item['price'];
-            }
-
-            $tax = $subtotal * 0.08; // 8% tax
-            $total = $subtotal + $tax;
-
-            // Extract number from invoice number (e.g., INV-2024-001 -> 1)
-            preg_match('/(\d+)$/', $data['invoice_number'], $matches);
-            $invoiceNumber = isset($matches[1]) ? (int) $matches[1] : rand(1000, 9999);
-
-            // Get first category or create a default one
-            $category = \App\Domains\Financial\Models\Category::first();
-            if (! $category) {
-                $category = \App\Domains\Financial\Models\Category::create([
-                    'company_id' => $company->id,
-                    'name' => 'Services',
-                    'type' => ['income'],
-                ]);
-            }
-
-            $invoice = Invoice::create([
-                'company_id' => $company->id,
-                'client_id' => $data['client']->id,
-                'category_id' => $category->id,
-                'prefix' => 'INV',
-                'number' => $invoiceNumber,
-                'status' => $data['status'],
-                'date' => $data['issue_date'],
-                'due' => $data['due_date'],
-                'due_date' => $data['due_date'],
-                'amount' => $total,
-                'note' => 'Thank you for your business! Payment due within 30 days.',
-                'currency_code' => 'USD',
-            ]);
-
-            // Create invoice items
-            $order = 1;
-            foreach ($data['items'] as $item) {
-                $itemTotal = $item['quantity'] * $item['price'];
-                InvoiceItem::create([
-                    'company_id' => $company->id,
-                    'invoice_id' => $invoice->id,
-                    'name' => $item['description'],
-                    'description' => $item['description'],
-                    'quantity' => $item['quantity'],
-                    'price' => $item['price'],
-                    'subtotal' => $itemTotal,
-                    'total' => $itemTotal,
-                    'order' => $order++,
-                ]);
-            }
-        }
-
-        $this->command->info('Created '.count($invoiceData).' sample invoices with items.');
+        return fake()->randomElement($descriptions);
     }
 }

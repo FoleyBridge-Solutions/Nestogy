@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
+import fs from 'fs';
 
 export default defineConfig({
     plugins: [
@@ -36,8 +37,19 @@ export default defineConfig({
         },
     },
     server: {
+        https: {
+            key: fs.readFileSync('/opt/nestogy/server.key'),
+            cert: fs.readFileSync('/opt/nestogy/server.crt'),
+        },
+        host: '0.0.0.0',
+        port: 5173,
+        cors: {
+            origin: ['https://10.0.3.179:8443', 'https://localhost:8443'],
+            credentials: true,
+        },
         hmr: {
-            host: 'localhost',
+            host: '10.0.3.179',
+            protocol: 'wss',
         },
     },
 });

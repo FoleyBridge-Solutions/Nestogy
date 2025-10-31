@@ -1,0 +1,28 @@
+{
+  "setup-worktree-unix": [
+    "# Ensure env: prefer copying from root worktree if present",
+    "if [ -f \"$ROOT_WORKTREE_PATH/.env\" ]; then cp \"$ROOT_WORKTREE_PATH/.env\" .env; fi",
+    "[ -f .env ] || { if [ -f .env.example ]; then cp .env.example .env; else echo APP_ENV=local > .env; fi; }",
+
+    "# Composer deps",
+    "[ -f composer.json ] && composer install --no-ansi --no-interaction --no-progress --prefer-dist || true",
+
+    "# Node deps",
+    "[ -f package.json ] && (npm ci || npm install) || true",
+
+    "# Laravel app key",
+    "[ -f artisan ] && php artisan key:generate --force || true",
+
+    "# Quick Postgres readiness check (optional)",
+    "if command -v pg_isready >/dev/null 2>&1; then pg_isready -h \"${DB_HOST:-127.0.0.1}\" -p \"${DB_PORT:-5432}\" -d \"${DB_DATABASE:-postgres}\" -U \"${DB_USERNAME:-postgres}\" || true; fi",
+
+    "# Redis sanity ping (optional)",
+    "if command -v redis-cli >/dev/null 2>&1; then redis-cli -h \"${REDIS_HOST:-127.0.0.1}\" -p \"${REDIS_PORT:-6379}\" ping || true; fi",
+
+    "# DB migrations (safe to no-op if DB not reachable)",
+    "[ -f artisan ] && php artisan migrate --force || true",
+
+    "# Build assets via Vite (CI parity)",
+    "[ -f package.json ] && npm run build || true"
+  ]
+}

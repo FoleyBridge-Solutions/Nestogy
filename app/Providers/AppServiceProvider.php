@@ -34,6 +34,11 @@ class AppServiceProvider extends ServiceProvider
             return new NavigationService;
         });
 
+        // Override PWA service with fixed version (removes script tag for sw.js)
+        $this->app->singleton(\EragLaravelPwa\Services\PWAService::class, function ($app) {
+            return new \App\Services\PWAService;
+        });
+
         // Register Tax Profile Service with company context
         $this->app->bind(\App\Services\TaxEngine\TaxProfileService::class, function ($app) {
             $service = new \App\Services\TaxEngine\TaxProfileService;
@@ -104,6 +109,9 @@ class AppServiceProvider extends ServiceProvider
 
         // Configure parallel testing
         $this->configureParallelTesting();
+
+        // Register Blaze directive for Livewire Flux compatibility
+        $this->registerBlazeDirective();
     }
 
     /**
@@ -313,5 +321,17 @@ class AppServiceProvider extends ServiceProvider
         Blade::if('canAccess', function ($permission, $resource) {
             return auth()->check() && auth()->user()->canAccessResource($permission, $resource);
         });
+    }
+
+    /**
+     * Register the Blaze directive for Livewire Flux compatibility
+     * The @blaze directive is used by Flux UI components to mark sections
+     * for optimization by the Blaze compiler in Livewire 4
+     */
+    protected function registerBlazeDirective(): void
+    {
+        // The @blaze directive compiles to empty string - it's just a marker
+        // for the Blaze compiler to optimize the following content
+        Blade::directive('blaze', fn () => '');
     }
 }

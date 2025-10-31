@@ -2,8 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Domains\Financial\Models\Category;
+use App\Domains\Company\Models\Company;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 
 class CategorySeeder extends Seeder
 {
@@ -12,454 +13,398 @@ class CategorySeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('categories')->insert([
-            // Expense Categories
+        $this->command->info('Creating categories...');
+
+        // Get all companies
+        $companies = Company::all();
+
+        foreach ($companies as $company) {
+            $this->command->info("  Creating categories for {$company->name}...");
+            $this->createCategories($company->id);
+        }
+
+        $this->command->info('Categories created successfully.');
+    }
+
+    /**
+     * Create all categories with appropriate types
+     */
+    private function createCategories(int $companyId): void
+    {
+        // First, create parent categories
+        $parentCategories = [
+            // IT Products & Services - Used across multiple contexts
+            // Note: invoice type automatically includes income and quote types
             [
-                'id' => 1,
-                'company_id' => 1,
-                'name' => 'Office Supplies',
-                'type' => json_encode(['expense']),
-                'color' => '#3498db',
-                'icon' => 'fas fa-paperclip',
-                'parent_id' => null,
-                'created_at' => now(),
-                'updated_at' => now(),
-                'archived_at' => null,
+                'name' => 'Managed Services',
+                'types' => [Category::TYPE_PRODUCT, Category::TYPE_INVOICE, Category::TYPE_RECURRING],
+                'icon' => 'server',
             ],
             [
-                'id' => 2,
-                'company_id' => 1,
-                'name' => 'Software & Licenses',
-                'type' => json_encode(['expense']),
-                'color' => '#9b59b6',
-                'icon' => 'fas fa-laptop-code',
-                'parent_id' => null,
-                'created_at' => now(),
-                'updated_at' => now(),
-                'archived_at' => null,
+                'name' => 'Hardware',
+                'types' => [Category::TYPE_PRODUCT, Category::TYPE_EXPENSE, Category::TYPE_INVOICE],
+                'icon' => 'computer-desktop',
             ],
             [
-                'id' => 3,
-                'company_id' => 1,
-                'name' => 'Hardware & Equipment',
-                'type' => json_encode(['expense']),
-                'color' => '#e74c3c',
-                'icon' => 'fas fa-server',
-                'parent_id' => null,
-                'created_at' => now(),
-                'updated_at' => now(),
-                'archived_at' => null,
+                'name' => 'Software',
+                'types' => [Category::TYPE_PRODUCT, Category::TYPE_EXPENSE, Category::TYPE_INVOICE],
+                'icon' => 'code-bracket',
             ],
             [
-                'id' => 4,
-                'company_id' => 1,
-                'name' => 'Travel & Transportation',
-                'type' => json_encode(['expense']),
-                'color' => '#f39c12',
-                'icon' => 'fas fa-car',
-                'parent_id' => null,
-                'created_at' => now(),
-                'updated_at' => now(),
-                'archived_at' => null,
+                'name' => 'Software Licenses',
+                'types' => [Category::TYPE_PRODUCT, Category::TYPE_INVOICE, Category::TYPE_RECURRING],
+                'icon' => 'key',
             ],
             [
-                'id' => 5,
-                'company_id' => 1,
-                'name' => 'Professional Services',
-                'type' => json_encode(['expense']),
-                'color' => '#2ecc71',
-                'icon' => 'fas fa-handshake',
-                'parent_id' => null,
-                'created_at' => now(),
-                'updated_at' => now(),
-                'archived_at' => null,
+                'name' => 'Cloud Services',
+                'types' => [Category::TYPE_PRODUCT, Category::TYPE_EXPENSE, Category::TYPE_RECURRING],
+                'icon' => 'cloud',
+            ],
+            [
+                'name' => 'Consulting',
+                'types' => [Category::TYPE_INVOICE],
+                'icon' => 'academic-cap',
+            ],
+            [
+                'name' => 'Support Services',
+                'types' => [Category::TYPE_PRODUCT, Category::TYPE_INVOICE, Category::TYPE_RECURRING],
+                'icon' => 'lifebuoy',
+            ],
+            [
+                'name' => 'Maintenance',
+                'types' => [Category::TYPE_INVOICE, Category::TYPE_TICKET, Category::TYPE_RECURRING],
+                'icon' => 'cog',
+            ],
+            [
+                'name' => 'Training',
+                'types' => [Category::TYPE_INVOICE, Category::TYPE_EXPENSE],
+                'icon' => 'users',
+            ],
+            [
+                'name' => 'Project Work',
+                'types' => [Category::TYPE_INVOICE, Category::TYPE_TICKET],
+                'icon' => 'briefcase',
             ],
 
-            // Income Categories
+            // Networking & Infrastructure
             [
-                'id' => 6,
-                'company_id' => 1,
-                'name' => 'IT Services',
-                'type' => json_encode(['income']),
-                'color' => '#1abc9c',
-                'icon' => 'fas fa-tools',
-                'parent_id' => null,
-                'created_at' => now(),
-                'updated_at' => now(),
-                'archived_at' => null,
+                'name' => 'Networking Equipment',
+                'types' => [Category::TYPE_PRODUCT, Category::TYPE_ASSET],
+                'icon' => 'wifi',
             ],
             [
-                'id' => 7,
-                'company_id' => 1,
-                'name' => 'Consulting',
-                'type' => json_encode(['income']),
-                'color' => '#34495e',
-                'icon' => 'fas fa-user-tie',
-                'parent_id' => null,
-                'created_at' => now(),
-                'updated_at' => now(),
-                'archived_at' => null,
+                'name' => 'Servers',
+                'types' => [Category::TYPE_PRODUCT, Category::TYPE_ASSET],
+                'icon' => 'server',
             ],
             [
-                'id' => 8,
-                'company_id' => 1,
-                'name' => 'Software Development',
-                'type' => json_encode(['income']),
-                'color' => '#8e44ad',
-                'icon' => 'fas fa-code',
-                'parent_id' => null,
-                'created_at' => now(),
-                'updated_at' => now(),
-                'archived_at' => null,
+                'name' => 'Storage',
+                'types' => [Category::TYPE_PRODUCT, Category::TYPE_ASSET],
+                'icon' => 'circle-stack',
             ],
             [
-                'id' => 9,
-                'company_id' => 1,
-                'name' => 'Managed Services',
-                'type' => json_encode(['income']),
-                'color' => '#27ae60',
-                'icon' => 'fas fa-shield-alt',
-                'parent_id' => null,
-                'created_at' => now(),
-                'updated_at' => now(),
-                'archived_at' => null,
+                'name' => 'Security Equipment',
+                'types' => [Category::TYPE_PRODUCT, Category::TYPE_ASSET],
+                'icon' => 'shield-check',
+            ],
+
+            // Computer Assets
+            [
+                'name' => 'Mobile Devices',
+                'types' => [Category::TYPE_PRODUCT, Category::TYPE_ASSET],
+                'icon' => 'device-phone-mobile',
+            ],
+
+            // Expenses Only
+            [
+                'name' => 'Travel',
+                'types' => [Category::TYPE_EXPENSE],
+                'icon' => 'globe-alt',
+            ],
+            [
+                'name' => 'Office Supplies',
+                'types' => [Category::TYPE_EXPENSE],
+                'icon' => 'pencil-square',
+            ],
+            [
+                'name' => 'Utilities',
+                'types' => [Category::TYPE_EXPENSE],
+                'icon' => 'bolt',
+            ],
+            [
+                'name' => 'Rent',
+                'types' => [Category::TYPE_EXPENSE],
+                'icon' => 'building-office',
+            ],
+            [
+                'name' => 'Insurance',
+                'types' => [Category::TYPE_EXPENSE],
+                'icon' => 'shield-check',
+            ],
+            [
+                'name' => 'Marketing',
+                'types' => [Category::TYPE_EXPENSE],
+                'icon' => 'megaphone',
+            ],
+            [
+                'name' => 'Subscriptions',
+                'types' => [Category::TYPE_EXPENSE, Category::TYPE_RECURRING],
+                'icon' => 'arrow-path',
+            ],
+            [
+                'name' => 'Professional Fees',
+                'types' => [Category::TYPE_EXPENSE],
+                'icon' => 'briefcase',
+            ],
+            [
+                'name' => 'Telecommunications',
+                'types' => [Category::TYPE_EXPENSE, Category::TYPE_RECURRING],
+                'icon' => 'phone',
             ],
 
             // Ticket Categories
             [
-                'id' => 10,
-                'company_id' => 1,
-                'name' => 'Hardware Issue',
-                'type' => json_encode(['ticket']),
-                'color' => '#e67e22',
-                'icon' => 'fas fa-wrench',
-                'parent_id' => null,
-                'created_at' => now(),
-                'updated_at' => now(),
-                'archived_at' => null,
+                'name' => 'Support Request',
+                'types' => [Category::TYPE_TICKET],
+                'icon' => 'lifebuoy',
             ],
             [
-                'id' => 11,
-                'company_id' => 1,
-                'name' => 'Software Issue',
-                'type' => json_encode(['ticket']),
-                'color' => '#3498db',
-                'icon' => 'fas fa-bug',
-                'parent_id' => null,
-                'created_at' => now(),
-                'updated_at' => now(),
-                'archived_at' => null,
+                'name' => 'Incident',
+                'types' => [Category::TYPE_TICKET],
+                'icon' => 'exclamation-triangle',
             ],
             [
-                'id' => 12,
-                'company_id' => 1,
-                'name' => 'Network Issue',
-                'type' => json_encode(['ticket']),
-                'color' => '#e74c3c',
-                'icon' => 'fas fa-network-wired',
-                'parent_id' => null,
-                'created_at' => now(),
-                'updated_at' => now(),
-                'archived_at' => null,
+                'name' => 'Service Request',
+                'types' => [Category::TYPE_TICKET],
+                'icon' => 'clipboard-document-list',
             ],
             [
-                'id' => 13,
-                'company_id' => 1,
-                'name' => 'User Request',
-                'type' => json_encode(['ticket']),
-                'color' => '#2ecc71',
-                'icon' => 'fas fa-user-plus',
-                'parent_id' => null,
-                'created_at' => now(),
-                'updated_at' => now(),
-                'archived_at' => null,
+                'name' => 'Emergency',
+                'types' => [Category::TYPE_TICKET],
+                'icon' => 'fire',
             ],
             [
-                'id' => 14,
-                'company_id' => 1,
+                'name' => 'Change Request',
+                'types' => [Category::TYPE_TICKET],
+                'icon' => 'arrow-path',
+            ],
+            [
+                'name' => 'Problem',
+                'types' => [Category::TYPE_TICKET],
+                'icon' => 'puzzle-piece',
+            ],
+            [
                 'name' => 'Security Issue',
-                'type' => json_encode(['ticket']),
-                'color' => '#c0392b',
-                'icon' => 'fas fa-shield-alt',
-                'parent_id' => null,
-                'created_at' => now(),
-                'updated_at' => now(),
-                'archived_at' => null,
+                'types' => [Category::TYPE_TICKET],
+                'icon' => 'shield-exclamation',
+            ],
+            [
+                'name' => 'Network Issue',
+                'types' => [Category::TYPE_TICKET],
+                'icon' => 'wifi',
+            ],
+            [
+                'name' => 'Hardware Issue',
+                'types' => [Category::TYPE_TICKET],
+                'icon' => 'computer-desktop',
+            ],
+            [
+                'name' => 'Software Issue',
+                'types' => [Category::TYPE_TICKET],
+                'icon' => 'code-bracket',
             ],
 
-            // Quote Categories
+            // Quote-specific
             [
-                'id' => 15,
-                'company_id' => 1,
-                'name' => 'IT Services',
-                'type' => json_encode(['quote']),
-                'color' => '#20c997',
-                'icon' => 'fas fa-tools',
-                'parent_id' => null,
-                'created_at' => now(),
-                'updated_at' => now(),
-                'archived_at' => null,
+                'name' => 'New Project',
+                'types' => [Category::TYPE_QUOTE],
+                'icon' => 'sparkles',
             ],
             [
-                'id' => 16,
-                'company_id' => 1,
-                'name' => 'Telecom Services',
-                'type' => json_encode(['quote']),
-                'color' => '#17a2b8',
-                'icon' => 'fas fa-phone',
-                'parent_id' => null,
-                'created_at' => now(),
-                'updated_at' => now(),
-                'archived_at' => null,
-            ],
-            [
-                'id' => 17,
-                'company_id' => 1,
-                'name' => 'Equipment Sales',
-                'type' => json_encode(['quote']),
-                'color' => '#fd7e14',
-                'icon' => 'fas fa-server',
-                'parent_id' => null,
-                'created_at' => now(),
-                'updated_at' => now(),
-                'archived_at' => null,
-            ],
-            [
-                'id' => 18,
-                'company_id' => 1,
-                'name' => 'Professional Services',
-                'type' => json_encode(['quote']),
-                'color' => '#6f42c1',
-                'icon' => 'fas fa-user-tie',
-                'parent_id' => null,
-                'created_at' => now(),
-                'updated_at' => now(),
-                'archived_at' => null,
-            ],
-            [
-                'id' => 19,
-                'company_id' => 1,
-                'name' => 'Maintenance Contracts',
-                'type' => json_encode(['quote']),
-                'color' => '#28a745',
-                'icon' => 'fas fa-wrench',
-                'parent_id' => null,
-                'created_at' => now(),
-                'updated_at' => now(),
-                'archived_at' => null,
+                'name' => 'Service Upgrade',
+                'types' => [Category::TYPE_QUOTE],
+                'icon' => 'arrow-trending-up',
             ],
 
-            // Product Categories
+            // Assets Only
             [
-                'id' => 20,
-                'company_id' => 1,
-                'name' => 'Hardware',
-                'type' => json_encode(['product']),
-                'color' => '#6f42c1',
-                'icon' => 'fas fa-microchip',
-                'parent_id' => null,
-                'created_at' => now(),
-                'updated_at' => now(),
-                'archived_at' => null,
+                'name' => 'Firewall',
+                'types' => [Category::TYPE_ASSET],
+                'icon' => 'shield-check',
             ],
             [
-                'id' => 21,
-                'company_id' => 1,
-                'name' => 'Software',
-                'type' => json_encode(['product']),
-                'color' => '#007bff',
-                'icon' => 'fas fa-code',
-                'parent_id' => null,
-                'created_at' => now(),
-                'updated_at' => now(),
-                'archived_at' => null,
+                'name' => 'UPS',
+                'types' => [Category::TYPE_ASSET],
+                'icon' => 'bolt',
             ],
             [
-                'id' => 22,
-                'company_id' => 1,
-                'name' => 'Licenses',
-                'type' => json_encode(['product']),
-                'color' => '#ffc107',
-                'icon' => 'fas fa-key',
-                'parent_id' => null,
-                'created_at' => now(),
-                'updated_at' => now(),
-                'archived_at' => null,
+                'name' => 'Phone System',
+                'types' => [Category::TYPE_ASSET],
+                'icon' => 'phone',
             ],
             [
-                'id' => 23,
-                'company_id' => 1,
-                'name' => 'Accessories',
-                'type' => json_encode(['product']),
-                'color' => '#17a2b8',
-                'icon' => 'fas fa-plug',
-                'parent_id' => null,
-                'created_at' => now(),
-                'updated_at' => now(),
-                'archived_at' => null,
-            ],
-            [
-                'id' => 24,
-                'company_id' => 1,
-                'name' => 'Services',
-                'type' => json_encode(['product']),
-                'color' => '#28a745',
-                'icon' => 'fas fa-cogs',
-                'parent_id' => null,
-                'created_at' => now(),
-                'updated_at' => now(),
-                'archived_at' => null,
+                'name' => 'Security Camera',
+                'types' => [Category::TYPE_ASSET],
+                'icon' => 'camera',
             ],
 
-            // Invoice Categories
+            // Recurring Services
             [
-                'id' => 25,
-                'company_id' => 1,
-                'name' => 'Professional Services',
-                'type' => json_encode(['invoice']),
-                'color' => '#fd7e14',
-                'icon' => 'fas fa-user-tie',
-                'parent_id' => null,
-                'created_at' => now(),
-                'updated_at' => now(),
-                'archived_at' => null,
-            ],
-            [
-                'id' => 26,
-                'company_id' => 1,
-                'name' => 'Equipment',
-                'type' => json_encode(['invoice']),
-                'color' => '#dc3545',
-                'icon' => 'fas fa-server',
-                'parent_id' => null,
-                'created_at' => now(),
-                'updated_at' => now(),
-                'archived_at' => null,
-            ],
-            [
-                'id' => 27,
-                'company_id' => 1,
-                'name' => 'Recurring Services',
-                'type' => json_encode(['invoice']),
-                'color' => '#28a745',
-                'icon' => 'fas fa-redo',
-                'parent_id' => null,
-                'created_at' => now(),
-                'updated_at' => now(),
-                'archived_at' => null,
-            ],
-            [
-                'id' => 28,
-                'company_id' => 1,
-                'name' => 'One-time Services',
-                'type' => json_encode(['invoice']),
-                'color' => '#6c757d',
-                'icon' => 'fas fa-clock',
-                'parent_id' => null,
-                'created_at' => now(),
-                'updated_at' => now(),
-                'archived_at' => null,
-            ],
-
-            // Recurring Categories
-            [
-                'id' => 29,
-                'company_id' => 1,
                 'name' => 'Monthly Services',
-                'type' => json_encode(['recurring']),
-                'color' => '#6c757d',
-                'icon' => 'fas fa-calendar',
-                'parent_id' => null,
-                'created_at' => now(),
-                'updated_at' => now(),
-                'archived_at' => null,
+                'types' => [Category::TYPE_RECURRING],
+                'icon' => 'calendar',
             ],
             [
-                'id' => 30,
-                'company_id' => 1,
-                'name' => 'Quarterly Services',
-                'type' => json_encode(['recurring']),
-                'color' => '#17a2b8',
-                'icon' => 'fas fa-calendar-alt',
-                'parent_id' => null,
-                'created_at' => now(),
-                'updated_at' => now(),
-                'archived_at' => null,
+                'name' => 'Quarterly Maintenance',
+                'types' => [Category::TYPE_RECURRING],
+                'icon' => 'cog',
             ],
             [
-                'id' => 31,
-                'company_id' => 1,
-                'name' => 'Annual Contracts',
-                'type' => json_encode(['recurring']),
-                'color' => '#ffc107',
-                'icon' => 'fas fa-calendar-check',
-                'parent_id' => null,
-                'created_at' => now(),
-                'updated_at' => now(),
-                'archived_at' => null,
+                'name' => 'Weekly Backup',
+                'types' => [Category::TYPE_RECURRING],
+                'icon' => 'circle-stack',
+            ],
+        ];
+
+        // Create all parent categories first
+        $createdParents = [];
+        foreach ($parentCategories as $categoryData) {
+            $types = $categoryData['types'];
+            unset($categoryData['types']);
+
+            $category = Category::updateOrCreate(
+                [
+                    'company_id' => $companyId,
+                    'name' => $categoryData['name'],
+                ],
+                array_merge($categoryData, [
+                    'company_id' => $companyId,
+                    'type' => $types,
+                ])
+            );
+
+            $createdParents[$categoryData['name']] = $category->id;
+        }
+
+        // Now create child categories with parent references
+        $childCategories = [
+            // Hardware subcategories
+            [
+                'name' => 'Laptops',
+                'parent' => 'Hardware',
+                'types' => [Category::TYPE_PRODUCT, Category::TYPE_ASSET],
+                'icon' => 'device-phone-mobile',
+            ],
+            [
+                'name' => 'Desktop Computers',
+                'parent' => 'Hardware',
+                'types' => [Category::TYPE_PRODUCT, Category::TYPE_ASSET],
+                'icon' => 'computer-desktop',
+            ],
+            [
+                'name' => 'Peripherals',
+                'parent' => 'Hardware',
+                'types' => [Category::TYPE_PRODUCT, Category::TYPE_ASSET],
+                'icon' => 'printer',
             ],
 
-            // Asset Categories
+            // Server subcategories
             [
-                'id' => 32,
-                'company_id' => 1,
-                'name' => 'Servers',
-                'type' => json_encode(['asset']),
-                'color' => '#17a2b8',
-                'icon' => 'fas fa-server',
-                'parent_id' => null,
-                'created_at' => now(),
-                'updated_at' => now(),
-                'archived_at' => null,
+                'name' => 'Physical Servers',
+                'parent' => 'Servers',
+                'types' => [Category::TYPE_PRODUCT, Category::TYPE_ASSET],
+                'icon' => 'server',
             ],
             [
-                'id' => 33,
-                'company_id' => 1,
-                'name' => 'Workstations',
-                'type' => json_encode(['asset']),
-                'color' => '#007bff',
-                'icon' => 'fas fa-desktop',
-                'parent_id' => null,
-                'created_at' => now(),
-                'updated_at' => now(),
-                'archived_at' => null,
+                'name' => 'Virtual Machines',
+                'parent' => 'Servers',
+                'types' => [Category::TYPE_ASSET],
+                'icon' => 'cloud',
+            ],
+
+            // Networking subcategories
+            [
+                'name' => 'Switches',
+                'parent' => 'Networking Equipment',
+                'types' => [Category::TYPE_PRODUCT, Category::TYPE_ASSET],
+                'icon' => 'server',
             ],
             [
-                'id' => 34,
-                'company_id' => 1,
-                'name' => 'Network Equipment',
-                'type' => json_encode(['asset']),
-                'color' => '#28a745',
-                'icon' => 'fas fa-network-wired',
-                'parent_id' => null,
-                'created_at' => now(),
-                'updated_at' => now(),
-                'archived_at' => null,
+                'name' => 'Routers',
+                'parent' => 'Networking Equipment',
+                'types' => [Category::TYPE_PRODUCT, Category::TYPE_ASSET],
+                'icon' => 'wifi',
             ],
             [
-                'id' => 35,
-                'company_id' => 1,
-                'name' => 'Mobile Devices',
-                'type' => json_encode(['asset']),
-                'color' => '#fd7e14',
-                'icon' => 'fas fa-mobile-alt',
-                'parent_id' => null,
-                'created_at' => now(),
-                'updated_at' => now(),
-                'archived_at' => null,
+                'name' => 'Firewalls',
+                'parent' => 'Networking Equipment',
+                'types' => [Category::TYPE_PRODUCT, Category::TYPE_ASSET],
+                'icon' => 'shield-check',
+            ],
+
+            // Software subcategories
+            [
+                'name' => 'Operating Systems',
+                'parent' => 'Software',
+                'types' => [Category::TYPE_PRODUCT, Category::TYPE_EXPENSE],
+                'icon' => 'code-bracket',
             ],
             [
-                'id' => 36,
-                'company_id' => 1,
-                'name' => 'Software Assets',
-                'type' => json_encode(['asset']),
-                'color' => '#6f42c1',
-                'icon' => 'fas fa-code',
-                'parent_id' => null,
-                'created_at' => now(),
-                'updated_at' => now(),
-                'archived_at' => null,
+                'name' => 'Business Applications',
+                'parent' => 'Software',
+                'types' => [Category::TYPE_PRODUCT, Category::TYPE_EXPENSE],
+                'icon' => 'briefcase',
             ],
-        ]);
+            [
+                'name' => 'Security Software',
+                'parent' => 'Software',
+                'types' => [Category::TYPE_PRODUCT, Category::TYPE_EXPENSE],
+                'icon' => 'shield-check',
+            ],
+
+            // Support Services subcategories
+            [
+                'name' => 'Help Desk Support',
+                'parent' => 'Support Services',
+                'types' => [Category::TYPE_PRODUCT, Category::TYPE_INVOICE],
+                'icon' => 'lifebuoy',
+            ],
+            [
+                'name' => 'Remote Support',
+                'parent' => 'Support Services',
+                'types' => [Category::TYPE_PRODUCT, Category::TYPE_INVOICE],
+                'icon' => 'computer-desktop',
+            ],
+            [
+                'name' => 'On-Site Support',
+                'parent' => 'Support Services',
+                'types' => [Category::TYPE_PRODUCT, Category::TYPE_INVOICE],
+                'icon' => 'map-pin',
+            ],
+        ];
+
+        foreach ($childCategories as $categoryData) {
+            $parentName = $categoryData['parent'];
+            unset($categoryData['parent']);
+
+            $types = $categoryData['types'];
+            unset($categoryData['types']);
+
+            if (isset($createdParents[$parentName])) {
+                Category::updateOrCreate(
+                    [
+                        'company_id' => $companyId,
+                        'name' => $categoryData['name'],
+                    ],
+                    array_merge($categoryData, [
+                        'company_id' => $companyId,
+                        'parent_id' => $createdParents[$parentName],
+                        'type' => $types,
+                    ])
+                );
+            }
+        }
+
+        $this->command->info('    ✓ Categories created with appropriate types and hierarchy');
     }
 }

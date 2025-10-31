@@ -32,7 +32,7 @@ class TicketFactory extends Factory
             'created_by' => User::factory(),
             'assigned_to' => null,
             'prefix' => 'TKT',
-            'number' => $this->faker->unique()->numberBetween(1000, 99999),
+            'number' => $this->faker->numberBetween(1000, 9999999),
             'subject' => $this->faker->sentence(6),
             'details' => $this->faker->paragraphs(3, true),
             'priority' => $this->faker->randomElement(['low', 'medium', 'high', 'urgent']),

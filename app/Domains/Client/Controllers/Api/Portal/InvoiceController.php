@@ -126,6 +126,13 @@ class InvoiceController extends PortalApiController
                 return $this->errorResponse(self::INVOICE_NOT_FOUND, 404);
             }
 
+            // Log activity to database
+            activity()
+                ->performedOn($invoice)
+                ->causedBy($client)
+                ->log('viewed');
+
+
             $invoiceData = [
                 'invoice' => [
                     'id' => $invoice->id,
