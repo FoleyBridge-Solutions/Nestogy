@@ -77,6 +77,8 @@ $pageSubtitle = $metadata['description'];
                     @include('settings.unified.forms.security-access', ['settings' => $settings])
                 @elseif($category === 'audit' && $domain === 'security')
                     @include('settings.unified.forms.security-audit', ['settings' => $settings])
+                @elseif($category === 'rmm' && $domain === 'integrations')
+                    @include('settings.unified.forms.integrations-rmm', ['settings' => $settings])
                 @else
                     <!-- Generic form for other categories -->
                     <div class="space-y-6">

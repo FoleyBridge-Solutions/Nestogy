@@ -5,6 +5,7 @@ namespace App\Domains\Core\Controllers\Settings;
 use App\Domains\Core\Services\Settings\CommunicationSettingsService;
 use App\Domains\Core\Services\Settings\CompanySettingsService;
 use App\Domains\Core\Services\Settings\FinancialSettingsService;
+use App\Domains\Core\Services\Settings\IntegrationsSettingsService;
 use App\Domains\Core\Services\Settings\SecuritySettingsService;
 use App\Http\Controllers\Controller;
 use App\Domains\Core\Models\SettingsConfiguration;
@@ -26,6 +27,7 @@ class UnifiedSettingsController extends Controller
             SettingsConfiguration::DOMAIN_COMMUNICATION => app(CommunicationSettingsService::class),
             SettingsConfiguration::DOMAIN_FINANCIAL => app(FinancialSettingsService::class),
             SettingsConfiguration::DOMAIN_SECURITY => app(SecuritySettingsService::class),
+            SettingsConfiguration::DOMAIN_INTEGRATIONS => app(IntegrationsSettingsService::class),
         ];
     }
 

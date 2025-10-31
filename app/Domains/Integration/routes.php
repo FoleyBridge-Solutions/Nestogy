@@ -1,9 +1,21 @@
 <?php
 
-// RMM Integration API (for settings page AJAX calls)
+// RMM Integration Routes
 
 use Illuminate\Support\Facades\Route;
 
+// Settings Web Routes for RMM Integrations Management
+Route::middleware(['web', 'auth', 'verified', 'company'])->prefix('settings/integrations/rmm/manage')->name('settings.integrations.rmm.')->group(function () {
+    Route::get('/', [App\Domains\Integration\Controllers\RmmIntegrationsController::class, 'index'])->name('index');
+    Route::get('/create', [App\Domains\Integration\Controllers\RmmIntegrationsController::class, 'create'])->name('create');
+    Route::post('/', [App\Domains\Integration\Controllers\RmmIntegrationsController::class, 'store'])->name('store');
+    Route::get('/{integration}', [App\Domains\Integration\Controllers\RmmIntegrationsController::class, 'show'])->name('show');
+    Route::get('/{integration}/edit', [App\Domains\Integration\Controllers\RmmIntegrationsController::class, 'edit'])->name('edit');
+    Route::put('/{integration}', [App\Domains\Integration\Controllers\RmmIntegrationsController::class, 'update'])->name('update');
+    Route::delete('/{integration}', [App\Domains\Integration\Controllers\RmmIntegrationsController::class, 'destroy'])->name('destroy');
+});
+
+// RMM Integration API (for settings page AJAX calls)
 Route::middleware(['auth', 'verified', 'company'])->prefix('api/rmm')->name('api.rmm.')->group(function () {
     // RMM Integration CRUD
     Route::get('integrations', [App\Domains\Integration\Controllers\RmmIntegrationsController::class, 'index'])->name('integrations.index');

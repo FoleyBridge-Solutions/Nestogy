@@ -166,7 +166,7 @@ class RmmIntegrationsController extends Controller
                 ], 201);
             }
 
-            return redirect()->route('admin.integrations.rmm.show', $integration)
+            return redirect()->route('settings.integrations.rmm.show', $integration)
                 ->with('success', 'RMM integration created successfully.');
 
         } catch (\Exception $e) {
@@ -236,7 +236,12 @@ class RmmIntegrationsController extends Controller
     {
         $this->authorize('update', $integration);
 
-        $validator = Validator::make($request->all(), RmmIntegration::getUpdateValidationRules());
+        $rules = RmmIntegration::getUpdateValidationRules();
+        // Remove company_id and rmm_type from validation since they can't be changed
+        unset($rules['company_id']);
+        unset($rules['rmm_type']);
+        
+        $validator = Validator::make($request->all(), $rules);
 
         if ($validator->fails()) {
             return redirect()->back()
@@ -260,6 +265,13 @@ class RmmIntegrationsController extends Controller
                 $updateData['api_key'] = $request->api_key;
             }
 
+            Log::info('RMM integration update data', [
+                'integration_id' => $integration->id,
+                'has_api_key' => $request->filled('api_key'),
+                'api_key_length' => $request->filled('api_key') ? strlen($request->api_key) : 0,
+                'update_data_keys' => array_keys($updateData),
+            ]);
+
             $integration->update($updateData);
 
             Log::info('RMM integration updated', [
@@ -276,7 +288,7 @@ class RmmIntegrationsController extends Controller
                 ]);
             }
 
-            return redirect()->route('admin.integrations.rmm.show', $integration)
+            return redirect()->route('settings.integrations.rmm.show', $integration)
                 ->with('success', 'Integration updated successfully.');
 
         } catch (\Exception $e) {
@@ -323,7 +335,7 @@ class RmmIntegrationsController extends Controller
                 ]);
             }
 
-            return redirect()->route('admin.integrations.rmm.index')
+            return redirect()->route('settings.integrations.rmm.index')
                 ->with('success', "Integration '{$integrationName}' deleted successfully.");
 
         } catch (\Exception $e) {
