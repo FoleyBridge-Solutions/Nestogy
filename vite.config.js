@@ -2,6 +2,11 @@ import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
 import fs from 'fs';
 
+// Check if SSL certificate files exist
+const sslKeyPath = '/opt/nestogy/server.key';
+const sslCertPath = '/opt/nestogy/server.crt';
+const hasSslCerts = fs.existsSync(sslKeyPath) && fs.existsSync(sslCertPath);
+
 export default defineConfig({
     plugins: [
         laravel({
@@ -36,10 +41,10 @@ export default defineConfig({
             },
         },
     },
-    server: {
+    server: hasSslCerts ? {
         https: {
-            key: fs.readFileSync('/opt/nestogy/server.key'),
-            cert: fs.readFileSync('/opt/nestogy/server.crt'),
+            key: fs.readFileSync(sslKeyPath),
+            cert: fs.readFileSync(sslCertPath),
         },
         host: '0.0.0.0',
         port: 5173,
@@ -51,5 +56,8 @@ export default defineConfig({
             host: '10.0.3.179',
             protocol: 'wss',
         },
+    } : {
+        host: '0.0.0.0',
+        port: 5173,
     },
 });
