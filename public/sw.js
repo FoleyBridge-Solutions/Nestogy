@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE_NAME = "nestogy-cache-v1";
+const CACHE_NAME = "nestogy-cache-v4";
 const OFFLINE_URL = '/offline.html';
 
 const filesToCache = [
@@ -46,16 +46,54 @@ self.addEventListener('activate', (event) => {
 // FETCH EVENT (Offline Support)
 // ===================================
 self.addEventListener("fetch", (event) => {
+    const url = new URL(event.request.url);
+    
+    // Skip Vite dev server requests (port 5173)
+    if (url.port === '5173') {
+        return; // Let the browser handle Vite requests directly
+    }
+    
+    // Skip Vite-specific paths
+    if (url.pathname.includes('/@vite/') || 
+        url.pathname.includes('/@fs/') ||
+        url.pathname.includes('/__vite_ping') ||
+        url.pathname.includes('/node_modules/')) {
+        return;
+    }
+    
+    // Skip cross-origin requests (different domain/port than app)
+    if (url.origin !== self.location.origin) {
+        return;
+    }
+    
+    // Skip Livewire requests - NEVER cache these!
+    if (url.pathname.startsWith('/livewire/')) {
+        return; // Let Livewire handle its own requests
+    }
+    
+    // Skip API requests and dynamic content
+    if (url.pathname.startsWith('/api/') || 
+        event.request.method !== 'GET' ||
+        event.request.headers.has('X-Livewire')) {
+        return; // Don't cache dynamic content
+    }
+
     if (event.request.mode === 'navigate') {
         event.respondWith(
             fetch(event.request)
                 .catch(() => caches.match(OFFLINE_URL))
         );
     } else {
-        event.respondWith(
-            caches.match(event.request)
-                .then((response) => response || fetch(event.request))
-        );
+        // Only cache static assets (CSS, JS, images, fonts)
+        const isStaticAsset = url.pathname.match(/\.(css|js|jpg|jpeg|png|gif|svg|woff|woff2|ttf|eot|ico)$/);
+        
+        if (isStaticAsset) {
+            event.respondWith(
+                caches.match(event.request)
+                    .then((response) => response || fetch(event.request))
+            );
+        }
+        // For everything else, always fetch fresh
     }
 });
 
