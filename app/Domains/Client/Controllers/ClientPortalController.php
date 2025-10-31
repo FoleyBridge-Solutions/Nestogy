@@ -897,6 +897,12 @@ class ClientPortalController extends Controller
 
         $invoice->load(['items', 'payments']);
 
+        // Log activity to database
+        activity()
+            ->performedOn($invoice)
+            ->causedBy($contact)
+            ->log('viewed');
+
         if ($request->wantsJson()) {
             $invoiceData = $invoice->toArray();
             $invoiceData['can_be_paid'] = $invoice->canBePaid();

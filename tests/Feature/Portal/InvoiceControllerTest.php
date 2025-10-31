@@ -359,9 +359,15 @@ class InvoiceControllerTest extends TestCase
             'client_id' => $this->client->id,
         ]);
 
-        $this->actingAsPortalClient($this->client)->getJson(route('client.invoices.show', $invoice->id));
+        $response = $this->actingAsPortalClient($this->client)->getJson(route('client.invoices.show', $invoice->id));
 
-        // Activity should be logged (test implementation depends on logging setup)
+        $response->assertStatus(200);
+        
+        // Verify activity was logged
+        $this->assertDatabaseHas('activity_log', [
+            'subject_type' => Invoice::class,
+            'subject_id' => $invoice->id,
+        ]);
     }
 
     // ==================== Company Isolation Tests ====================

@@ -96,6 +96,7 @@ class TicketSearchControllerTest extends TestCase
 
         $otherUser = User::factory()->create([
             'company_id' => $this->user->company_id,
+            'status' => true,
         ]);
 
         Cache::put("ticket_viewer_{$ticket->id}_{$this->user->id}", [
@@ -131,6 +132,7 @@ class TicketSearchControllerTest extends TestCase
 
         $anotherUser = User::factory()->create([
             'company_id' => $this->user->company_id,
+            'status' => true,
         ]);
 
         Cache::put("ticket_viewer_{$ticket->id}_{$anotherUser->id}", [
