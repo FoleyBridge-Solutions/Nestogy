@@ -110,6 +110,9 @@
     <!-- Additional Scripts -->
     @stack('scripts')
 
+    <!-- Flux Scripts -->
+    @fluxScripts
+
     @RegisterServiceWorkerScript
 </body>
 </html>
