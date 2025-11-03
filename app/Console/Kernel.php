@@ -208,15 +208,17 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->appendOutputTo(storage_path('logs/satisfaction-surveys.log'));
 
-        // RMM Agent Sync - Sync agents from all active RMM integrations
+        // RMM Agent Sync - Sync agents from all active RMM integrations every 5 minutes
+        // This enables real-time asset status updates via Laravel Reverb broadcasting
         $schedule->call(function () {
             $integrations = \App\Domains\Integration\Models\RmmIntegration::where('is_active', true)->get();
             foreach ($integrations as $integration) {
                 \App\Jobs\SyncRmmAgents::dispatch($integration);
             }
         })
-            ->everyThirtyMinutes()
+            ->everyFiveMinutes()
             ->withoutOverlapping()
+            ->onOneServer() // Prevent running on multiple replicas
             ->runInBackground()
             ->name('sync-rmm-agents')
             ->appendOutputTo(storage_path('logs/rmm-sync.log'));
@@ -334,18 +336,7 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping()
             ->appendOutputTo(storage_path('logs/texas-address-data.log'));
 
-        // RMM Agent Sync - Sync agents from all active RMM integrations every 30 minutes
-        $schedule->call(function () {
-            $integrations = \App\Domains\Integration\Models\RmmIntegration::where('is_active', true)->get();
-            foreach ($integrations as $integration) {
-                \App\Jobs\SyncRmmAgents::dispatch($integration);
-            }
-        })
-            ->everyThirtyMinutes()
-            ->withoutOverlapping()
-            ->runInBackground()
-            ->name('sync-rmm-agents')
-            ->appendOutputTo(storage_path('logs/rmm-sync.log'));
+
     }
 
     /**
