@@ -66,18 +66,29 @@ class AssetRmmStatus extends Component
 
     public function handleStatusUpdate($event)
     {
+        \Log::info('🎉 Livewire received Echo event', [
+            'event' => $event,
+            'asset_id' => $this->asset->id,
+        ]);
+        
         // Refresh the asset from database
         $this->asset->refresh();
         
         // Update the component state with the broadcasted data
-        $this->isOnline = $event['is_online'];
-        $this->lastSeen = $event['last_seen'];
-        $this->rmmPublicIp = $event['rmm_public_ip'];
-        $this->rmmPlatform = $event['rmm_platform'];
-        $this->rmmVersion = $event['rmm_version'];
+        $this->isOnline = $event['is_online'] ?? false;
+        $this->lastSeen = $event['last_seen'] ?? null;
+        $this->rmmPublicIp = $event['rmm_public_ip'] ?? null;
+        $this->rmmPlatform = $event['rmm_platform'] ?? null;
+        $this->rmmVersion = $event['rmm_version'] ?? null;
         
         // Show notification
         $this->showUpdateNotification = true;
+        
+        \Log::info('✓ Component state updated', [
+            'is_online' => $this->isOnline,
+            'last_seen' => $this->lastSeen,
+            'show_notification' => $this->showUpdateNotification,
+        ]);
         
         // Hide notification after 3 seconds
         $this->dispatch('status-updated');

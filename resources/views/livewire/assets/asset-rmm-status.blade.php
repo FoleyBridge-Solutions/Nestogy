@@ -1,4 +1,12 @@
 <div>
+    @script
+    <script>
+        // Simple debug logging for Livewire Echo integration
+        console.log('📡 AssetRmmStatus component loaded for asset {{ $asset->id }}');
+        console.log('Livewire will automatically subscribe to: echo:assets.{{ $asset->id }},AssetStatusUpdated');
+    </script>
+    @endscript
+
     {{-- Real-time Update Notification --}}
     @if($showUpdateNotification)
     <div 
