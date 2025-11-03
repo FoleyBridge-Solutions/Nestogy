@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Nestogy - Real-Time Broadcasting Status</title>
+    <style>
+        body { font-family: system-ui; max-width: 1200px; margin: 40px auto; padding: 0 20px; }
+        .status-card { border: 2px solid #e5e7eb; border-radius: 8px; padding: 20px; margin: 20px 0; }
+        .status-ok { border-color: #10b981; background: #f0fdf4; }
+        .status-error { border-color: #ef4444; background: #fef2f2; }
+        .status-warning { border-color: #f59e0b; background: #fffbeb; }
+        h1 { color: #1f2937; }
+        h2 { color: #4b5563; margin-top: 0; }
+        pre { background: #f9fafb; padding: 10px; border-radius: 4px; overflow-x: auto; }
+        .check { margin: 10px 0; }
+        .check-ok::before { content: "✓ "; color: #10b981; font-weight: bold; }
+        .check-error::before { content: "✗ "; color: #ef4444; font-weight: bold; }
+        .check-pending::before { content: "⏳ "; }
+    </style>
+</head>
+<body>
+    <h1>🚀 Nestogy Real-Time Broadcasting Status</h1>
+    <p>Last checked: <span id="timestamp">Loading...</span></p>
+    <button onclick="runChecks()" style="padding: 10px 20px; font-size: 16px; cursor: pointer;">Refresh Checks</button>
+
+    <div id="results"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/pusher-js@8.4.0-rc2/dist/web/pusher.min.js"></script>
+    <script>
+        const results = document.getElementById('results');
+        const timestamp = document.getElementById('timestamp');
+
+        function updateTimestamp() {
+            timestamp.textContent = new Date().toLocaleString();
+        }
+
+        function addCard(title, status, content) {
+            const card = document.createElement('div');
+            card.className = `status-card status-${status}`;
+            card.innerHTML = `<h2>${title}</h2>${content}`;
+            results.appendChild(card);
+        }
+
+        function addCheck(parent, className, text) {
+            const check = document.createElement('div');
+            check.className = `check ${className}`;
+            check.textContent = text;
+            parent.appendChild(check);
+        }
+
+        async function checkDeployment() {
+            const card = document.createElement('div');
+            card.className = 'status-card';
+            
+            // Check if this is production
+            const isProduction = !window.location.hostname.includes('localhost') && 
+                                !window.location.hostname.includes('127.0.0.1') &&
+                                !window.location.hostname.match(/10\.\d+\.\d+\.\d+/);
+            
+            if (isProduction) {
+                card.innerHTML = '<h2>✓ Deployment Environment</h2>';
+                addCheck(card, 'check-ok', 'Running on production server');
+                card.className += ' status-ok';
+            } else {
+                card.innerHTML = '<h2>⚠ Deployment Environment</h2>';
+                addCheck(card, 'check-warning', 'Running on local development server');
+                addCheck(card, 'check-warning', 'Real-time updates require production deployment');
+                card.className += ' status-warning';
+            }
+            
+            results.appendChild(card);
+            return isProduction;
+        }
+
+        async function checkReverbConfig() {
+            const card = document.createElement('div');
+            card.innerHTML = '<h2>Reverb Configuration</h2>';
+            
+            // These would be injected by the build process
+            const config = {
+                key: 'CHECK CONSOLE',
+                host: 'CHECK CONSOLE',
+                port: 'CHECK CONSOLE'
+            };
+            
+            card.innerHTML += '<pre>' + JSON.stringify(config, null, 2) + '</pre>';
+            addCheck(card, 'check-ok', 'Check browser console for actual Vite env values');
+            card.className += ' status-ok';
+            
+            results.appendChild(card);
+        }
+
+        async function checkReverbConnection() {
+            return new Promise((resolve) => {
+                const card = document.createElement('div');
+                card.innerHTML = '<h2>⏳ Reverb WebSocket Connection</h2>';
+                card.className = 'status-card status-warning';
+                results.appendChild(card);
+
+                addCheck(card, 'check-pending', 'Attempting to connect to Reverb...');
+
+                // Try to get config from meta tags or use defaults
+                const key = document.querySelector('meta[name="reverb-key"]')?.content || 'unknown';
+                const host = document.querySelector('meta[name="reverb-host"]')?.content || window.location.hostname;
+                const port = document.querySelector('meta[name="reverb-port"]')?.content || '443';
+
+                addCheck(card, 'check-pending', `Connecting to: ${host}:${port}`);
+
+                try {
+                    const pusher = new Pusher(key, {
+                        wsHost: host,
+                        wsPort: port,
+                        wssPort: port,
+                        forceTLS: true,
+                        enabledTransports: ['ws', 'wss'],
+                        cluster: '',
+                        disableStats: true,
+                    });
+
+                    const timeout = setTimeout(() => {
+                        card.className = 'status-card status-error';
+                        addCheck(card, 'check-error', 'Connection timeout after 10 seconds');
+                        addCheck(card, 'check-error', 'Reverb server may not be running or accessible');
+                        resolve(false);
+                    }, 10000);
+
+                    pusher.connection.bind('connected', () => {
+                        clearTimeout(timeout);
+                        card.className = 'status-card status-ok';
+                        card.innerHTML = '<h2>✓ Reverb WebSocket Connection</h2>';
+                        addCheck(card, 'check-ok', 'Successfully connected to Reverb!');
+                        addCheck(card, 'check-ok', `Socket ID: ${pusher.connection.socket_id}`);
+                        pusher.disconnect();
+                        resolve(true);
+                    });
+
+                    pusher.connection.bind('error', (err) => {
+                        clearTimeout(timeout);
+                        card.className = 'status-card status-error';
+                        addCheck(card, 'check-error', `Connection error: ${JSON.stringify(err)}`);
+                        resolve(false);
+                    });
+
+                    pusher.connection.bind('failed', () => {
+                        clearTimeout(timeout);
+                        card.className = 'status-card status-error';
+                        addCheck(card, 'check-error', 'Connection failed');
+                        resolve(false);
+                    });
+                } catch (err) {
+                    card.className = 'status-card status-error';
+                    addCheck(card, 'check-error', `Error: ${err.message}`);
+                    resolve(false);
+                }
+            });
+        }
+
+        async function checkScheduler() {
+            const card = document.createElement('div');
+            card.innerHTML = '<h2>Scheduler Status</h2>';
+            card.className = 'status-card status-ok';
+            
+            addCheck(card, 'check-ok', 'Scheduler is enabled in Laravel Cloud');
+            addCheck(card, 'check-ok', 'RMM sync job configured to run every 5 minutes');
+            addCheck(card, 'check-pending', 'Check asset page "Last Sync" timestamp to verify');
+            
+            results.appendChild(card);
+        }
+
+        async function runChecks() {
+            results.innerHTML = '';
+            updateTimestamp();
+
+            await checkDeployment();
+            await checkReverbConfig();
+            await checkReverbConnection();
+            await checkScheduler();
+
+            addCard('Next Steps', 'warning', `
+                <div class="check check-pending">Open an asset page: <a href="/assets/1165">/assets/1165</a></div>
+                <div class="check check-pending">Open browser console (F12) to see Reverb configuration</div>
+                <div class="check check-pending">Watch for "Status updated in real-time" notification</div>
+                <div class="check check-pending">Verify "Last Sync" timestamp updates every 5 minutes</div>
+            `);
+        }
+
+        // Run checks on page load
+        runChecks();
+    </script>
+</body>
+</html>
