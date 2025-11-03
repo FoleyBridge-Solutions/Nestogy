@@ -24,11 +24,13 @@ class AssetRmmStatus extends Component
 
     /**
      * Define event listeners for this component.
+     * Livewire automatically handles Echo events with the echo: prefix
      */
-    #[On('asset-status-updated')]
-    public function onAssetStatusUpdated($event)
+    public function getListeners()
     {
-        $this->handleStatusUpdate($event);
+        return [
+            "echo:assets.{$this->asset->id},AssetStatusUpdated" => 'handleStatusUpdate',
+        ];
     }
 
     protected function loadRmmData()

@@ -1,41 +1,4 @@
 <div>
-    @script
-    <script>
-        const assetId = {{ $asset->id }};
-        const channelName = `assets.${assetId}`;
-        
-        console.log('🚀 Setting up Echo for asset', assetId);
-        console.log('📡 Subscribing to channel:', channelName);
-        
-        const channel = window.Echo.channel(channelName);
-        console.log('✓ Channel object created:', channel);
-        
-        // Listen for subscription success
-        channel.subscription.bind('pusher:subscription_succeeded', () => {
-            console.log('✓✓✓ Successfully subscribed to', channelName);
-        });
-        
-        // Listen for subscription error
-        channel.subscription.bind('pusher:subscription_error', (err) => {
-            console.error('❌ Subscription error:', err);
-        });
-        
-        // Listen for the event (no prefix)
-        channel.listen('AssetStatusUpdated', (event) => {
-            console.log('🎉 EVENT RECEIVED (no prefix):', event);
-            $wire.dispatch('asset-status-updated', event);
-        });
-        
-        // Listen for the event (with dot prefix)
-        channel.listen('.AssetStatusUpdated', (event) => {
-            console.log('🎉 EVENT RECEIVED (dot prefix):', event);
-            $wire.dispatch('asset-status-updated', event);
-        });
-        
-        console.log('✓ Event listeners attached');
-    </script>
-    @endscript
-
     {{-- Real-time Update Notification --}}
     @if($showUpdateNotification)
     <div 
