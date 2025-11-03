@@ -23,13 +23,13 @@
         // Listen for the event (no prefix)
         channel.listen('AssetStatusUpdated', (event) => {
             console.log('🎉 EVENT RECEIVED (no prefix):', event);
-            $wire.handleStatusUpdate(event);
+            $wire.dispatch('asset-status-updated', event);
         });
         
         // Listen for the event (with dot prefix)
         channel.listen('.AssetStatusUpdated', (event) => {
             console.log('🎉 EVENT RECEIVED (dot prefix):', event);
-            $wire.handleStatusUpdate(event);
+            $wire.dispatch('asset-status-updated', event);
         });
         
         console.log('✓ Event listeners attached');
