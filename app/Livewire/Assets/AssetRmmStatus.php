@@ -22,6 +22,17 @@ class AssetRmmStatus extends Component
         $this->loadRmmData();
     }
 
+    /**
+     * Define event listeners for this component.
+     * Using getListeners() method as it's more reliable than attributes for Echo events.
+     */
+    public function getListeners()
+    {
+        return [
+            "echo:assets.{$this->asset->id},AssetStatusUpdated" => 'handleStatusUpdate',
+        ];
+    }
+
     protected function loadRmmData()
     {
         $rmmData = null;
@@ -53,7 +64,6 @@ class AssetRmmStatus extends Component
         }
     }
 
-    #[On('echo:assets.{asset.id},AssetStatusUpdated')]
     public function handleStatusUpdate($event)
     {
         // Refresh the asset from database
