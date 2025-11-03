@@ -120,3 +120,14 @@ Schedule::command('nestogy:cleanup')->weeklyOn(0, '03:00');
 
 // Schedule health check every hour
 Schedule::command('nestogy:health-check')->hourly();
+
+// RMM Agent Sync - Sync agents from all active RMM integrations every 5 minutes
+// This enables real-time asset status updates via Laravel Reverb broadcasting
+Schedule::call(function () {
+    $integrations = \App\Domains\Integration\Models\RmmIntegration::where('is_active', true)->get();
+    foreach ($integrations as $integration) {
+        \App\Jobs\SyncRmmAgents::dispatch($integration);
+    }
+})
+    ->everyFiveMinutes()
+    ->name('sync-rmm-agents');
