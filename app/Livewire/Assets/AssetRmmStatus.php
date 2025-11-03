@@ -20,17 +20,30 @@ class AssetRmmStatus extends Component
     {
         $this->asset = $asset;
         $this->loadRmmData();
+        
+        \Log::info('AssetRmmStatus component mounted', [
+            'asset_id' => $this->asset->id,
+            'listeners' => $this->getListeners(),
+        ]);
     }
 
     /**
      * Define event listeners for this component.
      * Livewire automatically handles Echo events with the echo: prefix
+     * Try both with and without dot prefix for the event name
      */
     public function getListeners()
     {
         return [
-            "echo:assets.{$this->asset->id},AssetStatusUpdated" => 'handleStatusUpdate',
+            "echo:assets.{$this->asset->id},.AssetStatusUpdated" => 'handleStatusUpdate',
+            "echo:assets.{$this->asset->id},AssetStatusUpdated" => 'handleStatusUpdateNoDot',
         ];
+    }
+    
+    public function handleStatusUpdateNoDot($event)
+    {
+        \Log::info('🎉 Received event WITHOUT dot prefix');
+        $this->handleStatusUpdate($event);
     }
 
     protected function loadRmmData()
