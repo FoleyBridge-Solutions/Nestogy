@@ -3,6 +3,20 @@
         console.log('AssetRmmStatus component mounted for asset {{ $asset->id }}');
         console.log('Echo available:', typeof window.Echo !== 'undefined');
         console.log('Livewire will subscribe to: assets.{{ $asset->id }}');
+        
+        // Manual Echo subscription as fallback
+        if (typeof window.Echo !== 'undefined') {
+            const channelName = 'assets.{{ $asset->id }}';
+            console.log('Manually subscribing to channel:', channelName);
+            
+            window.Echo.channel(channelName)
+                .listen('.AssetStatusUpdated', (event) => {
+                    console.log('✓ Received AssetStatusUpdated event via manual subscription:', event);
+                    
+                    // Trigger Livewire method
+                    @this.call('handleStatusUpdate', event);
+                });
+        }
     }
 }">
     {{-- Real-time Update Notification --}}
