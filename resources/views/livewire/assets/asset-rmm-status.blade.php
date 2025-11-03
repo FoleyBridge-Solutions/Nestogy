@@ -1,32 +1,61 @@
-<div x-data="{ 
-    init() {
-        console.log('AssetRmmStatus component mounted for asset {{ $asset->id }}');
-        console.log('Echo available:', typeof window.Echo !== 'undefined');
-        console.log('Livewire will subscribe to: assets.{{ $asset->id }}');
-        
-        // Manual Echo subscription as fallback
-        if (typeof window.Echo !== 'undefined') {
-            const channelName = 'assets.{{ $asset->id }}';
-            console.log('Manually subscribing to channel:', channelName);
-            
-            const channel = window.Echo.channel(channelName);
-            
-            console.log('Subscribed to channel:', channel);
-            
-            // Listen without namespace prefix (for public channels with broadcastAs)
-            channel.listen('AssetStatusUpdated', (event) => {
-                console.log('✓ Received AssetStatusUpdated event (no prefix):', event);
-                @this.call('handleStatusUpdate', event);
-            });
-            
-            // Also listen with dot prefix (for namespaced events)
-            channel.listen('.AssetStatusUpdated', (event) => {
-                console.log('✓ Received AssetStatusUpdated event (dot prefix):', event);
-                @this.call('handleStatusUpdate', event);
-            });
+<div 
+    x-data="assetRmmStatusComponent({{ $asset->id }})"
+    x-init="initEcho()">
+    
+    <script>
+        function assetRmmStatusComponent(assetId) {
+            return {
+                assetId: assetId,
+                echoChannel: null,
+                
+                initEcho() {
+                    console.log('🚀 Initializing Echo for asset', this.assetId);
+                    console.log('Echo available:', typeof window.Echo !== 'undefined');
+                    console.log('Window Echo:', window.Echo);
+                    
+                    if (typeof window.Echo === 'undefined') {
+                        console.error('❌ Echo is not available!');
+                        return;
+                    }
+                    
+                    const channelName = `assets.${this.assetId}`;
+                    console.log('📡 Subscribing to channel:', channelName);
+                    
+                    try {
+                        this.echoChannel = window.Echo.channel(channelName);
+                        console.log('✓ Channel object created:', this.echoChannel);
+                        
+                        // Listen for subscription success
+                        this.echoChannel.subscription.bind('pusher:subscription_succeeded', () => {
+                            console.log('✓✓✓ Successfully subscribed to', channelName);
+                        });
+                        
+                        // Listen for subscription error
+                        this.echoChannel.subscription.bind('pusher:subscription_error', (err) => {
+                            console.error('❌ Subscription error:', err);
+                        });
+                        
+                        // Listen for the event (no prefix)
+                        this.echoChannel.listen('AssetStatusUpdated', (event) => {
+                            console.log('🎉 EVENT RECEIVED (no prefix):', event);
+                            this.$wire.call('handleStatusUpdate', event);
+                        });
+                        
+                        // Listen for the event (with dot prefix)
+                        this.echoChannel.listen('.AssetStatusUpdated', (event) => {
+                            console.log('🎉 EVENT RECEIVED (dot prefix):', event);
+                            this.$wire.call('handleStatusUpdate', event);
+                        });
+                        
+                        console.log('✓ Event listeners attached');
+                        
+                    } catch (error) {
+                        console.error('❌ Error setting up Echo:', error);
+                    }
+                }
+            }
         }
-    }
-}">
+    </script>
     {{-- Real-time Update Notification --}}
     @if($showUpdateNotification)
     <div 
