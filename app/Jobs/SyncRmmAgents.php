@@ -244,6 +244,10 @@ class SyncRmmAgents implements ShouldQueue
 
             $asset = Asset::create($assetData);
 
+            // Broadcast real-time status update for new asset
+            $rmmData = json_decode($asset->notes, true);
+            \App\Events\AssetStatusUpdated::dispatch($asset, $rmmData);
+
             $createdCount++;
             Log::info('Successfully created new asset from RMM agent', [
                 'asset_id' => $asset->id,
@@ -263,6 +267,19 @@ class SyncRmmAgents implements ShouldQueue
                 $currentStatus = 'Ready To Deploy'; // Reset to default - user can manage lifecycle separately
             }
 
+            $rmmData = array_merge(
+                json_decode($asset->notes ?? '{}', true),
+                [
+                    'rmm_last_seen' => $agentData['last_seen'],
+                    'rmm_online' => $agentData['online'] ?? false, // Store connectivity status in notes
+                    'rmm_public_ip' => $agentData['public_ip'],
+                    'rmm_version' => $agentData['version'],
+                    'rmm_needs_reboot' => $agentData['needs_reboot'] ?? false,
+                    'rmm_monitoring_type' => $agentData['monitoring_type'] ?? 'workstation',
+                    'sync_timestamp' => now()->toISOString(),
+                ]
+            );
+
             $asset->update([
                 'name' => $agentData['hostname'],
                 'type' => $this->determineAssetTypeFromRmm($agentData),
@@ -270,20 +287,12 @@ class SyncRmmAgents implements ShouldQueue
                 'ip' => $agentData['local_ip'],
                 'mac' => $agentData['mac_address'],
                 'status' => $currentStatus, // Preserve actual lifecycle status, don't overwrite with connectivity
-                'notes' => json_encode(array_merge(
-                    json_decode($asset->notes ?? '{}', true),
-                    [
-                        'rmm_last_seen' => $agentData['last_seen'],
-                        'rmm_online' => $agentData['online'] ?? false, // Store connectivity status in notes
-                        'rmm_public_ip' => $agentData['public_ip'],
-                        'rmm_version' => $agentData['version'],
-                        'rmm_needs_reboot' => $agentData['needs_reboot'] ?? false,
-                        'rmm_monitoring_type' => $agentData['monitoring_type'] ?? 'workstation',
-                        'sync_timestamp' => now()->toISOString(),
-                    ]
-                )),
+                'notes' => json_encode($rmmData),
                 'updated_at' => now(),
             ]);
+
+            // Broadcast real-time status update
+            \App\Events\AssetStatusUpdated::dispatch($asset, $rmmData);
 
             $updatedCount++;
             Log::debug('Updated asset from RMM agent', [

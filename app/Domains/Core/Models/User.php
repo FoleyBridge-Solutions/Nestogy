@@ -354,6 +354,59 @@ class User extends Authenticatable
     }
 
     /**
+     * Override can() to use wildcard-aware permission checking
+     * This makes all authorization checks (Gate, policies, etc.) support wildcards
+     *
+     * @param  string  $ability
+     * @param  array|mixed  $arguments
+     * @return bool
+     */
+    public function can($ability, $arguments = []): bool
+    {
+        // For non-string abilities or model policies, use parent implementation
+        if (!is_string($ability)) {
+            return parent::can($ability, $arguments);
+        }
+
+        // Direct permission check using parent (Bouncer)
+        if (parent::can($ability, $arguments)) {
+            return true;
+        }
+
+        // Wildcard permission check
+        return $this->checkWildcardPermission($ability);
+    }
+
+    /**
+     * Check wildcard permissions without recursion
+     * Example: 'assets.*' matches 'assets.view', 'assets.edit', etc.
+     */
+    protected function checkWildcardPermission(string $permission): bool
+    {
+        $parts = explode('.', $permission);
+        $wildcardChecks = [];
+
+        // Build wildcard patterns to check
+        // For 'assets.equipment.view', check:
+        // - '*' (full wildcard)
+        // - 'assets.*'
+        // - 'assets.equipment.*'
+        for ($i = 0; $i < count($parts); $i++) {
+            $wildcard = implode('.', array_slice($parts, 0, $i)).($i > 0 ? '.' : '').'*';
+            $wildcardChecks[] = $wildcard;
+        }
+
+        // Check each wildcard pattern using parent::can() to avoid recursion
+        foreach ($wildcardChecks as $pattern) {
+            if (parent::can($pattern)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Get user's avatar URL.
      */
     public function getAvatarUrl(): string
