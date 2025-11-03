@@ -29,7 +29,7 @@ class AssetRmmStatus extends Component
     public function getListeners()
     {
         return [
-            "echo:assets.{$this->asset->id},AssetStatusUpdated" => 'handleStatusUpdate',
+            "echo:assets.{$this->asset->id},.AssetStatusUpdated" => 'handleStatusUpdate',
         ];
     }
 

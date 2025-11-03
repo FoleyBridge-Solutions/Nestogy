@@ -9,13 +9,21 @@
             const channelName = 'assets.{{ $asset->id }}';
             console.log('Manually subscribing to channel:', channelName);
             
-            window.Echo.channel(channelName)
-                .listen('.AssetStatusUpdated', (event) => {
-                    console.log('✓ Received AssetStatusUpdated event via manual subscription:', event);
-                    
-                    // Trigger Livewire method
-                    @this.call('handleStatusUpdate', event);
-                });
+            const channel = window.Echo.channel(channelName);
+            
+            console.log('Subscribed to channel:', channel);
+            
+            // Listen without namespace prefix (for public channels with broadcastAs)
+            channel.listen('AssetStatusUpdated', (event) => {
+                console.log('✓ Received AssetStatusUpdated event (no prefix):', event);
+                @this.call('handleStatusUpdate', event);
+            });
+            
+            // Also listen with dot prefix (for namespaced events)
+            channel.listen('.AssetStatusUpdated', (event) => {
+                console.log('✓ Received AssetStatusUpdated event (dot prefix):', event);
+                @this.call('handleStatusUpdate', event);
+            });
         }
     }
 }">
