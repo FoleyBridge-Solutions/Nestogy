@@ -1,60 +1,51 @@
-<div 
-    x-data="assetRmmStatusComponent({{ $asset->id }})"
-    x-init="initEcho()">
-    
+<div wire:ignore>
     <script>
-        function assetRmmStatusComponent(assetId) {
-            return {
-                assetId: assetId,
-                echoChannel: null,
-                
-                initEcho() {
-                    console.log('🚀 Initializing Echo for asset', this.assetId);
-                    console.log('Echo available:', typeof window.Echo !== 'undefined');
-                    console.log('Window Echo:', window.Echo);
-                    
-                    if (typeof window.Echo === 'undefined') {
-                        console.error('❌ Echo is not available!');
-                        return;
-                    }
-                    
-                    const channelName = `assets.${this.assetId}`;
-                    console.log('📡 Subscribing to channel:', channelName);
-                    
-                    try {
-                        this.echoChannel = window.Echo.channel(channelName);
-                        console.log('✓ Channel object created:', this.echoChannel);
-                        
-                        // Listen for subscription success
-                        this.echoChannel.subscription.bind('pusher:subscription_succeeded', () => {
-                            console.log('✓✓✓ Successfully subscribed to', channelName);
-                        });
-                        
-                        // Listen for subscription error
-                        this.echoChannel.subscription.bind('pusher:subscription_error', (err) => {
-                            console.error('❌ Subscription error:', err);
-                        });
-                        
-                        // Listen for the event (no prefix)
-                        this.echoChannel.listen('AssetStatusUpdated', (event) => {
-                            console.log('🎉 EVENT RECEIVED (no prefix):', event);
-                            this.$wire.call('handleStatusUpdate', event);
-                        });
-                        
-                        // Listen for the event (with dot prefix)
-                        this.echoChannel.listen('.AssetStatusUpdated', (event) => {
-                            console.log('🎉 EVENT RECEIVED (dot prefix):', event);
-                            this.$wire.call('handleStatusUpdate', event);
-                        });
-                        
-                        console.log('✓ Event listeners attached');
-                        
-                    } catch (error) {
-                        console.error('❌ Error setting up Echo:', error);
-                    }
-                }
+        document.addEventListener('DOMContentLoaded', function() {
+            const assetId = {{ $asset->id }};
+            
+            console.log('🚀 Setting up Echo for asset', assetId);
+            console.log('Echo available:', typeof window.Echo !== 'undefined');
+            
+            if (typeof window.Echo === 'undefined') {
+                console.error('❌ Echo is not available!');
+                return;
             }
-        }
+            
+            const channelName = `assets.${assetId}`;
+            console.log('📡 Subscribing to channel:', channelName);
+            
+            try {
+                const channel = window.Echo.channel(channelName);
+                console.log('✓ Channel object created:', channel);
+                
+                // Listen for subscription success
+                channel.subscription.bind('pusher:subscription_succeeded', () => {
+                    console.log('✓✓✓ Successfully subscribed to', channelName);
+                });
+                
+                // Listen for subscription error
+                channel.subscription.bind('pusher:subscription_error', (err) => {
+                    console.error('❌ Subscription error:', err);
+                });
+                
+                // Listen for the event (no prefix)
+                channel.listen('AssetStatusUpdated', (event) => {
+                    console.log('🎉 EVENT RECEIVED (no prefix):', event);
+                    Livewire.find('{{ $this->getId() }}').call('handleStatusUpdate', event);
+                });
+                
+                // Listen for the event (with dot prefix)
+                channel.listen('.AssetStatusUpdated', (event) => {
+                    console.log('🎉 EVENT RECEIVED (dot prefix):', event);
+                    Livewire.find('{{ $this->getId() }}').call('handleStatusUpdate', event);
+                });
+                
+                console.log('✓ Event listeners attached');
+                
+            } catch (error) {
+                console.error('❌ Error setting up Echo:', error);
+            }
+        });
     </script>
     {{-- Real-time Update Notification --}}
     @if($showUpdateNotification)
