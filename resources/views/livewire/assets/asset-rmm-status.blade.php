@@ -1,4 +1,10 @@
-<div>
+<div x-data="{ 
+    init() {
+        console.log('AssetRmmStatus component mounted for asset {{ $asset->id }}');
+        console.log('Echo available:', typeof window.Echo !== 'undefined');
+        console.log('Livewire will subscribe to: assets.{{ $asset->id }}');
+    }
+}">
     {{-- Real-time Update Notification --}}
     @if($showUpdateNotification)
     <div 
