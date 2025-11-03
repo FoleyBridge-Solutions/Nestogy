@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Check Broadcasting Events</title>
+    <style>
+        body { font-family: monospace; padding: 20px; max-width: 1200px; margin: 0 auto; }
+        h1 { color: #1f2937; }
+        .log { background: #f9fafb; padding: 15px; border-radius: 8px; margin: 20px 0; max-height: 500px; overflow-y: auto; }
+        .event { padding: 10px; margin: 5px 0; background: #fff; border-left: 4px solid #10b981; }
+        .error { border-left-color: #ef4444; }
+        .info { border-left-color: #3b82f6; }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Broadcasting Events Monitor</h1>
+    <p>This page listens for real-time events from Laravel Reverb.</p>
+    
+    <div>
+        <button onclick="subscribeToAsset()">Subscribe to Asset 1165</button>
+        <button onclick="clearLog()">Clear Log</button>
+        <input type="number" id="assetId" placeholder="Asset ID" value="1165" style="padding: 10px; font-size: 16px;">
+    </div>
+
+    <div class="log" id="log"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/pusher-js@8.4.0-rc2/dist/web/pusher.min.js"></script>
+    <script>
+        const logDiv = document.getElementById('log');
+        let pusher = null;
+        let channel = null;
+
+        function addLog(message, type = 'info') {
+            const entry = document.createElement('div');
+            entry.className = `event ${type}`;
+            entry.innerHTML = `<strong>[${new Date().toLocaleTimeString()}]</strong> ${message}`;
+            logDiv.insertBefore(entry, logDiv.firstChild);
+        }
+
+        function clearLog() {
+            logDiv.innerHTML = '';
+        }
+
+        function subscribeToAsset() {
+            const assetId = document.getElementById('assetId').value;
+            
+            if (pusher) {
+                addLog('Disconnecting previous connection...', 'info');
+                pusher.disconnect();
+            }
+
+            addLog('Initializing Pusher...', 'info');
+            
+            pusher = new Pusher('o60rnZyX7Q9dY9CACySt', {
+                wsHost: 'ws-a04568a9-bf88-4928-9a27-ba0c79538f94-reverb.laravel.cloud',
+                wsPort: 443,
+                wssPort: 443,
+                forceTLS: true,
+                enabledTransports: ['ws', 'wss'],
+                cluster: '',
+                disableStats: true,
+                enabledLogging: true,
+            });
+
+            pusher.connection.bind('connecting', () => {
+                addLog('Connecting to Reverb...', 'info');
+            });
+
+            pusher.connection.bind('connected', () => {
+                addLog(`✓ Connected! Socket ID: ${pusher.connection.socket_id}`, 'info');
+            });
+
+            pusher.connection.bind('unavailable', () => {
+                addLog('✗ Connection unavailable', 'error');
+            });
+
+            pusher.connection.bind('failed', () => {
+                addLog('✗ Connection failed', 'error');
+            });
+
+            pusher.connection.bind('error', (err) => {
+                addLog(`✗ Error: ${JSON.stringify(err)}`, 'error');
+            });
+
+            // Subscribe to the asset channel
+            const channelName = `assets.${assetId}`;
+            addLog(`Subscribing to channel: ${channelName}`, 'info');
+            
+            channel = pusher.subscribe(channelName);
+
+            channel.bind('pusher:subscription_succeeded', () => {
+                addLog(`✓ Successfully subscribed to ${channelName}`, 'info');
+                addLog('Waiting for AssetStatusUpdated events...', 'info');
+            });
+
+            channel.bind('pusher:subscription_error', (err) => {
+                addLog(`✗ Subscription error: ${JSON.stringify(err)}`, 'error');
+            });
+
+            // Listen for the actual event
+            channel.bind('AssetStatusUpdated', (data) => {
+                addLog(`<strong>🎉 EVENT RECEIVED: AssetStatusUpdated</strong>`, 'info');
+                addLog(`<pre>${JSON.stringify(data, null, 2)}</pre>`, 'info');
+            });
+
+            // Listen for all events
+            channel.bind_global((eventName, data) => {
+                if (!eventName.startsWith('pusher:')) {
+                    addLog(`Event: ${eventName} - ${JSON.stringify(data)}`, 'info');
+                }
+            });
+        }
+
+        // Auto-subscribe on page load
+        setTimeout(() => {
+            subscribeToAsset();
+        }, 500);
+    </script>
+</body>
+</html>
