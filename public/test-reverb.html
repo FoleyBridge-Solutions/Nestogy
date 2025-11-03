@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Reverb Connection Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/pusher-js@8.4.0-rc2/dist/web/pusher.min.js"></script>
+</head>
+<body>
+    <h1>Reverb Connection Test</h1>
+    <div id="status">Connecting...</div>
+    <div id="log" style="border: 1px solid #ccc; padding: 10px; margin-top: 20px; height: 400px; overflow-y: scroll; font-family: monospace; font-size: 12px;"></div>
+    
+    <script>
+        const log = document.getElementById('log');
+        const status = document.getElementById('status');
+        
+        function addLog(message) {
+            const time = new Date().toLocaleTimeString();
+            log.innerHTML += `[${time}] ${message}<br>`;
+            log.scrollTop = log.scrollHeight;
+        }
+        
+        // Get Vite env variables from meta tags (you'll need to add these)
+        const appKey = 'nn9iqmvqwpoirj0amfzs'; // Your VITE_REVERB_APP_KEY
+        const host = 'nestogy.io'; // Your production domain
+        const port = 443;
+        const scheme = 'https';
+        
+        addLog(`Connecting to Reverb...`);
+        addLog(`Host: ${host}:${port}`);
+        addLog(`App Key: ${appKey}`);
+        addLog(`Scheme: ${scheme}`);
+        
+        const pusher = new Pusher(appKey, {
+            wsHost: host,
+            wsPort: port,
+            wssPort: port,
+            forceTLS: scheme === 'https',
+            enabledTransports: ['ws', 'wss'],
+            cluster: '', // Empty for self-hosted
+            disableStats: true,
+        });
+        
+        pusher.connection.bind('connecting', () => {
+            addLog('STATE: Connecting...');
+            status.textContent = 'Connecting...';
+            status.style.color = 'orange';
+        });
+        
+        pusher.connection.bind('connected', () => {
+            addLog('STATE: Connected!');
+            status.textContent = 'Connected ✓';
+            status.style.color = 'green';
+        });
+        
+        pusher.connection.bind('unavailable', () => {
+            addLog('STATE: Unavailable');
+            status.textContent = 'Connection Unavailable';
+            status.style.color = 'red';
+        });
+        
+        pusher.connection.bind('failed', () => {
+            addLog('STATE: Failed');
+            status.textContent = 'Connection Failed';
+            status.style.color = 'red';
+        });
+        
+        pusher.connection.bind('disconnected', () => {
+            addLog('STATE: Disconnected');
+            status.textContent = 'Disconnected';
+            status.style.color = 'orange';
+        });
+        
+        pusher.connection.bind('error', (err) => {
+            addLog(`ERROR: ${JSON.stringify(err)}`);
+        });
+        
+        // Subscribe to a test channel
+        const channel = pusher.subscribe('assets.1165');
+        
+        channel.bind('pusher:subscription_succeeded', () => {
+            addLog('Successfully subscribed to channel: assets.1165');
+        });
+        
+        channel.bind('pusher:subscription_error', (err) => {
+            addLog(`Subscription error: ${JSON.stringify(err)}`);
+        });
+        
+        channel.bind('AssetStatusUpdated', (data) => {
+            addLog(`EVENT RECEIVED: AssetStatusUpdated`);
+            addLog(`Data: ${JSON.stringify(data, null, 2)}`);
+        });
+        
+        addLog('Pusher client initialized. Waiting for connection...');
+    </script>
+</body>
+</html>
