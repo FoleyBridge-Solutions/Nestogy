@@ -3,7 +3,7 @@
 @section('title', $asset->name . ' - Asset Details')
 
 @section('content')
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+<div class="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
     {{-- Page Header --}}
     <div class="mb-6 flex items-center justify-end">
         <div class="flex items-center gap-3">
@@ -127,10 +127,10 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
             {{-- Basic Information --}}
-            <div class="lg:col-span-2 space-y-4">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div class="lg:col-span-3 space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
                     <div>
                         <flux:text variant="subtle" class="text-sm mb-1">Client</flux:text>
                         <flux:link href="{{ route('clients.show', $asset->client) }}" class="text-base">
@@ -143,6 +143,10 @@
                             {{ $asset->serial ?: 'N/A' }}
                         </flux:text>
                     </div>
+                    <div>
+                        <flux:text variant="subtle" class="text-sm mb-1">Asset ID</flux:text>
+                        <flux:text class="font-mono">{{ $asset->id }}</flux:text>
+                    </div>
                 </div>
                 
                 @if($asset->description)
@@ -154,19 +158,22 @@
             </div>
             
             {{-- QR Code --}}
-            <div class="flex flex-col items-center justify-center p-6 bg-zinc-50 dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-700">
-                <div class="mb-3 bg-white p-3 rounded">
+            <div class="flex flex-col items-center justify-center p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-700">
+                <div class="mb-2 bg-white p-2 rounded">
                     {!! $qrCode !!}
                 </div>
-                <flux:text variant="subtle" class="text-xs">
-                    Asset ID: {{ $asset->id }}
+                <flux:text variant="subtle" class="text-xs text-center">
+                    Scan for quick access
                 </flux:text>
             </div>
         </div>
     </flux:card>
 
-    {{-- Main Content Grid --}}
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    {{-- Remote Control Center - FULL WIDTH for Maximum Space Utilization --}}
+    @livewire('assets.asset-remote-control', ['asset' => $asset])
+
+    {{-- Main Content Grid - 2 Columns for Better Space Usage --}}
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
         {{-- Left Column --}}
         <div class="space-y-6">
             {{-- Hardware Information --}}
@@ -500,58 +507,54 @@
                 @endif
             </flux:card>
             @endif
+
+            {{-- Metadata --}}
+            <flux:card>
+                <flux:heading class="flex items-center gap-2 mb-4">
+                    <flux:icon.information-circle class="size-5" />
+                    Metadata
+                </flux:heading>
+                
+                <div class="space-y-3">
+                    <div>
+                        <flux:text variant="subtle" class="text-sm">Created</flux:text>
+                        <flux:text variant="strong" class="block mt-1">
+                            {{ $asset->created_at->format('M d, Y g:i A') }}
+                        </flux:text>
+                        <flux:text variant="subtle" class="text-xs block">
+                            {{ $asset->created_at->diffForHumans() }}
+                        </flux:text>
+                    </div>
+                    <div>
+                        <flux:text variant="subtle" class="text-sm">Last Updated</flux:text>
+                        <flux:text variant="strong" class="block mt-1">
+                            {{ $asset->updated_at->format('M d, Y g:i A') }}
+                        </flux:text>
+                        <flux:text variant="subtle" class="text-xs block">
+                            {{ $asset->updated_at->diffForHumans() }}
+                        </flux:text>
+                    </div>
+                    @if($asset->accessed_at)
+                    <div>
+                        <flux:text variant="subtle" class="text-sm">Last Accessed</flux:text>
+                        <flux:text variant="strong" class="block mt-1">
+                            {{ $asset->accessed_at->format('M d, Y g:i A') }}
+                        </flux:text>
+                        <flux:text variant="subtle" class="text-xs block">
+                            {{ $asset->accessed_at->diffForHumans() }}
+                        </flux:text>
+                    </div>
+                    @endif
+                    @if($asset->rmm_id)
+                    <div>
+                        <flux:text variant="subtle" class="text-sm">RMM ID</flux:text>
+                        <flux:text variant="strong" class="font-mono block mt-1">{{ $asset->rmm_id }}</flux:text>
+                    </div>
+                    @endif
+                </div>
+            </flux:card>
         </div>
     </div>
-
-    {{-- Metadata --}}
-    <flux:card class="mt-6">
-        <flux:heading class="flex items-center gap-2 mb-4">
-            <flux:icon.information-circle class="size-5" />
-            Metadata
-        </flux:heading>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="space-y-3">
-                <div>
-                    <flux:text variant="subtle" class="text-sm">Created</flux:text>
-                    <flux:text variant="strong" class="block mt-1">
-                        {{ $asset->created_at->format('M d, Y g:i A') }}
-                    </flux:text>
-                    <flux:text variant="subtle" class="text-xs block">
-                        {{ $asset->created_at->diffForHumans() }}
-                    </flux:text>
-                </div>
-                <div>
-                    <flux:text variant="subtle" class="text-sm">Last Updated</flux:text>
-                    <flux:text variant="strong" class="block mt-1">
-                        {{ $asset->updated_at->format('M d, Y g:i A') }}
-                    </flux:text>
-                    <flux:text variant="subtle" class="text-xs block">
-                        {{ $asset->updated_at->diffForHumans() }}
-                    </flux:text>
-                </div>
-            </div>
-            <div class="space-y-3">
-                @if($asset->accessed_at)
-                <div>
-                    <flux:text variant="subtle" class="text-sm">Last Accessed</flux:text>
-                    <flux:text variant="strong" class="block mt-1">
-                        {{ $asset->accessed_at->format('M d, Y g:i A') }}
-                    </flux:text>
-                    <flux:text variant="subtle" class="text-xs block">
-                        {{ $asset->accessed_at->diffForHumans() }}
-                    </flux:text>
-                </div>
-                @endif
-                @if($asset->rmm_id)
-                <div>
-                    <flux:text variant="subtle" class="text-sm">RMM ID</flux:text>
-                    <flux:text variant="strong" class="font-mono block mt-1">{{ $asset->rmm_id }}</flux:text>
-                </div>
-                @endif
-            </div>
-        </div>
-    </flux:card>
 </div>
 
 {{-- Check In/Out Modal --}}

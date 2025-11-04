@@ -3,6 +3,9 @@
 namespace App\Livewire\Assets;
 
 use App\Domains\Asset\Models\Asset;
+use App\Domains\Integration\Services\RmmServiceFactory;
+use App\Events\AssetCommandExecuted;
+use App\Jobs\PollRmmTaskStatus;
 use Livewire\Attributes\On;
 use Livewire\Component;
 
@@ -15,6 +18,7 @@ class AssetRmmStatus extends Component
     public $rmmPlatform = null;
     public $rmmVersion = null;
     public $showUpdateNotification = false;
+    public $commandRunning = false;
 
     public function mount(Asset $asset)
     {
@@ -110,6 +114,86 @@ class AssetRmmStatus extends Component
     public function hideNotification()
     {
         $this->showUpdateNotification = false;
+    }
+
+    public function quickReboot()
+    {
+        if (!auth()->user()->can('rebootAsset', $this->asset)) {
+            $this->addError('reboot', 'You do not have permission to reboot this device.');
+            return;
+        }
+
+        $this->commandRunning = true;
+
+        try {
+            $rmmIntegration = $this->asset->company->rmmIntegrations()->where('is_active', true)->first();
+            
+            if (!$rmmIntegration) {
+                $this->addError('reboot', 'No active RMM integration found.');
+                $this->commandRunning = false;
+                return;
+            }
+
+            $deviceMapping = $this->asset->deviceMappings()->where('integration_id', $rmmIntegration->id)->first();
+            
+            if (!$deviceMapping) {
+                $this->addError('reboot', 'This asset is not mapped to an RMM device.');
+                $this->commandRunning = false;
+                return;
+            }
+
+            $rmmService = app(RmmServiceFactory::class)->make($rmmIntegration);
+            $result = $rmmService->rebootAgent($deviceMapping->rmm_device_id, [
+                'delay' => 30,
+            ]);
+
+            if ($result['success']) {
+                $taskId = $result['task_id'] ?? null;
+
+                // Broadcast immediate notification
+                event(new AssetCommandExecuted([
+                    'asset_id' => $this->asset->id,
+                    'asset_name' => $this->asset->name,
+                    'command' => 'System Reboot (30s delay)',
+                    'command_type' => 'general',
+                    'status' => 'initiated',
+                    'executed_by' => auth()->user()->name,
+                    'task_id' => $taskId,
+                ]));
+
+                // Dispatch background job to poll for completion
+                if ($taskId) {
+                    PollRmmTaskStatus::dispatch(
+                        $taskId,
+                        $this->asset->id,
+                        $rmmIntegration->id,
+                        'System Reboot',
+                        'general',
+                        auth()->user()->name
+                    );
+                }
+
+                // Log activity
+                activity()
+                    ->performedOn($this->asset)
+                    ->causedBy(auth()->user())
+                    ->withProperties(['command' => 'reboot', 'delay' => 30])
+                    ->log('device_reboot_initiated');
+
+                $this->showUpdateNotification = true;
+                $this->dispatch('status-updated');
+            } else {
+                $this->addError('reboot', 'Failed to initiate reboot: ' . ($result['error'] ?? 'Unknown error'));
+            }
+        } catch (\Exception $e) {
+            \Log::error('Quick reboot failed', [
+                'asset_id' => $this->asset->id,
+                'error' => $e->getMessage(),
+            ]);
+            $this->addError('reboot', 'An error occurred while initiating reboot.');
+        }
+
+        $this->commandRunning = false;
     }
 
     public function render()

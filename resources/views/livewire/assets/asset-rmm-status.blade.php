@@ -116,5 +116,38 @@
             </div>
             @endif
         </div>
+
+        @error('reboot')
+        <div class="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <div class="flex items-center gap-2">
+                <flux:icon.exclamation-circle class="text-red-600 size-5" />
+                <flux:text class="text-red-800 text-sm">{{ $message }}</flux:text>
+            </div>
+        </div>
+        @enderror
+
+        {{-- Quick Actions --}}
+        @if($isOnline)
+        <div class="mt-4 pt-4 border-t">
+            <flux:text variant="subtle" class="text-xs mb-2">Quick Actions:</flux:text>
+            <div class="flex gap-2">
+                <flux:button 
+                    size="sm" 
+                    variant="danger"
+                    wire:click="quickReboot"
+                    wire:confirm="Are you sure you want to reboot {{ $asset->name }}? The device will restart in 30 seconds."
+                    :disabled="$commandRunning"
+                >
+                    @if($commandRunning)
+                        <flux:icon.arrow-path class="animate-spin" />
+                        <span>Rebooting...</span>
+                    @else
+                        <flux:icon.power />
+                        <span>Reboot Device</span>
+                    @endif
+                </flux:button>
+            </div>
+        </div>
+        @endif
     </flux:card>
 </div>

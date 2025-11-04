@@ -332,7 +332,7 @@ class TacticalRmmService implements RmmServiceInterface
     public function runCommand(string $agentId, string $command, array $options = []): array
     {
         $data = [
-            'command' => $command,
+            'cmd' => $command,
             'shell' => $options['shell'] ?? 'cmd',
             'timeout' => $options['timeout'] ?? 30,
         ];

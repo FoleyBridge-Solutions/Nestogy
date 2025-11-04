@@ -84,13 +84,15 @@ class TacticalRmmApiClient
         try {
             $url = $this->baseUrl.'/'.ltrim($endpoint, '/');
 
-            Log::debug('TacticalRMM API Request', [
-                'method' => $method,
-                'url' => $url,
-                'integration_id' => $this->integration->id,
-                'has_data' => ! empty($data),
-                'has_params' => ! empty($params),
-            ]);
+        Log::debug('TacticalRMM API Request', [
+            'method' => $method,
+            'url' => $url,
+            'integration_id' => $this->integration->id,
+            'has_data' => !empty($data),
+            'has_params' => !empty($params),
+            'data' => $data, // Log the actual data being sent
+            'params' => $params,
+        ]);
 
             $response = Http::withHeaders([
                 'X-API-KEY' => $this->apiKey,

@@ -176,6 +176,46 @@ class AssetPolicy
     }
 
     /**
+     * Determine whether the user can execute remote commands on an asset.
+     */
+    public function executeRemoteCommands(User $user, Asset $asset): bool
+    {
+        return $user->can('assets.remote.execute') && $this->sameCompany($user, $asset);
+    }
+
+    /**
+     * Determine whether the user can view processes on an asset.
+     */
+    public function viewProcesses(User $user, Asset $asset): bool
+    {
+        return $user->can('assets.remote.view') && $this->sameCompany($user, $asset);
+    }
+
+    /**
+     * Determine whether the user can control services on an asset.
+     */
+    public function controlServices(User $user, Asset $asset): bool
+    {
+        return $user->can('assets.remote.execute') && $this->sameCompany($user, $asset);
+    }
+
+    /**
+     * Determine whether the user can use the remote terminal for an asset.
+     */
+    public function useRemoteTerminal(User $user, Asset $asset): bool
+    {
+        return $user->can('assets.remote.terminal') && $this->sameCompany($user, $asset);
+    }
+
+    /**
+     * Determine whether the user can reboot an asset remotely.
+     */
+    public function rebootAsset(User $user, Asset $asset): bool
+    {
+        return $user->can('assets.remote.reboot') && $this->sameCompany($user, $asset);
+    }
+
+    /**
      * Check if user and asset belong to same company.
      */
     private function sameCompany(User $user, Asset $asset): bool

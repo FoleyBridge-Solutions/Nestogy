@@ -192,6 +192,14 @@ class Company extends Model
     }
 
     /**
+     * Get the company's RMM integrations.
+     */
+    public function rmmIntegrations(): HasMany
+    {
+        return $this->hasMany(\App\Domains\Integration\Models\RmmIntegration::class);
+    }
+
+    /**
      * Get the client record in Company 1 for billing (for tenant companies).
      */
     public function clientRecord()
