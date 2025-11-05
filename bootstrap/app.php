@@ -51,6 +51,7 @@ $app = Application::configure(basePath: dirname(__DIR__))
 
         // Add middleware to web group
         $middleware->web(append: [
+            \App\Http\Middleware\CleanupCloudflareCookies::class, // Fix Cloudflare cookie domain issues
             \App\Http\Middleware\LogSignupRequests::class, // Log all signup requests
             \App\Http\Middleware\RememberTokenMiddleware::class,
             // SessionSecurityMiddleware moved to auth group to avoid running on unauthenticated routes

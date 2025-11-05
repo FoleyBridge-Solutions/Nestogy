@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -e
+
+echo "Deployment started..."
+
+# No custom nginx config - handled by support ticket
+# Just run standard Laravel Cloud deployment
+
+echo "Deployment finished!"

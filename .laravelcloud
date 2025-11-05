@@ -1,0 +1,20 @@
+# Laravel Cloud Configuration
+# This file configures deployment settings for Laravel Cloud
+
+[nginx]
+# Increase buffer sizes to handle large cookies/headers from session encryption
+client_header_buffer_size = 32k
+large_client_header_buffers = 8 64k
+client_max_body_size = 100M
+
+# FastCGI buffers for PHP
+fastcgi_buffer_size = 128k
+fastcgi_buffers = 8 256k
+fastcgi_busy_buffers_size = 256k
+
+[php]
+# Increase memory and execution time
+memory_limit = 512M
+max_execution_time = 300
+post_max_size = 100M
+upload_max_filesize = 100M
