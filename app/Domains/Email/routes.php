@@ -4,9 +4,16 @@
 
 use Illuminate\Support\Facades\Route;
 
-// Public OAuth callback route (must be outside auth middleware)
+// Public routes (no auth required)
 Route::middleware(['web'])->prefix('email')->name('email.')->group(function () {
+    // OAuth callback
     Route::get('oauth/callback', [\App\Domains\Email\Controllers\Legacy\OAuthCallbackController::class, 'callback'])->name('oauth.callback');
+    
+    // Email Tracking Routes (must be public for external email clients)
+    Route::get('/track/open/{token}', [\App\Domains\Email\Controllers\EmailTrackingController::class, 'trackOpen'])->name('track.open');
+    Route::get('/track/click/{token}', [\App\Domains\Email\Controllers\EmailTrackingController::class, 'trackClick'])->name('track.click');
+    Route::get('/view/{uuid}', [\App\Domains\Email\Controllers\EmailTrackingController::class, 'viewEmail'])->name('view');
+    Route::get('/unsubscribe/{token}', [\App\Domains\Email\Controllers\EmailTrackingController::class, 'unsubscribe'])->name('unsubscribe');
 });
 
 Route::middleware(['web', 'auth', 'verified'])->prefix('email')->name('email.')->group(function () {
@@ -47,12 +54,6 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('email')->name('email.')-
     // Signature management routes
     Route::resource('signatures', \App\Domains\Email\Controllers\SignatureController::class);
     Route::post('signatures/{signature}/set-default', [\App\Domains\Email\Controllers\SignatureController::class, 'setDefault'])->name('signatures.set-default');
-
-    // Email Tracking Routes (public)
-    Route::get('/track/open/{token}', [\App\Domains\Email\Controllers\EmailTrackingController::class, 'trackOpen'])->name('track.open');
-    Route::get('/track/click/{token}', [\App\Domains\Email\Controllers\EmailTrackingController::class, 'trackClick'])->name('track.click');
-    Route::get('/view/{uuid}', [\App\Domains\Email\Controllers\EmailTrackingController::class, 'viewEmail'])->name('view');
-    Route::get('/unsubscribe/{token}', [\App\Domains\Email\Controllers\EmailTrackingController::class, 'unsubscribe'])->name('unsubscribe');
 });
 
 // Mail Queue Management

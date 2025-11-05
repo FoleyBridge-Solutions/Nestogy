@@ -165,7 +165,7 @@
         </div>
 
         <div class="footer">
-            <p>Need help? Contact our support team at <a href="mailto:support@{{ request()->getHost() }}">support@{{ request()->getHost() }}</a></p>
+            <p>Need help? Contact our support team at <a href="mailto:support@{{ $supportDomain }}">support@{{ $supportDomain }}</a></p>
             <p>&copy; {{ date('Y') }} {{ $companyName }}. All rights reserved.</p>
             <p style="font-size: 12px; margin-top: 10px;">
                 This email was sent to {{ $contact->email }} because you were invited to access the client portal.

@@ -38,6 +38,10 @@ class PortalInvitationMail extends Mailable
      */
     public function content(): Content
     {
+        // Extract domain from invitation URL for support email
+        $parsedUrl = parse_url($this->invitationUrl);
+        $domain = $parsedUrl['host'] ?? config('app.url_host', 'nestogy.io');
+        
         return new Content(
             view: 'emails.portal-invitation',
             with: [
@@ -47,6 +51,7 @@ class PortalInvitationMail extends Mailable
                 'invitationUrl' => $this->invitationUrl,
                 'expiresAt' => $this->contact->invitation_expires_at,
                 'expiresInHours' => now()->diffInHours($this->contact->invitation_expires_at),
+                'supportDomain' => $domain,
             ],
         );
     }

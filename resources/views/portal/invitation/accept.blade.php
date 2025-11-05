@@ -93,8 +93,8 @@
         <div class="text-center">
             <p class="text-sm text-gray-600">
                 Need help? Contact support at 
-                <a href="mailto:support@{{ request()->getHost() }}" class="font-medium text-indigo-600 hover:text-indigo-500">
-                    support@{{ request()->getHost() }}
+                <a href="mailto:support@{{ config('app.url_host', parse_url(config('app.url'), PHP_URL_HOST)) }}" class="font-medium text-indigo-600 hover:text-indigo-500">
+                    support@{{ config('app.url_host', parse_url(config('app.url'), PHP_URL_HOST)) }}
                 </a>
             </p>
         </div>
