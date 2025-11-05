@@ -86,12 +86,12 @@ class PortalInvitationService
             $contact->save();
 
             // Send invitation email
-            $emailSent = $this->sendInvitationEmail($contact, $token);
+            $emailSent = $this->sendInvitationEmail($contact, $token, $sentBy);
             
             if (!$emailSent) {
                 // Rollback invitation status if email failed
                 $contact->invitation_token = null;
-                $contact->invitation_status = 'failed';
+                $contact->invitation_status = 'pending';  // Reset to pending, not 'failed' (not a valid status)
                 $contact->save();
                 
                 return $this->errorResponse('Failed to send invitation email. Please check your email configuration.');
@@ -401,7 +401,7 @@ class PortalInvitationService
     /**
      * Send invitation email
      */
-    protected function sendInvitationEmail(Contact $contact, string $token): bool
+    protected function sendInvitationEmail(Contact $contact, string $token, User $sentBy): bool
     {
         try {
             $invitationUrl = route('client.invitation.show', ['token' => $token]);
@@ -421,10 +421,16 @@ class PortalInvitationService
             ])->render();
 
             // Send the email immediately (portal invitations are time-sensitive)
+            Log::info('Attempting to send portal invitation email', [
+                'contact_id' => $contact->id,
+                'contact_email' => $contact->email,
+            ]);
+            
             $sent = $mailService->sendNow([
                 'company_id' => $contact->company_id,
                 'client_id' => $contact->client_id,
                 'contact_id' => $contact->id,
+                'user_id' => $sentBy->id,  // Add user_id for communication log
                 'to_email' => $contact->email,
                 'to_name' => $contact->name,
                 'subject' => "You're invited to access your ".($contact->client->company->name ?? 'Nestogy').' Client Portal',
@@ -437,6 +443,11 @@ class PortalInvitationService
                     'invitation_token' => substr($token, 0, 8).'...',
                     'expires_at' => $contact->invitation_expires_at->toIso8601String(),
                 ],
+            ]);
+            
+            Log::info('Portal invitation email send result', [
+                'contact_id' => $contact->id,
+                'sent' => $sent ? 'true' : 'false',
             ]);
             
             if (!$sent) {

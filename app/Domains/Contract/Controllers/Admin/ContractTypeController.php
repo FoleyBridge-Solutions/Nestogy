@@ -395,8 +395,8 @@ class ContractTypeController extends Controller
                     ->map(fn ($group) => $group->count())
                     ->toArray(),
                 'monthly_trend' => $contracts
-                    ->selectRaw('MONTH(created_at) as month, YEAR(created_at) as year, COUNT(*) as count')
-                    ->whereRaw('created_at >= DATE_SUB(NOW(), INTERVAL 12 MONTH)')
+                    ->selectRaw('EXTRACT(MONTH FROM created_at) as month, EXTRACT(YEAR FROM created_at) as year, COUNT(*) as count')
+                    ->where('created_at', '>=', now()->subMonths(12))
                     ->groupBy('year', 'month')
                     ->orderBy('year')
                     ->orderBy('month')

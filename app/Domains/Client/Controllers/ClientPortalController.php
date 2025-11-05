@@ -696,13 +696,12 @@ class ClientPortalController extends Controller
     protected function getAssetsForContact(Contact $contact)
     {
         if (! $contact->client) {
-            return collect();
+            return new \Illuminate\Pagination\LengthAwarePaginator([], 0, 10);
         }
 
         return $contact->client->assets()
             ->orderBy('created_at', 'desc')
-            ->limit(10)
-            ->get();
+            ->paginate(10);
     }
 
     protected function getAssetStatsForContact(Contact $contact): array
@@ -1185,7 +1184,19 @@ class ClientPortalController extends Controller
             abort(403, 'You do not have permission to view assets.');
         }
 
-        $asset = $contact->client->assets()->findOrFail($asset);
+        $asset = $contact->client->assets()
+            ->with([
+                'location',
+                'contact',
+                'vendor',
+                'network',
+                'supportingContract',
+                'supportingSchedule',
+                'tickets' => function($query) {
+                    $query->latest()->limit(10);
+                }
+            ])
+            ->findOrFail($asset);
 
         return view('client-portal.assets.show', compact('asset', 'contact'));
     }

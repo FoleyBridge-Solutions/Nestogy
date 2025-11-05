@@ -116,11 +116,16 @@ class UnifiedMailService
     }
 
     /**
-     * Send an email immediately (bypassing queue)
+     * Send email immediately without queueing
      */
     public function sendNow(array $data): bool
     {
         $mailQueue = $this->queue($data);
+
+        // If already sent (auto-processed due to priority), return true
+        if ($mailQueue->status === MailQueue::STATUS_SENT) {
+            return true;
+        }
 
         return $this->process($mailQueue);
     }
@@ -130,7 +135,17 @@ class UnifiedMailService
      */
     public function process(MailQueue $mailQueue): bool
     {
+        Log::info('UnifiedMailService::process called', [
+            'mail_queue_id' => $mailQueue->id,
+            'status' => $mailQueue->status,
+            'is_ready' => $mailQueue->isReadyToSend(),
+        ]);
+        
         if (! $mailQueue->isReadyToSend()) {
+            Log::info('UnifiedMailService::process - mail not ready to send', [
+                'mail_queue_id' => $mailQueue->id,
+                'status' => $mailQueue->status,
+            ]);
             return false;
         }
 
@@ -158,9 +173,18 @@ class UnifiedMailService
                 $this->logToCommunications($mailQueue);
             }
 
+            Log::info('UnifiedMailService::process - success', [
+                'mail_queue_id' => $mailQueue->id,
+            ]);
+            
             return true;
 
         } catch (Exception $e) {
+            Log::error('UnifiedMailService::process - exception caught', [
+                'mail_queue_id' => $mailQueue->id,
+                'error' => $e->getMessage(),
+            ]);
+            
             $this->handleSendFailure($mailQueue, $e);
 
             return false;

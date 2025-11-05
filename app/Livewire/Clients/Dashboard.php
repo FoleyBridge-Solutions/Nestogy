@@ -28,7 +28,7 @@ class Dashboard extends Component
 
     public function render()
     {
-        return view('livewire.client.dashboard', $this->getDashboardData());
+        return view('livewire.clients.dashboard', $this->getDashboardData());
     }
 
     protected function getDashboardData(): array
@@ -391,7 +391,7 @@ class Dashboard extends Component
         $openTickets = $this->client->tickets()
             ->whereBetween('created_at', [$startDate, $endDate])
             ->whereIn('status', ['Open', 'In Progress', 'Waiting', 'On Hold'])
-            ->selectRaw('YEAR(created_at) as year, MONTH(created_at) as month, COUNT(*) as count')
+            ->selectRaw('EXTRACT(YEAR FROM created_at) as year, EXTRACT(MONTH FROM created_at) as month, COUNT(*) as count')
             ->groupBy('year', 'month')
             ->get()
             ->keyBy(fn($item) => $item->year . '-' . str_pad($item->month, 2, '0', STR_PAD_LEFT));
@@ -399,7 +399,7 @@ class Dashboard extends Component
         $closedTickets = $this->client->tickets()
             ->whereBetween('updated_at', [$startDate, $endDate])
             ->whereIn('status', ['Resolved', 'Closed'])
-            ->selectRaw('YEAR(updated_at) as year, MONTH(updated_at) as month, COUNT(*) as count')
+            ->selectRaw('EXTRACT(YEAR FROM updated_at) as year, EXTRACT(MONTH FROM updated_at) as month, COUNT(*) as count')
             ->groupBy('year', 'month')
             ->get()
             ->keyBy(fn($item) => $item->year . '-' . str_pad($item->month, 2, '0', STR_PAD_LEFT));
@@ -437,7 +437,7 @@ class Dashboard extends Component
         // Use single aggregate query instead of 6 separate queries
         $invoiceData = $this->client->invoices()
             ->whereBetween('created_at', [$startDate, $endDate])
-            ->selectRaw('YEAR(created_at) as year, MONTH(created_at) as month, SUM(amount) as total')
+            ->selectRaw('EXTRACT(YEAR FROM created_at) as year, EXTRACT(MONTH FROM created_at) as month, SUM(amount) as total')
             ->groupBy('year', 'month')
             ->get()
             ->keyBy(fn($item) => $item->year . '-' . str_pad($item->month, 2, '0', STR_PAD_LEFT));
