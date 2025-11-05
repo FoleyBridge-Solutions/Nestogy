@@ -7,13 +7,6 @@ use Illuminate\Console\Command;
 
 class ListCompanyEmailConfigCommand extends Command
 {
-    // Class constants to reduce duplication
-    private const CONFIG_SMTP = 'smtp';
-
-    private const CONFIG_IMAP = 'imap';
-
-    private const MSG_LIST_START = 'Listing company email configurations...';
-
     private const VALUE_NOT_SET = 'Not Set';
 
     /**

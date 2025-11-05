@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Laravel\Scout\Searchable;
+// use Laravel\Scout\Searchable; // TODO: Install laravel/scout package
 
 /**
  * Knowledge Base Article Model
@@ -37,7 +37,7 @@ use Laravel\Scout\Searchable;
  */
 class KbArticle extends Model
 {
-    use Searchable, SoftDeletes;
+    use SoftDeletes; // TODO: Add Searchable trait when Scout is installed
 
     protected $fillable = [
         'company_id',

@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Domains\Core\Services\ConfigurationValidationService;
 use App\Domains\Core\Services\NavigationService;
+use App\Helpers\ConfigHelper;
 use App\Http\ViewComposers\ClientViewComposer;
 use App\Http\ViewComposers\NavigationComposer;
 use App\Domains\Company\Models\Company;
@@ -15,6 +16,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\ParallelTesting;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\Rules\Password;
 use Silber\Bouncer\BouncerFacade as Bouncer;
 
 class AppServiceProvider extends ServiceProvider
@@ -98,6 +100,9 @@ class AppServiceProvider extends ServiceProvider
         // Configure upload directories
         $this->configureUploadDirectories();
 
+        // Configure password validation rules from database
+        $this->configurePasswordValidation();
+
         // Register view composers
         $this->registerViewComposers();
 
@@ -112,6 +117,49 @@ class AppServiceProvider extends ServiceProvider
 
         // Register Blaze directive for Livewire Flux compatibility
         $this->registerBlazeDirective();
+    }
+
+    /**
+     * Configure password validation rules based on security settings
+     */
+    protected function configurePasswordValidation(): void
+    {
+        Password::defaults(function () {
+            // Try to get settings from authenticated user's company
+            // If no user is authenticated, use config defaults
+            $companyId = Auth::check() ? Auth::user()->company_id : null;
+            
+            // Get password settings from database (with config fallback)
+            $minLength = ConfigHelper::securitySetting($companyId, 'authentication', 'password_min_length', 12);
+            $requireUppercase = ConfigHelper::securitySetting($companyId, 'authentication', 'password_require_uppercase', true);
+            $requireLowercase = ConfigHelper::securitySetting($companyId, 'authentication', 'password_require_lowercase', true);
+            $requireNumbers = ConfigHelper::securitySetting($companyId, 'authentication', 'password_require_numbers', true);
+            $requireSymbols = ConfigHelper::securitySetting($companyId, 'authentication', 'password_require_symbols', true);
+
+            $rule = Password::min($minLength);
+
+            if ($requireUppercase || $requireLowercase) {
+                if ($requireUppercase && $requireLowercase) {
+                    $rule->mixedCase();
+                } elseif ($requireUppercase) {
+                    $rule->letters()->rules(['regex:/[A-Z]/']);
+                } elseif ($requireLowercase) {
+                    $rule->letters()->rules(['regex:/[a-z]/']);
+                }
+            } else {
+                $rule->letters();
+            }
+
+            if ($requireNumbers) {
+                $rule->numbers();
+            }
+
+            if ($requireSymbols) {
+                $rule->symbols();
+            }
+
+            return $rule;
+        });
     }
 
     /**

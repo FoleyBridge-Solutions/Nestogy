@@ -16,13 +16,6 @@ class ParseTemplateIntoClauses extends Command
 
     private const DEFAULT_BATCH_SIZE = 100;
 
-    // Class constants to reduce duplication
-    private const CLAUSE_TYPE_STANDARD = 'standard';
-
-    private const CLAUSE_TYPE_CUSTOM = 'custom';
-
-    private const MSG_PARSE_START = 'Parsing template into clauses...';
-
     /**
      * The name and signature of the console command.
      *

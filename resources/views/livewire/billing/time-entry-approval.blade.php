@@ -82,7 +82,7 @@
                     <flux:button wire:click="bulkReject" variant="danger" size="sm" class="w-full sm:w-auto">
                         Reject Selected
                     </flux:button>
-                    <flux:button wire:click="previewInvoice" variant="success" size="sm">
+                    <flux:button wire:click="previewInvoice" variant="primary" color="green" size="sm">
                         Preview Invoice
                     </flux:button>
                 </div>

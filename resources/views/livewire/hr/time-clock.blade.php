@@ -20,7 +20,7 @@
                 
                 <flux:button 
                     variant="primary" 
-                    size="lg"
+                    size="base"
                     icon="play-circle"
                     wire:click="clockIn"
                     wire:loading.attr="disabled"
@@ -53,7 +53,7 @@
                 <div class="flex gap-3 justify-center">
                     <flux:button 
                         variant="ghost"
-                        size="lg"
+                        size="base"
                         icon="pause"
                         wire:click="openBreakModal"
                         wire:loading.attr="disabled"
@@ -63,7 +63,7 @@
                     
                     <flux:button 
                         variant="danger" 
-                        size="lg"
+                        size="base"
                         icon="stop-circle"
                         wire:click="openClockOutModal"
                         wire:loading.attr="disabled"
@@ -93,7 +93,7 @@
                 @if($requireGPS && (!$latitude || !$longitude))
                     <flux:button 
                         variant="primary" 
-                        size="lg"
+                        size="base"
                         icon="map-pin"
                         wire:click="requestLocation"
                         wire:loading.attr="disabled"
@@ -103,7 +103,7 @@
                 @else
                     <flux:button 
                         variant="primary" 
-                        size="lg"
+                        size="base"
                         icon="play-circle"
                         wire:click="clockIn"
                         wire:loading.attr="disabled"
@@ -129,7 +129,7 @@
                         <div class="flex-1">
                             <div class="flex items-center gap-2">
                                 @if($isBreakEntry)
-                                    <flux:icon.pause variant="mini" class="text-orange-600 dark:text-orange-400" />
+                                    <flux:icon.pause class="size-4 text-orange-600 dark:text-orange-400" />
                                 @endif
                                 <flux:heading>{{ $entry->clock_in->timezone($tz)->format('M d, Y') }}</flux:heading>
                             </div>
@@ -191,7 +191,7 @@
                     @foreach($availableBreakDurations as $duration)
                         <flux:select.option value="{{ $duration }}">
                             <div class="flex items-center gap-2">
-                                <flux:icon.clock variant="mini" class="text-zinc-400" />
+                                <flux:icon.clock class="size-4 text-zinc-400" />
                                 {{ $duration }} minutes
                             </div>
                         </flux:select.option>
@@ -200,7 +200,7 @@
                     @if($allowCustomDuration)
                         <flux:select.option value="custom">
                             <div class="flex items-center gap-2">
-                                <flux:icon.pencil variant="mini" class="text-zinc-400" />
+                                <flux:icon.pencil class="size-4 text-zinc-400" />
                                 Custom duration...
                             </div>
                         </flux:select.option>

@@ -6,8 +6,10 @@ use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
 use App\Actions\Fortify\UpdateUserPassword;
 use App\Actions\Fortify\UpdateUserProfileInformation;
+use App\Helpers\ConfigHelper;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
@@ -56,15 +58,28 @@ class FortifyServiceProvider extends ServiceProvider
             return view('auth.verify');
         });
 
-        // Configure rate limiting
+        // Configure rate limiting with database settings
         RateLimiter::for('login', function (Request $request) {
             $throttleKey = Str::transliterate(Str::lower($request->input(Fortify::username())).'|'.$request->ip());
 
-            return Limit::perMinute(5)->by($throttleKey);
+            // Try to get company ID from session or authenticated user
+            $companyId = session('company_id') ?? (Auth::check() ? Auth::user()->company_id : null);
+            
+            // Get max login attempts from database settings (fallback to 5)
+            $maxAttempts = ConfigHelper::securitySetting($companyId, 'authentication', 'max_login_attempts', 5);
+            
+            // Get lockout duration in minutes from database settings (fallback to 15)
+            $lockoutMinutes = ConfigHelper::securitySetting($companyId, 'authentication', 'lockout_duration', 15);
+
+            return Limit::perMinutes($lockoutMinutes, $maxAttempts)->by($throttleKey);
         });
 
         RateLimiter::for('two-factor', function (Request $request) {
-            return Limit::perMinute(5)->by($request->session()->get('login.id'));
+            // Use same rate limiting as login
+            $companyId = session('company_id') ?? (Auth::check() ? Auth::user()->company_id : null);
+            $maxAttempts = ConfigHelper::securitySetting($companyId, 'authentication', 'max_login_attempts', 5);
+            
+            return Limit::perMinute($maxAttempts)->by($request->session()->get('login.id'));
         });
     }
 }

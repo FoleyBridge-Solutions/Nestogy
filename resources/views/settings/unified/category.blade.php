@@ -63,8 +63,10 @@ $pageSubtitle = $metadata['description'];
             <div>
                 @if($category === 'email' && $domain === 'communication')
                     @include('settings.unified.forms.communication-email', ['settings' => $settings])
-                @elseif($category === 'physical_mail' && $domain === 'communication')
+                @elseif($category === 'physical-mail' && $domain === 'communication')
                     @include('settings.unified.forms.communication-physical-mail', ['settings' => $settings])
+                @elseif($category === 'templates' && $domain === 'communication')
+                    @include('settings.unified.forms.communication-templates', ['settings' => $settings])
                 @elseif($category === 'general' && $domain === 'company')
                     @include('settings.unified.forms.company-general', ['settings' => $settings])
                 @elseif($category === 'branding' && $domain === 'company')
@@ -105,7 +107,7 @@ $pageSubtitle = $metadata['description'];
             
             <div class="flex items-center justify-between">
                 <flux:button.group>
-                    @if(in_array($category, ['email', 'physical_mail']) && $domain === 'communication')
+                    @if(in_array($category, ['email', 'physical-mail']) && $domain === 'communication')
                         <flux:button type="button" icon="beaker" onclick="testConfiguration()">
                             Test Configuration
                         </flux:button>

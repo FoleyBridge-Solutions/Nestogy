@@ -15,9 +15,6 @@ class UpdateTaxData extends Command
 
     private const DEFAULT_BATCH_SIZE = 100;
 
-    // Class constants to reduce duplication
-    private const API_BASE_URL = 'https://api.example.com';
-
     private const MSG_UPDATE_START = 'Starting Texas tax data update...';
 
     private const MSG_UPDATE_COMPLETE = 'Texas tax data update completed';

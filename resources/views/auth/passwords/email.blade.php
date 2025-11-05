@@ -72,7 +72,7 @@
                         </flux:field>
 
                         <!-- Submit Button -->
-                        <flux:button type="submit" variant="primary" class="w-full mb-6" size="lg">
+                        <flux:button type="submit" variant="primary" class="w-full mb-6" size="base">
                             <i class="fas fa-paper-plane mr-2"></i>Send Reset Link
                         </flux:button>
 

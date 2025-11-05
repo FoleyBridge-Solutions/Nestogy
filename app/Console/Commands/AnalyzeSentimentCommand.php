@@ -9,8 +9,6 @@ use Illuminate\Console\Command;
 
 class AnalyzeSentimentCommand extends Command
 {
-    private const DEFAULT_PAGE_SIZE = 50;
-
     /**
      * The name and signature of the console command.
      *

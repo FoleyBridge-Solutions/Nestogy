@@ -142,7 +142,7 @@ if (!$entry->exported_to_payroll && auth()->user()->can('update', $entry)) {
                     @if($entry->status === 'completed' && auth()->user()->can('approve', $entry))
                         <form method="POST" action="{{ route('hr.time-entries.approve', $entry) }}">
                             @csrf
-                            <flux:button type="submit" variant="success">
+                            <flux:button type="submit" variant="primary" color="green">
                                 <flux:icon.check class="w-4 h-4" />
                                 Approve
                             </flux:button>

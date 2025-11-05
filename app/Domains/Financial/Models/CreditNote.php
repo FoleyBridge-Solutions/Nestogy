@@ -412,7 +412,7 @@ class CreditNote extends Model
             return false;
         }
 
-        DB::transaction(function () use ($approver, $comments) {
+        DB::transaction(function () use ($approver) {
             $this->update([
                 'status' => self::STATUS_APPROVED,
                 'approved_by' => $approver->id,

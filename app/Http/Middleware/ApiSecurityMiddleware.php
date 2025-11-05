@@ -3,8 +3,10 @@
 namespace App\Http\Middleware;
 
 use App\Domains\Core\Models\AuditLog;
+use App\Helpers\ConfigHelper;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
 use Symfony\Component\HttpFoundation\Response;
@@ -150,22 +152,19 @@ class ApiSecurityMiddleware
         $user = $request->user();
 
         if ($user) {
+            // Get company ID for settings lookup
+            $companyId = $user->company_id ?? null;
+            
             // Check for custom rate limits
             if (method_exists($user, 'getApiRateLimit')) {
                 return $user->getApiRateLimit();
             }
 
-            // Check user role
-            $role = $user->getRole();
-            $roleLimits = config('security.api.rate_limits_by_role', [
-                3 => 1000, // Admin
-                2 => 500,  // Tech
-                1 => 100,  // Accountant
-            ]);
-
-            return $roleLimits[$role] ?? config('security.api.rate_limit_authenticated', 60);
+            // Get API rate limit from database settings (fallback to 1000 per minute)
+            return ConfigHelper::securitySetting($companyId, 'access', 'api_rate_limit', 1000);
         }
 
+        // For unauthenticated requests, use a lower limit from config
         return config('security.api.rate_limit_unauthenticated', 30);
     }
 

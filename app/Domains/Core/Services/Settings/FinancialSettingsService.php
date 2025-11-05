@@ -73,6 +73,29 @@ class FinancialSettingsService extends BaseSettingsService
                     'cash_enabled' => 'boolean',
                 ];
 
+            case 'accounting':
+                return [
+                    'chart_of_accounts_enabled' => 'boolean',
+                    'default_currency' => self::NULLABLE_STRING . '|max:3',
+                    'fiscal_year_start' => 'nullable|integer|between:1,12',
+                    'accounting_method' => 'nullable|in:accrual,cash',
+                    'enable_multi_currency' => 'boolean',
+                    'auto_create_accounts' => 'boolean',
+                ];
+
+            case 'payments':
+                return [
+                    'accept_credit_cards' => 'boolean',
+                    'accept_ach' => 'boolean',
+                    'accept_checks' => 'boolean',
+                    'accept_cash' => 'boolean',
+                    'accept_wire_transfer' => 'boolean',
+                    'payment_processing_fee' => 'nullable|numeric|between:0,100',
+                    'minimum_payment_amount' => 'nullable|numeric|min:0',
+                    'convenience_fee_enabled' => 'boolean',
+                    'convenience_fee_percentage' => 'nullable|numeric|between:0,100',
+                ];
+
             default:
                 return [];
         }
@@ -163,6 +186,29 @@ class FinancialSettingsService extends BaseSettingsService
                     'cash_enabled' => true,
                 ];
 
+            case 'accounting':
+                return [
+                    'chart_of_accounts_enabled' => true,
+                    'default_currency' => 'USD',
+                    'fiscal_year_start' => 1, // January
+                    'accounting_method' => 'accrual',
+                    'enable_multi_currency' => false,
+                    'auto_create_accounts' => true,
+                ];
+
+            case 'payments':
+                return [
+                    'accept_credit_cards' => true,
+                    'accept_ach' => true,
+                    'accept_checks' => true,
+                    'accept_cash' => true,
+                    'accept_wire_transfer' => true,
+                    'payment_processing_fee' => 0,
+                    'minimum_payment_amount' => 0,
+                    'convenience_fee_enabled' => false,
+                    'convenience_fee_percentage' => 0,
+                ];
+
             default:
                 return [];
         }
@@ -200,6 +246,20 @@ class FinancialSettingsService extends BaseSettingsService
                     'name' => 'Payment Gateways',
                     'description' => 'Configure payment processors',
                     'icon' => 'credit-card',
+                ];
+
+            case 'accounting':
+                return [
+                    'name' => 'Accounting',
+                    'description' => 'General ledger and accounting rules',
+                    'icon' => 'book-open',
+                ];
+
+            case 'payments':
+                return [
+                    'name' => 'Payments',
+                    'description' => 'Payment methods and processing',
+                    'icon' => 'banknotes',
                 ];
 
             default:

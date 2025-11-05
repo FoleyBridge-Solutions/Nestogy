@@ -6,11 +6,11 @@
         
         @if(isset($sidebarConfig['title']) && !$this->mobile)
         <!-- Sidebar Header -->
-        <div class="flex-shrink-0 px-3 py-3 border-b border-zinc-200 dark:border-zinc-700 bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-zinc-800 dark:to-zinc-900">
+        <div class="flex-shrink-0 px-3 py-3 border-b border-zinc-200 dark:border-zinc-700 bg-gradient-to-r from-[color-mix(in_oklab,var(--color-accent),white_95%)] to-[color-mix(in_oklab,var(--color-accent),white_90%)] dark:from-zinc-800 dark:to-zinc-900">
             <div class="flex items-center space-x-3">
                 @if(isset($sidebarConfig['icon']))
                 <div class="flex-shrink-0">
-                    <flux:icon name="{{ $sidebarConfig['icon'] }}" class="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+                    <flux:icon name="{{ $sidebarConfig['icon'] }}" class="w-6 h-6 text-[var(--color-accent)]" />
                 </div>
                 @endif
                 <div class="flex-1 min-w-0">
@@ -28,7 +28,7 @@
                     @endif
                 </div>
                 <div class="flex-shrink-0">
-                    <div class="w-2 h-2 bg-gradient-to-r from-indigo-500 to-blue-500 rounded-full animate-pulse"></div>
+                    <div class="w-2 h-2 bg-[var(--color-accent)] rounded-full animate-pulse"></div>
                 </div>
             </div>
         </div>
@@ -83,10 +83,10 @@
                                 @endphp
                                 <a
                                     href="{{ $itemHref }}"
-                                    class="group flex items-center px-3 py-3 text-sm font-bold rounded-lg {{ $isActive ? 'bg-indigo-50 border-r-4 border-indigo-500 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-200' : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-gray-100' }} {{ $this->mobile ? 'py-6 text-base' : '' }}"
+                                    class="group flex items-center px-3 py-3 text-sm font-bold rounded-lg {{ $isActive ? 'bg-[color-mix(in_oklab,var(--color-accent),white_90%)] border-r-4 border-[var(--color-accent)] text-[var(--color-accent-content)] dark:bg-[color-mix(in_oklab,var(--color-accent),black_80%)] dark:text-[var(--color-accent-foreground)]' : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-gray-100' }} {{ $this->mobile ? 'py-6 text-base' : '' }}"
                                 >
                                     @if($iconAttr)
-                                        <flux:icon name="{{ $iconAttr }}" class="mr-3 w-6 h-6 {{ $isActive ? 'text-indigo-500 dark:text-indigo-300' : 'text-gray-400 group-hover:text-gray-500 dark:text-gray-500 dark:group-hover:text-gray-400' }}" />
+                                        <flux:icon name="{{ $iconAttr }}" class="mr-3 w-6 h-6 {{ $isActive ? 'text-[var(--color-accent)]' : 'text-gray-400 group-hover:text-gray-500 dark:text-gray-500 dark:group-hover:text-gray-400' }}" />
                                     @endif
                                     <span class="flex-1">{{ $item['name'] }}</span>
                                     @if($badgeAttr)
@@ -141,11 +141,11 @@
                                     @endphp
                                     <a
                                         href="{{ $itemHref }}"
-                                        class="group flex items-center px-3 py-2 text-sm font-medium rounded-lg {{ $isActive ? 'bg-indigo-50 border-r-4 border-indigo-500 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-200' : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-gray-100' }} {{ $this->mobile ? 'py-2 text-base min-h-[44px]' : '' }}"
+                                        class="group flex items-center px-3 py-2 text-sm font-medium rounded-lg {{ $isActive ? 'bg-[color-mix(in_oklab,var(--color-accent),white_90%)] border-r-4 border-[var(--color-accent)] text-[var(--color-accent-content)] dark:bg-[color-mix(in_oklab,var(--color-accent),black_80%)] dark:text-[var(--color-accent-foreground)]' : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-gray-100' }} {{ $this->mobile ? 'py-2 text-base min-h-[44px]' : '' }}"
                                     >
-                                        @if($iconAttr)
-                                            <flux:icon name="{{ $iconAttr }}" class="mr-3 w-5 h-5 {{ $isActive ? 'text-indigo-500 dark:text-indigo-300' : 'text-gray-400 group-hover:text-gray-500 dark:text-gray-500 dark:group-hover:text-gray-400' }}" />
-                                        @endif
+                                            @if($iconAttr)
+                                            <flux:icon name="{{ $iconAttr }}" class="mr-3 w-5 h-5 {{ $isActive ? 'text-[var(--color-accent)]' : 'text-gray-400 group-hover:text-gray-500 dark:text-gray-500 dark:group-hover:text-gray-400' }}" />
+                                            @endif
                                         <span class="flex-1">{{ $item['name'] }}</span>
                                         @if($badgeAttr)
                                             <span class="ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200">

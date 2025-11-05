@@ -1,0 +1,29 @@
+includes:
+    - vendor/nunomaduro/larastan/extension.neon
+
+parameters:
+    paths:
+        - app
+        - config
+        - database
+        - routes
+
+    # Rule level (0-9, higher is stricter)
+    level: 5
+
+    ignoreErrors:
+        # Ignore specific Laravel magic methods
+        - '#Call to an undefined method Illuminate\\Database\\Eloquent\\Builder#'
+        # Ignore Scout trait (not installed)
+        - '#Trait "Laravel\\Scout\\Searchable" not found#'
+        # Ignore missing job classes
+        - '#Class App\\Jobs\\SyncTacticalRmmAgents was not found#'
+        - '#Class App\\Jobs\\SyncTacticalRmmAlerts was not found#'
+        
+    excludePaths:
+        - app/Providers/TelescopeServiceProvider.php (?)
+        - app/Livewire/TacticalRmmIntegration.php (?)
+        - app/Domains/Knowledge/Models/KbArticle.php (?)
+        
+    # Useful rules for finding dead code
+    reportUnmatchedIgnoredErrors: false

@@ -44,4 +44,3 @@ class CrossCompanyUserSeeder extends Seeder
         $this->command->info('Cross Company User Seeder completed!');
     }
 }
-}

@@ -27,11 +27,11 @@
             </div>
             <div class="flex gap-2">
                 @if($activeEntry)
-                    <flux:button variant="danger" size="lg" icon="arrow-right-end-on-rectangle" wire:click="clockOut">
+                    <flux:button variant="danger" size="base" icon="arrow-right-end-on-rectangle" wire:click="clockOut">
                         Clock Out
                     </flux:button>
                 @else
-                    <flux:button variant="primary" size="lg" icon="arrow-right-end-on-rectangle" wire:click="clockIn">
+                    <flux:button variant="primary" size="base" icon="arrow-right-end-on-rectangle" wire:click="clockIn">
                         Clock In
                     </flux:button>
                 @endif

@@ -24,25 +24,17 @@ class CompanySettingsService extends BaseSettingsService
         // For general settings, pull from Company model + company_info JSON
         if ($category === 'general') {
             $companyInfo = $company->company_info ?? [];
-            $socialLinks = $company->social_links ?? [];
             
             return [
                 'company_name' => $company->name ?? '',
-                'legal_name' => $companyInfo['legal_name'] ?? '',
-                'business_type' => $companyInfo['business_type'] ?? '',
-                'tax_id' => $companyInfo['tax_id'] ?? '',
                 'website' => $company->website ?? '',
                 'email' => $company->email ?? '',
                 'phone' => $company->phone ?? '',
                 'address_line1' => $companyInfo['address_line1'] ?? '',
-                'address_line2' => $companyInfo['address_line2'] ?? '',
                 'city' => $company->city ?? '',
                 'state' => $company->state ?? '',
                 'postal_code' => $companyInfo['postal_code'] ?? '',
                 'country' => $company->country ?? '',
-                'linkedin_url' => $socialLinks['linkedin'] ?? '',
-                'twitter_url' => $socialLinks['twitter'] ?? '',
-                'facebook_url' => $socialLinks['facebook'] ?? '',
             ];
         }
         
@@ -58,8 +50,6 @@ class CompanySettingsService extends BaseSettingsService
                 'accent_content_color' => $branding['accent_content_color'] ?? '#2563eb',
                 'accent_foreground_color' => $branding['accent_foreground_color'] ?? '#ffffff',
                 'base_color_scheme' => $branding['base_color_scheme'] ?? 'zinc',
-                'default_theme' => $branding['default_theme'] ?? 'light',
-                'allow_theme_switching' => $branding['allow_theme_switching'] ?? true,
             ];
         }
         
@@ -80,20 +70,10 @@ class CompanySettingsService extends BaseSettingsService
         // For general settings, save to Company model + JSON columns
         if ($category === 'general') {
             $companyInfo = $company->company_info ?? [];
-            $socialLinks = $company->social_links ?? [];
             
             // Update company_info JSON
-            $companyInfo['legal_name'] = $data['legal_name'] ?? null;
-            $companyInfo['business_type'] = $data['business_type'] ?? null;
-            $companyInfo['tax_id'] = $data['tax_id'] ?? null;
             $companyInfo['address_line1'] = $data['address_line1'] ?? null;
-            $companyInfo['address_line2'] = $data['address_line2'] ?? null;
             $companyInfo['postal_code'] = $data['postal_code'] ?? null;
-            
-            // Update social_links JSON
-            $socialLinks['linkedin'] = $data['linkedin_url'] ?? null;
-            $socialLinks['twitter'] = $data['twitter_url'] ?? null;
-            $socialLinks['facebook'] = $data['facebook_url'] ?? null;
             
             // Update main company fields
             $company->update([
@@ -105,7 +85,6 @@ class CompanySettingsService extends BaseSettingsService
                 'state' => $data['state'] ?? null,
                 'country' => $data['country'] ?? null,
                 'company_info' => $companyInfo,
-                'social_links' => $socialLinks,
             ]);
         } 
         
@@ -120,8 +99,6 @@ class CompanySettingsService extends BaseSettingsService
             $branding['accent_content_color'] = $data['accent_content_color'] ?? '#2563eb';
             $branding['accent_foreground_color'] = $data['accent_foreground_color'] ?? '#ffffff';
             $branding['base_color_scheme'] = $data['base_color_scheme'] ?? 'zinc';
-            $branding['default_theme'] = $data['default_theme'] ?? 'light';
-            $branding['allow_theme_switching'] = isset($data['allow_theme_switching']);
             
             $company->update(['branding' => $branding]);
         }
@@ -148,13 +125,10 @@ class CompanySettingsService extends BaseSettingsService
             case 'general':
                 return [
                     'company_name' => 'required|string|max:255',
-                    'legal_name' => self::VALIDATION_NULLABLE_STRING_255,
-                    'tax_id' => 'nullable|string|max:50',
                     'website' => self::VALIDATION_NULLABLE_URL,
                     'phone' => 'nullable|string|max:20',
                     'email' => 'nullable|email',
                     'address_line1' => self::VALIDATION_NULLABLE_STRING_255,
-                    'address_line2' => self::VALIDATION_NULLABLE_STRING_255,
                     'city' => 'nullable|string|max:100',
                     'state' => 'nullable|string|max:100',
                     'postal_code' => 'nullable|string|max:20',
@@ -170,8 +144,6 @@ class CompanySettingsService extends BaseSettingsService
                     'accent_content_color' => 'nullable|string|regex:/^#[0-9A-Fa-f]{6}$/',
                     'accent_foreground_color' => 'nullable|string|regex:/^#[0-9A-Fa-f]{6}$/',
                     'base_color_scheme' => 'nullable|in:zinc,slate,gray,neutral,stone',
-                    'default_theme' => 'nullable|in:light,dark,auto',
-                    'allow_theme_switching' => 'boolean',
                 ];
 
             case 'localization':

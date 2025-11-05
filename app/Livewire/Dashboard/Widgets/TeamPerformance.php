@@ -128,7 +128,7 @@ class TeamPerformance extends Component
             ->keyBy('user_id');
 
         // Calculate metrics for each user
-        return $users->map(function ($user) use ($ticketMetrics, $timeMetrics, $periodStart) {
+        return $users->map(function ($user) use ($ticketMetrics, $timeMetrics) {
             $userId = $user->id;
 
             // Get ticket metrics (or defaults)

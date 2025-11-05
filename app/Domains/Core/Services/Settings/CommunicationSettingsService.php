@@ -74,6 +74,17 @@ class CommunicationSettingsService extends BaseSettingsService
                     'digest_frequency' => 'required_if:notification_digest,true|in:daily,weekly,monthly',
                 ];
 
+            case 'templates':
+                return [
+                    'use_custom_templates' => 'boolean',
+                    'invoice_template' => 'nullable|string',
+                    'quote_template' => 'nullable|string',
+                    'receipt_template' => 'nullable|string',
+                    'welcome_email_template' => 'nullable|string',
+                    'password_reset_template' => 'nullable|string',
+                    'notification_template' => 'nullable|string',
+                ];
+
             default:
                 return [];
         }
@@ -313,6 +324,17 @@ class CommunicationSettingsService extends BaseSettingsService
                     'digest_frequency' => 'daily',
                 ];
 
+            case 'templates':
+                return [
+                    'use_custom_templates' => false,
+                    'invoice_template' => '',
+                    'quote_template' => '',
+                    'receipt_template' => '',
+                    'welcome_email_template' => '',
+                    'password_reset_template' => '',
+                    'notification_template' => '',
+                ];
+
             default:
                 return [];
         }
@@ -332,6 +354,7 @@ class CommunicationSettingsService extends BaseSettingsService
                 ];
 
             case 'physical_mail':
+            case 'physical-mail':
                 return [
                     'name' => 'Physical Mail',
                     'description' => 'Configure physical mail services like PostGrid',
@@ -343,6 +366,13 @@ class CommunicationSettingsService extends BaseSettingsService
                     'name' => 'Notifications',
                     'description' => 'Configure notification channels and preferences',
                     'icon' => 'bell',
+                ];
+
+            case 'templates':
+                return [
+                    'name' => 'Templates',
+                    'description' => 'Email and communication templates',
+                    'icon' => 'document-duplicate',
                 ];
 
             default:

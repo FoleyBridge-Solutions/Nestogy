@@ -345,14 +345,6 @@ class CommandPalette extends Component
         ])->toArray();
     }
 
-    /**
-     * Legacy method for backward compatibility - delegates to getSearchResults
-     */
-    private function performSearch($query)
-    {
-        $this->results = $this->getSearchResults($query);
-    }
-
     private function getQuickActions($query)
     {
         $user = Auth::user();
@@ -575,55 +567,6 @@ class CommandPalette extends Component
         }
 
         return $processed;
-    }
-
-    /**
-     * Generate searchable keywords for a navigation item
-     */
-    private function generateKeywords($name, $context)
-    {
-        $keywords = [];
-
-        // Add the name itself
-        $keywords[] = strtolower($name);
-
-        // Add context
-        $keywords[] = strtolower($context);
-
-        // Add common variations
-        $nameWords = explode(' ', strtolower($name));
-        foreach ($nameWords as $word) {
-            if (strlen($word) > 2) { // Skip short words
-                $keywords[] = $word;
-            }
-        }
-
-        // Add specific keywords for common items
-        $specificKeywords = [
-            'client details' => ['customer', 'account'],
-            'open tickets' => ['issues', 'problems', 'support'],
-            'contacts' => ['people', 'users'],
-            'locations' => ['addresses', 'sites'],
-            'invoices' => ['bills', 'billing'],
-            'quotes' => ['estimates', 'proposals'],
-            'contracts' => ['agreements', 'sla'],
-            'assets' => ['equipment', 'hardware', 'devices'],
-            'projects' => ['tasks', 'work'],
-            'email' => ['mail', 'messages'],
-            'settings' => ['config', 'configuration', 'preferences'],
-            'reports' => ['analytics', 'stats', 'statistics'],
-            'security' => ['permissions', 'access', 'auth'],
-            'users' => ['staff', 'employees', 'team'],
-        ];
-
-        $nameLower = strtolower($name);
-        foreach ($specificKeywords as $item => $itemKeywords) {
-            if (str_contains($nameLower, $item)) {
-                $keywords = array_merge($keywords, $itemKeywords);
-            }
-        }
-
-        return array_unique($keywords);
     }
 
     /**

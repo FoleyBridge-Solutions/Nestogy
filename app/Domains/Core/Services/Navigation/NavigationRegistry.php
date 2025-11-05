@@ -695,7 +695,7 @@ class NavigationRegistry
 
         static::register('hr', 'time-off', [
             'label' => 'Time Off Requests',
-            'icon' => 'calendar-x',
+            'icon' => 'calendar',
             'route' => 'hr.time-off.index',
             'permission' => 'manage-hr',
             'section' => 'admin',

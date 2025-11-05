@@ -35,4 +35,3 @@ class PortalNotificationSeeder extends Seeder
         $this->command->info('Portal Notification Seeder completed!');
     }
 }
-}

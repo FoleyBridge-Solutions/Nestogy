@@ -67,7 +67,7 @@
                     {{ $contacts->links() }}
                 </div>
             @else
-                <flux:button variant="primary" size="lg" href="{{ route('clients.index') }}" class="mt-4">
+                <flux:button variant="primary" size="base" href="{{ route('clients.index') }}" class="mt-4">
                     Browse Clients
                 </flux:button>
             @endif

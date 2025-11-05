@@ -1,11 +1,13 @@
 <?php
 
 namespace App\Domains\Core\Models;
-use App\Domains\Company\Models\Company;
 
+use App\Domains\Company\Models\Company;
+use App\Helpers\ConfigHelper;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Auth;
 
 class AuditLog extends Model
 {
@@ -115,11 +117,18 @@ class AuditLog extends Model
     /**
      * Log a security event.
      */
-    public static function logSecurity(string $action, array $metadata = [], string $severity = self::SEVERITY_WARNING): self
+    public static function logSecurity(string $action, array $metadata = [], string $severity = self::SEVERITY_WARNING): ?self
     {
+        // Check if audit logging is enabled
+        $companyId = Auth::check() ? Auth::user()->company_id : session('company_id');
+        
+        if (!static::isAuditEnabled($companyId, 'audit')) {
+            return null;
+        }
+
         return static::create([
             'user_id' => auth()->id(),
-            'company_id' => session('company_id'),
+            'company_id' => $companyId,
             'event_type' => self::EVENT_SECURITY,
             'action' => $action,
             'metadata' => $metadata,
@@ -135,11 +144,18 @@ class AuditLog extends Model
     /**
      * Log an API event.
      */
-    public static function logApi(string $action, array $metadata = [], ?int $responseStatus = null): self
+    public static function logApi(string $action, array $metadata = [], ?int $responseStatus = null): ?self
     {
+        // Check if API request auditing is enabled
+        $companyId = Auth::check() ? Auth::user()->company_id : session('company_id');
+        
+        if (!static::isAuditEnabled($companyId, 'audit_api_requests')) {
+            return null;
+        }
+
         return static::create([
             'user_id' => auth()->id(),
-            'company_id' => session('company_id'),
+            'company_id' => $companyId,
             'event_type' => self::EVENT_API,
             'action' => $action,
             'metadata' => $metadata,
@@ -155,11 +171,18 @@ class AuditLog extends Model
     /**
      * Log a model event.
      */
-    public static function logModel(Model $model, string $eventType, array $oldValues = [], array $newValues = []): self
+    public static function logModel(Model $model, string $eventType, array $oldValues = [], array $newValues = []): ?self
     {
+        // Check if user action auditing is enabled
+        $companyId = Auth::check() ? Auth::user()->company_id : session('company_id');
+        
+        if (!static::isAuditEnabled($companyId, 'audit_user_actions')) {
+            return null;
+        }
+
         return static::create([
             'user_id' => auth()->id(),
-            'company_id' => session('company_id'),
+            'company_id' => $companyId,
             'event_type' => $eventType,
             'model_type' => get_class($model),
             'model_id' => $model->getKey(),
@@ -173,6 +196,27 @@ class AuditLog extends Model
             'request_url' => request()->fullUrl(),
             'severity' => self::SEVERITY_INFO,
         ]);
+    }
+
+    /**
+     * Check if audit logging is enabled for a specific type
+     */
+    protected static function isAuditEnabled(?int $companyId, string $settingKey): bool
+    {
+        // Get audit enabled setting from database
+        $auditEnabled = ConfigHelper::securitySetting($companyId, 'audit', 'audit_enabled', true);
+        
+        if (!$auditEnabled) {
+            return false;
+        }
+
+        // If checking main audit setting, return here
+        if ($settingKey === 'audit') {
+            return true;
+        }
+
+        // Check specific audit type setting
+        return ConfigHelper::securitySetting($companyId, 'audit', $settingKey, true);
     }
 
     /**

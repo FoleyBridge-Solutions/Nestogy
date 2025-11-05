@@ -358,3 +358,12 @@ window.formatDate = (date, formatStr = 'yyyy-MM-dd') => {
 };
 
 // Alpine.js completely removed - using Flux/Livewire only
+
+// Alpine Clipboard Plugin Registration
+document.addEventListener('livewire:init', () => {
+    import('@ryangjchandler/alpine-clipboard').then(module => {
+        if (window.Alpine) {
+            window.Alpine.plugin(module.default);
+        }
+    });
+});

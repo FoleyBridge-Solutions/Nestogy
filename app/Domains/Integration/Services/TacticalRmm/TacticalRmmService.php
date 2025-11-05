@@ -1123,4 +1123,117 @@ class TacticalRmmService implements RmmServiceInterface
             'collected_at' => now()->toISOString(),
         ];
     }
+
+    /**
+     * Get all deployments.
+     */
+    public function getDeployments(): array
+    {
+        $response = $this->apiClient->get('/clients/deployments/');
+
+        if (! $response['success']) {
+            return $response;
+        }
+
+        return [
+            'success' => true,
+            'data' => $response['data'],
+        ];
+    }
+
+    /**
+     * Get deployment link for a specific client.
+     * Uses the first available deployment or creates one if needed.
+     */
+    public function getDeploymentLink(?int $clientId = null, ?int $siteId = null): array
+    {
+        // Get existing deployments
+        $deploymentsResponse = $this->getDeployments();
+
+        if (! $deploymentsResponse['success']) {
+            Log::error('TacticalRMM: Failed to get deployments', [
+                'integration_id' => $this->integration->id,
+                'error' => $deploymentsResponse['message'] ?? 'Unknown error',
+            ]);
+
+            return $deploymentsResponse;
+        }
+
+        $deployments = $deploymentsResponse['data'];
+
+        // Find a deployment for this client/site, or use first available
+        $selectedDeployment = null;
+        if (!empty($deployments)) {
+            foreach ($deployments as $deployment) {
+                // If client specified, try to match it
+                if ($clientId && isset($deployment['client_id']) && $deployment['client_id'] == $clientId) {
+                    // If site also specified, try to match it
+                    if (!$siteId || (isset($deployment['site_id']) && $deployment['site_id'] == $siteId)) {
+                        $selectedDeployment = $deployment;
+                        break;
+                    }
+                }
+            }
+
+            // If no match found and we have deployments, use the first one
+            if (!$selectedDeployment && !empty($deployments)) {
+                $selectedDeployment = $deployments[0];
+            }
+        }
+
+        // If no deployments exist at all, return error (creating requires specific date format)
+        if (!$selectedDeployment) {
+            Log::warning('TacticalRMM: No deployments available', [
+                'integration_id' => $this->integration->id,
+                'client_id' => $clientId,
+                'site_id' => $siteId,
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'No deployment configurations found in TacticalRMM. Please create a deployment in the TacticalRMM dashboard first.',
+                'data' => null,
+            ];
+        }
+
+        // Build the download URL using the deployment UID
+        $downloadUrl = $this->getDeploymentDownloadUrl($selectedDeployment);
+
+        Log::info('TacticalRMM: Deployment link retrieved', [
+            'integration_id' => $this->integration->id,
+            'deployment_uid' => $selectedDeployment['uid'] ?? null,
+            'client_name' => $selectedDeployment['client_name'] ?? null,
+            'site_name' => $selectedDeployment['site_name'] ?? null,
+        ]);
+
+        return [
+            'success' => true,
+            'deployment' => $selectedDeployment,
+            'download_url' => $downloadUrl,
+        ];
+    }
+
+    /**
+     * Get the download URL for a deployment.
+     */
+    protected function getDeploymentDownloadUrl(array $deployment): string
+    {
+        $deploymentUid = $deployment['uid'] ?? null;
+        
+        if (!$deploymentUid) {
+            return '';
+        }
+
+        // TacticalRMM deployment download URL pattern
+        return rtrim($this->integration->api_url, '/') . '/clients/' . $deploymentUid . '/deploy/';
+    }
+
+    /**
+     * Get deployment link for the default/first deployment.
+     * Uses first available deployment.
+     */
+    public function getDefaultDeploymentLink(): array
+    {
+        return $this->getDeploymentLink();
+    }
 }

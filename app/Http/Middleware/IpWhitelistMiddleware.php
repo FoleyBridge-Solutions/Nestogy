@@ -3,8 +3,10 @@
 namespace App\Http\Middleware;
 
 use App\Domains\Core\Models\AuditLog;
+use App\Helpers\ConfigHelper;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -26,8 +28,13 @@ class IpWhitelistMiddleware
     {
         $clientIp = $this->getClientIp($request);
 
-        // Check if IP whitelisting is enabled
-        if (! config('security.ip_whitelist.enabled', false)) {
+        // Get company ID for settings lookup
+        $companyId = Auth::check() ? Auth::user()->company_id : null;
+
+        // Check if IP whitelisting is enabled (database setting with config fallback)
+        $enabled = ConfigHelper::securitySetting($companyId, 'access', 'ip_whitelist_enabled', false);
+        
+        if (! $enabled) {
             return $next($request);
         }
 
@@ -37,7 +44,7 @@ class IpWhitelistMiddleware
         }
 
         // Get the appropriate whitelist
-        $whitelist = $this->getWhitelist($listName);
+        $whitelist = $this->getWhitelist($listName, $companyId);
 
         // Check if IP is whitelisted
         if (! $this->isIpAllowed($clientIp, $whitelist)) {
@@ -101,22 +108,30 @@ class IpWhitelistMiddleware
     /**
      * Get the whitelist configuration.
      */
-    protected function getWhitelist(?string $listName): array
+    protected function getWhitelist(?string $listName, ?int $companyId): array
     {
         // Cache whitelist for performance
-        $cacheKey = 'ip_whitelist_'.($listName ?? 'default');
+        $cacheKey = 'ip_whitelist_'.($companyId ?? 'default').'_'.($listName ?? 'default');
 
-        return Cache::remember($cacheKey, 300, function () use ($listName) {
+        return Cache::remember($cacheKey, 300, function () use ($listName, $companyId) {
             if ($listName) {
-                // Get named whitelist
+                // Get named whitelist from config (named lists not yet in database)
                 $namedLists = config('security.ip_whitelist.lists', []);
                 if (isset($namedLists[$listName])) {
                     return $namedLists[$listName];
                 }
             }
 
-            // Get default whitelist
-            return config('security.ip_whitelist.allowed_ips', []);
+            // Get whitelist from database settings
+            $whitelist = ConfigHelper::securitySetting($companyId, 'access', 'ip_whitelist', []);
+            
+            // Ensure it's an array
+            if (is_string($whitelist)) {
+                // Convert newline-separated list to array
+                $whitelist = array_filter(array_map('trim', explode("\n", $whitelist)));
+            }
+
+            return is_array($whitelist) ? $whitelist : [];
         });
     }
 

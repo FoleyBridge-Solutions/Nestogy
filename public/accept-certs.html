@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Accept SSL Certificates</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+        h1 { color: #333; }
+        .cert-link { display: block; margin: 10px 0; padding: 10px; background: #f0f0f0; border-radius: 4px; }
+        .cert-link a { color: #0066cc; text-decoration: none; font-weight: bold; }
+        .instructions { background: #fff3cd; padding: 15px; border-radius: 4px; margin: 20px 0; }
+        .success { background: #d4edda; padding: 15px; border-radius: 4px; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <h1>Accept SSL Certificates for Development</h1>
+    
+    <div class="instructions">
+        <strong>Instructions:</strong>
+        <ol>
+            <li>Click each link below</li>
+            <li>Accept the security warning (click "Advanced" then "Accept the Risk and Continue" or "Proceed")</li>
+            <li>You should see "OK" or content from each service</li>
+            <li>Return to this page and click the next link</li>
+            <li>After accepting all certificates, refresh your main application page</li>
+        </ol>
+    </div>
+
+    <h2>Certificates to Accept:</h2>
+    
+    <div class="cert-link">
+        <strong>1. Main Application (HTTPS):</strong><br>
+        <a href="https://10.0.3.179:8443" target="_blank">https://10.0.3.179:8443</a>
+    </div>
+    
+    <div class="cert-link">
+        <strong>2. Vite Dev Server (HTTPS):</strong><br>
+        <a href="https://10.0.3.179:5173/@vite/client" target="_blank">https://10.0.3.179:5173/@vite/client</a>
+    </div>
+    
+    <div class="cert-link">
+        <strong>3. Reverb WebSocket Server:</strong><br>
+        <a href="https://10.0.3.179:8080" target="_blank">https://10.0.3.179:8080</a>
+    </div>
+
+    <div class="success">
+        <strong>✓ Once all certificates are accepted, your application should work without CORS errors!</strong>
+    </div>
+
+    <script>
+        // Test if certificates are accepted
+        setTimeout(() => {
+            fetch('https://10.0.3.179:5173/@vite/client')
+                .then(response => {
+                    if (response.ok) {
+                        console.log('✓ Vite certificate accepted');
+                    }
+                })
+                .catch(error => {
+                    console.log('✗ Vite certificate not yet accepted:', error.message);
+                });
+        }, 1000);
+    </script>
+</body>
+</html>

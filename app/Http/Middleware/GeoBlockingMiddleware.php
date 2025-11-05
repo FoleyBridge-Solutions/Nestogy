@@ -3,8 +3,10 @@
 namespace App\Http\Middleware;
 
 use App\Domains\Core\Models\AuditLog;
+use App\Helpers\ConfigHelper;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Symfony\Component\HttpFoundation\Response;
@@ -26,8 +28,15 @@ class GeoBlockingMiddleware
      */
     public function handle(Request $request, Closure $next, ?string $mode = null, ?string $countries = null): Response
     {
-        // Check if geo-blocking is enabled
-        if (! config('security.geo_blocking.enabled', false)) {
+        // Get company ID for settings lookup
+        $companyId = Auth::check() ? Auth::user()->company_id : null;
+
+        // Check if geo-blocking is enabled from database settings or check for block_tor_vpn
+        $geoBlockingEnabled = config('security.geo_blocking.enabled', false);
+        $blockTorVpn = ConfigHelper::securitySetting($companyId, 'access', 'block_tor_vpn', false);
+        
+        // If neither geo-blocking nor Tor/VPN blocking is enabled, allow through
+        if (! $geoBlockingEnabled && ! $blockTorVpn) {
             return $next($request);
         }
 
@@ -52,23 +61,37 @@ class GeoBlockingMiddleware
             return $next($request);
         }
 
+        // Get allowed countries from database settings
+        $allowedCountries = ConfigHelper::securitySetting($companyId, 'access', 'allowed_countries', []);
+        
+        // Convert to array if it's a string
+        if (is_string($allowedCountries) && !empty($allowedCountries)) {
+            $allowedCountries = array_filter(array_map('trim', explode("\n", $allowedCountries)));
+        }
+        
+        // Ensure it's an array
+        $allowedCountries = is_array($allowedCountries) ? $allowedCountries : [];
+
         // Determine mode and countries list
-        $mode = $mode ?? config('security.geo_blocking.mode', 'block');
-        $countriesList = $countries ? explode(',', $countries) : config('security.geo_blocking.countries', []);
+        $mode = $mode ?? config('security.geo_blocking.mode', 'allow');
+        $countriesList = $countries ? explode(',', $countries) : $allowedCountries;
         $countriesList = array_map('strtoupper', array_map('trim', $countriesList));
 
-        // Check if access should be allowed
-        $isInList = in_array(strtoupper($country), $countriesList);
-        $shouldAllow = ($mode === 'allow' && $isInList) || ($mode === 'block' && ! $isInList);
+        // If we have allowed countries configured, check them
+        if (!empty($countriesList)) {
+            // Check if access should be allowed
+            $isInList = in_array(strtoupper($country), $countriesList);
+            $shouldAllow = ($mode === 'allow' && $isInList) || ($mode === 'block' && ! $isInList);
 
-        if (! $shouldAllow) {
-            $this->logBlockedAttempt($request, $clientIp, $country, "Country $country is ".($mode === 'allow' ? 'not allowed' : 'blocked'));
+            if (! $shouldAllow) {
+                $this->logBlockedAttempt($request, $clientIp, $country, "Country $country is ".($mode === 'allow' ? 'not allowed' : 'blocked'));
 
-            // Return appropriate response
-            if (config('security.geo_blocking.stealth_mode', false)) {
-                abort(404); // Pretend the resource doesn't exist
-            } else {
-                abort(403, 'Access denied. This service is not available in your region.');
+                // Return appropriate response
+                if (config('security.geo_blocking.stealth_mode', false)) {
+                    abort(404); // Pretend the resource doesn't exist
+                } else {
+                    abort(403, 'Access denied. This service is not available in your region.');
+                }
             }
         }
 

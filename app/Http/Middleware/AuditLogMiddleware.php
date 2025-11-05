@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Domains\Core\Models\AuditLog;
+use App\Helpers\ConfigHelper;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -71,6 +72,14 @@ class AuditLogMiddleware
      */
     protected function shouldLog(Request $request): bool
     {
+        // Check if audit logging is enabled in settings
+        $companyId = Auth::check() ? Auth::user()->company_id : session('company_id');
+        $auditEnabled = ConfigHelper::securitySetting($companyId, 'audit', 'audit_enabled', true);
+        
+        if (!$auditEnabled) {
+            return false;
+        }
+
         // Don't log if user is not authenticated (unless it's a security event)
         if (! Auth::check() && ! $this->isSecurityEvent($request)) {
             return false;

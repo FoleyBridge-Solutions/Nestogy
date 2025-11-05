@@ -2,6 +2,8 @@
 
 namespace App\Helpers;
 
+use App\Domains\Core\Models\SettingsConfiguration;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
 
 class ConfigHelper
@@ -364,5 +366,64 @@ class ConfigHelper
         }
 
         return Config::get("nestogy.assets.{$key}", $default);
+    }
+
+    /**
+     * Get security setting from database (fallback to config if not found)
+     * 
+     * @param int|null $companyId Company ID (if null, uses current user's company)
+     * @param string $category Security category (authentication, access, audit)
+     * @param string $key Setting key
+     * @param mixed $default Default value if not found
+     * @return mixed
+     */
+    public static function securitySetting(?int $companyId, string $category, string $key, $default = null)
+    {
+        // Get company ID if not provided
+        if ($companyId === null) {
+            $user = Auth::user();
+            if (!$user || !$user->company_id) {
+                // No authenticated user, fall back to static config
+                return Config::get("security.{$key}", $default);
+            }
+            $companyId = $user->company_id;
+        }
+
+        // Get settings from database
+        $settings = SettingsConfiguration::getSettings(
+            $companyId,
+            SettingsConfiguration::DOMAIN_SECURITY,
+            $category
+        );
+
+        // Return setting value or default
+        return $settings[$key] ?? Config::get("security.{$key}", $default);
+    }
+
+    /**
+     * Get all security settings for a category from database
+     * 
+     * @param int|null $companyId Company ID (if null, uses current user's company)
+     * @param string $category Security category (authentication, access, audit)
+     * @return array
+     */
+    public static function securitySettings(?int $companyId, string $category): array
+    {
+        // Get company ID if not provided
+        if ($companyId === null) {
+            $user = Auth::user();
+            if (!$user || !$user->company_id) {
+                // No authenticated user, return empty array
+                return [];
+            }
+            $companyId = $user->company_id;
+        }
+
+        // Get settings from database (cached)
+        return SettingsConfiguration::getSettings(
+            $companyId,
+            SettingsConfiguration::DOMAIN_SECURITY,
+            $category
+        );
     }
 }

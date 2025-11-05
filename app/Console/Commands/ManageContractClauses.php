@@ -9,15 +9,6 @@ use Illuminate\Console\Command;
 
 class ManageContractClauses extends Command
 {
-    // Class constants to reduce duplication
-    private const ACTION_LIST = 'list';
-
-    private const ACTION_ADD = 'add';
-
-    private const ACTION_REMOVE = 'remove';
-
-    private const MSG_MANAGE_START = 'Managing contract clauses...';
-
     /**
      * The name and signature of the console command.
      *

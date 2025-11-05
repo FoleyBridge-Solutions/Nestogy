@@ -1,9 +1,4 @@
 <div class="space-y-8">
-    <flux:callout icon="sparkles" variant="info">
-        <flux:heading size="sm">Customize Your Brand</flux:heading>
-        <flux:text size="sm" class="mt-1">Make this application your own by uploading your logo and choosing colors that match your brand identity. All changes apply instantly across the entire platform.</flux:text>
-    </flux:callout>
-
     <flux:card>
         <div class="flex items-start justify-between mb-4">
             <div>
@@ -219,53 +214,6 @@
                 </flux:text>
             </flux:field>
 
-            <flux:separator />
-
-            <flux:field>
-                <flux:label>Default Theme</flux:label>
-                <flux:select name="default_theme">
-                    <flux:select.option value="light" :selected="($settings['default_theme'] ?? 'light') === 'light'">
-                        <flux:icon name="sun" variant="micro" class="inline" /> Light Mode
-                    </flux:select.option>
-                    <flux:select.option value="dark" :selected="($settings['default_theme'] ?? 'light') === 'dark'">
-                        <flux:icon name="moon" variant="micro" class="inline" /> Dark Mode
-                    </flux:select.option>
-                    <flux:select.option value="auto" :selected="($settings['default_theme'] ?? 'light') === 'auto'">
-                        <flux:icon name="computer-desktop" variant="micro" class="inline" /> Auto (System Preference)
-                    </flux:select.option>
-                </flux:select>
-                <flux:text size="sm" variant="muted">Theme shown to new users by default</flux:text>
-            </flux:field>
-
-            <flux:field variant="inline">
-                <flux:checkbox name="allow_theme_switching" :checked="$settings['allow_theme_switching'] ?? true" />
-                <div>
-                    <flux:label>Allow users to change theme</flux:label>
-                    <flux:text size="sm" variant="muted">Let users switch between light and dark mode</flux:text>
-                </div>
-            </flux:field>
-        </div>
-    </flux:card>
-
-    <flux:card>
-        <flux:heading size="lg">Theme</flux:heading>
-        <flux:text variant="muted" class="mb-6">Application theme preferences</flux:text>
-        
-        <div class="space-y-4">
-            <flux:field>
-                <flux:label>Default Theme</flux:label>
-                <flux:select name="default_theme">
-                    <flux:select.option value="light" :selected="($settings['default_theme'] ?? 'light') === 'light'">Light</flux:select.option>
-                    <flux:select.option value="dark" :selected="($settings['default_theme'] ?? 'light') === 'dark'">Dark</flux:select.option>
-                    <flux:select.option value="auto" :selected="($settings['default_theme'] ?? 'light') === 'auto'">Auto (System)</flux:select.option>
-                </flux:select>
-            </flux:field>
-
-            <flux:field>
-                <flux:label>Allow Theme Switching</flux:label>
-                <flux:switch name="allow_theme_switching" :checked="$settings['allow_theme_switching'] ?? true" />
-                <flux:text size="sm" variant="muted">Allow users to change their theme preference</flux:text>
-            </flux:field>
         </div>
     </flux:card>
 </div>

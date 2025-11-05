@@ -11,7 +11,11 @@
 
     <title>{{ $currentCompany?->name ?? config('app.name', 'Nestogy ERP') }} - @yield('title', 'Dashboard')</title>
 
-    @PwaHead
+    <!-- Favicon -->
+    @php
+        $faviconUrl = ($currentCompany?->branding['favicon_url'] ?? null) ?: asset('favicon.ico');
+    @endphp
+    <link rel="icon" type="image/x-icon" href="{{ $faviconUrl }}">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -38,14 +42,78 @@
         ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) !!};
     </script>
     
-    <!-- Company Customization Styles -->
-    @if(auth()->check() && auth()->user()->company_id)
+    <!-- Company Branding Styles -->
+    @if(auth()->check() && auth()->user()->company)
         @php
-            $settingsService = app(\App\Domains\Core\Services\SettingsService::class);
-            $companyCss = $settingsService->generateCompanyCss(auth()->user()->company);
+            $company = auth()->user()->company;
+            $branding = $company->branding ?? [];
+            $accentColor = $branding['accent_color'] ?? '#3b82f6';
+            $accentContentColor = $branding['accent_content_color'] ?? '#2563eb';
+            $accentForegroundColor = $branding['accent_foreground_color'] ?? '#ffffff';
+            $baseScheme = $branding['base_color_scheme'] ?? 'zinc';
         @endphp
         <style>
-            {!! $companyCss !!}
+            @theme {
+                --color-accent: {{ $accentColor }};
+                --color-accent-content: {{ $accentContentColor }};
+                --color-accent-foreground: {{ $accentForegroundColor }};
+                
+                @if($baseScheme !== 'zinc')
+                /* Override base color scheme to {{ $baseScheme }} */
+                @php
+                    // Define all gray color palettes (Tailwind defaults)
+                    $grayPalettes = [
+                        'slate' => [
+                            50 => '#f8fafc', 100 => '#f1f5f9', 200 => '#e2e8f0', 300 => '#cbd5e1',
+                            400 => '#94a3b8', 500 => '#64748b', 600 => '#475569', 700 => '#334155',
+                            800 => '#1e293b', 900 => '#0f172a', 950 => '#020617'
+                        ],
+                        'gray' => [
+                            50 => '#f9fafb', 100 => '#f3f4f6', 200 => '#e5e7eb', 300 => '#d1d5db',
+                            400 => '#9ca3af', 500 => '#6b7280', 600 => '#4b5563', 700 => '#374151',
+                            800 => '#1f2937', 900 => '#111827', 950 => '#030712'
+                        ],
+                        'neutral' => [
+                            50 => '#fafafa', 100 => '#f5f5f5', 200 => '#e5e5e5', 300 => '#d4d4d4',
+                            400 => '#a3a3a3', 500 => '#737373', 600 => '#525252', 700 => '#404040',
+                            800 => '#262626', 900 => '#171717', 950 => '#0a0a0a'
+                        ],
+                        'stone' => [
+                            50 => '#fafaf9', 100 => '#f5f5f4', 200 => '#e7e5e4', 300 => '#d6d3d1',
+                            400 => '#a8a29e', 500 => '#78716c', 600 => '#57534e', 700 => '#44403c',
+                            800 => '#292524', 900 => '#1c1917', 950 => '#0c0a09'
+                        ],
+                        'zinc' => [
+                            50 => '#fafafa', 100 => '#f4f4f5', 200 => '#e4e4e7', 300 => '#d4d4d8',
+                            400 => '#a1a1aa', 500 => '#71717a', 600 => '#52525b', 700 => '#3f3f46',
+                            800 => '#27272a', 900 => '#18181b', 950 => '#09090b'
+                        ]
+                    ];
+                    
+                    $selectedPalette = $grayPalettes[$baseScheme] ?? $grayPalettes['zinc'];
+                @endphp
+                
+                --color-zinc-50: {{ $selectedPalette[50] }};
+                --color-zinc-100: {{ $selectedPalette[100] }};
+                --color-zinc-200: {{ $selectedPalette[200] }};
+                --color-zinc-300: {{ $selectedPalette[300] }};
+                --color-zinc-400: {{ $selectedPalette[400] }};
+                --color-zinc-500: {{ $selectedPalette[500] }};
+                --color-zinc-600: {{ $selectedPalette[600] }};
+                --color-zinc-700: {{ $selectedPalette[700] }};
+                --color-zinc-800: {{ $selectedPalette[800] }};
+                --color-zinc-900: {{ $selectedPalette[900] }};
+                --color-zinc-950: {{ $selectedPalette[950] }};
+                @endif
+            }
+            
+            @layer theme {
+                .dark {
+                    --color-accent: {{ $accentColor }};
+                    --color-accent-content: {{ $accentContentColor }};
+                    --color-accent-foreground: {{ $accentForegroundColor }};
+                }
+            }
         </style>
     @endif
     
@@ -81,35 +149,6 @@
         [data-flux-breadcrumbs] * {
             margin: 0 !important;
         }
-        
-        /* Mobile sidebar z-index and interactivity */
-        [data-flux-sidebar] {
-            z-index: 40;
-        }
-        
-        /* Ensure sidebar content is clickable */
-        [data-flux-sidebar] a,
-        [data-flux-sidebar] button {
-            position: relative;
-            z-index: 41;
-            pointer-events: auto !important;
-        }
-        
-        /* Make sure sidebar content wrapper is above backdrop */
-        [data-flux-sidebar] > div {
-            position: relative;
-            z-index: 41;
-        }
-        
-        /* Force backdrop below sidebar - target custom elements with high specificity */
-        ui-sidebar-toggle[data-flux-sidebar-backdrop] {
-            z-index: 10 !important;
-        }
-        
-        /* Force mobile sidebar above backdrop */
-        ui-sidebar[data-flux-sidebar-on-mobile] {
-            z-index: 45 !important;
-        }
     </style>
     
 
@@ -121,19 +160,19 @@
         <flux:navbar class="w-full px-4">
             <!-- Brand (Far Left) -->
             @php
-                try {
-                    $dashboardRoute = route('dashboard');
-                } catch (\Exception $e) {
-                    $dashboardRoute = '#';
-                }
+                $company = Auth::user()?->company;
+                $companyBranding = $company?->branding ?? [];
+                $logoLight = $companyBranding['logo_url'] ?? asset('static-assets/img/branding/nestogy-logo.png');
+                $logoDark = $companyBranding['logo_dark_url'] ?? $logoLight;
+                $companyName = $company?->name ?? config('app.name', 'Nestogy');
             @endphp
-            <flux:brand href="{{ $dashboardRoute }}" 
-                        logo="{{ asset('static-assets/img/branding/nestogy-logo.png') }}" 
-                        name="{{ Auth::user()?->company?->name ?? config('app.name', 'Nestogy') }}" 
+            <flux:brand href="{{ route('dashboard') }}" 
+                        logo="{{ $logoLight }}" 
+                        name="{{ $companyName }}"
                         class="dark:hidden" />
-            <flux:brand href="{{ $dashboardRoute }}" 
-                        logo="{{ asset('static-assets/img/branding/nestogy-logo.png') }}" 
-                        name="{{ Auth::user()?->company?->name ?? config('app.name', 'Nestogy') }}" 
+            <flux:brand href="{{ route('dashboard') }}" 
+                        logo="{{ $logoDark }}" 
+                        name="{{ $companyName }}"
                         class="hidden dark:flex" />
             
             <!-- Mobile Toggle -->
@@ -145,71 +184,26 @@
             
             <flux:spacer />
             <!-- Client Switcher -->
-            @auth
-                @livewire('client-switcher')
-            @endauth
+            @livewire('client-switcher')
             
             <!-- Navbar Timer -->
-            @auth
-                @livewire('navbar-timer')
-            @endauth
-
-            <!-- Command Palette -->
-            @auth
-                @livewire('command-palette')
-            @endauth
+            @livewire('navbar-timer')
+            
+            <!-- Command Palette loaded in main layout -->
             
             {{-- Global keyboard shortcut for command palette --}}
             <script>
                 document.addEventListener('keydown', function(e) {
                     if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
                         e.preventDefault();
-                        Livewire.dispatch('openCommandPalette', { 
-                            currentRoute: '{{ Route::currentRouteName() }}' 
-                        });
+                        Livewire.dispatch('openCommandPalette');
                     }
                 });
             </script>
-            
-            <!-- Notification Center -->
-            @auth
-                @livewire('notifications.notification-center')
-            @endauth
-            @php
-                try {
-                    $emailRoute = route('email.inbox.index');
-                } catch (\Exception $e) {
-                    $emailRoute = null;
-                }
-                try {
-                    $mailRoute = route('mail.index');
-                } catch (\Exception $e) {
-                    $mailRoute = null;
-                }
-                try {
-                    $settingsRoute = route('settings.index');
-                } catch (\Exception $e) {
-                    $settingsRoute = null;
-                }
-            @endphp
-            @if($emailRoute)
-            <flux:navbar.item icon="envelope" 
-                            href="{{ $emailRoute }}" 
-                            class="max-lg:hidden"
-                            aria-label="Email" />
-            @endif
-            @if($mailRoute)
-            <flux:navbar.item icon="paper-airplane" 
-                            href="{{ $mailRoute }}" 
-                            class="max-lg:hidden"
-                            aria-label="Physical Mail" />
-            @endif
-            @if($settingsRoute)
             <flux:navbar.item icon="cog-6-tooth" 
-                            href="{{ $settingsRoute }}" 
+                            href="{{ route('settings.index') }}" 
                             class="max-lg:hidden"
                             aria-label="Settings" />
-            @endif
             <flux:navbar.item icon="information-circle" 
                             href="#" 
                             class="max-lg:hidden"
@@ -230,19 +224,8 @@
                     
                     <flux:navmenu.separator />
                     
-                    @php
-                        try {
-                            $profileRoute = route('users.profile');
-                        } catch (\Exception $e) {
-                            $profileRoute = null;
-                        }
-                    @endphp
-                    @if($profileRoute)
-                    <flux:navmenu.item href="{{ $profileRoute }}" icon="user" class="text-zinc-800 dark:text-white">Profile</flux:navmenu.item>
-                    @endif
-                    @if($settingsRoute)
-                    <flux:navmenu.item href="{{ $settingsRoute }}" icon="cog-6-tooth" class="text-zinc-800 dark:text-white">Settings</flux:navmenu.item>
-                    @endif
+                    <flux:navmenu.item href="{{ route('users.profile') }}" icon="user" class="text-zinc-800 dark:text-white">Profile</flux:navmenu.item>
+                    <flux:navmenu.item href="{{ route('settings.index') }}" icon="cog-6-tooth" class="text-zinc-800 dark:text-white">Settings</flux:navmenu.item>
                     
                     <flux:navmenu.separator />
                     
@@ -374,7 +357,7 @@
         @endif
 
         <!-- Page Content -->
-        <div class="pt-2 px-6 pb-6 lg:px-8 lg:pb-8 h-full">
+        <div class="p-4 lg:p-6">
             <!-- Standardized Page Header -->
             @if(isset($pageTitle))
                 <div class="mb-6">
@@ -401,96 +384,38 @@
                 </div>
             @endif
             @yield('content')
+            {{ $slot ?? '' }}
         </div>
     </flux:main>
-
-    <!-- Livewire Scripts -->
-    @livewireScripts
-
-    <!-- Flux Scripts -->
-    @fluxScripts
-
-    <!-- Defer Flux component initialization -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Small delay to ensure all components are rendered
-            setTimeout(function() {
-                if (window.Flux && window.Flux.init) {
-                    window.Flux.init();
-                }
-            }, 100);
-        });
-    </script>
 
     <!-- Additional Scripts -->
     @stack('scripts')
     
+    <!-- Livewire Scripts -->
+    @livewireScripts
+    
+    <!-- Flux Scripts -->
+    @fluxScripts
+    
     <!-- Flux Toast Component -->
     <flux:toast />
     
+    <!-- Global Toast Handler -->
+    <script>
+        document.addEventListener('livewire:init', () => {
+            Livewire.on('flux-toast', (event) => {
+                const data = Array.isArray(event) ? event[0] : event;
+                Flux.toast({
+                    text: data.text,
+                    variant: data.variant || 'info',
+                    duration: data.duration || 3000
+                });
+            });
+        });
+    </script>
+    
     <!-- Alpine.js removed - using Flux/Livewire components -->
     <script>
-        // Global notification listener for Livewire components
-        window.addEventListener('notify', event => {
-            console.log('Notification received:', event.detail);
-            const detail = event.detail;
-            const type = detail.type || detail[0]?.type || 'info';
-            const message = detail.message || detail[0]?.message || 'Notification';
-            
-            // Create a toast notification
-            const toast = document.createElement('div');
-            toast.className = `fixed top-4 right-4 z-50 px-6 py-4 rounded-lg shadow-lg transform translate-x-full transition-transform duration-300 ${
-                type === 'success' ? 'bg-green-100 text-green-800 border border-green-200' :
-                type === 'error' ? 'bg-red-100 text-red-800 border border-red-200' :
-                type === 'warning' ? 'bg-yellow-100 text-yellow-800 border border-yellow-200' :
-                'bg-blue-100 text-blue-800 border border-blue-200'
-            }`;
-            
-            toast.innerHTML = `
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        ${type === 'success' ? 
-                            '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>' :
-                          type === 'error' ?
-                            '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>' :
-                            '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>'
-                        }
-                    </div>
-                    <div class="ml-3">
-                        <p class="text-sm font-medium">${message}</p>
-                    </div>
-                    <div class="ml-auto pl-3">
-                        <button onclick="this.parentElement.parentElement.parentElement.remove()" class="text-current opacity-50 hover:opacity-75">
-                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-            `;
-            
-            document.body.appendChild(toast);
-            
-            // Animate in
-            setTimeout(() => toast.classList.remove('translate-x-full'), 100);
-            
-            // Auto-remove after 5 seconds
-            setTimeout(() => {
-                toast.classList.add('translate-x-full');
-                setTimeout(() => {
-                    if (toast.parentElement) {
-                        document.body.removeChild(toast);
-                    }
-                }, 300);
-            }, 5000);
-        });
-
-        // Print invoice listener
-        window.addEventListener('print-invoice', event => {
-            const { url } = event.detail;
-            // Open PDF in new tab - browser will handle PDF viewing and user can print from there
-            window.open(url, '_blank');
-        });
 
         // Theme handling for Flux UI
         document.addEventListener('DOMContentLoaded', function() {
@@ -538,11 +463,5 @@
             });
         }
     </script>
-
-    {{-- Timer Modals (Global) --}}
-    @livewire('timer-completion-modal')
-    @livewire('timer-batch-completion-modal')
-
-    @RegisterServiceWorkerScript
 </body>
 </html>

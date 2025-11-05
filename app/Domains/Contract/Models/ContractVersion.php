@@ -168,7 +168,7 @@ class ContractVersion extends Model
         return count($changes['items'] ?? []);
     }
 
-    public function hasChanges(): bool
+    public function hasVersionChanges(): bool
     {
         return $this->getChangeCount() > 0;
     }
