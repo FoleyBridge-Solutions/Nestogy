@@ -76,24 +76,23 @@ class PortalInvitationService
             $expiresAt = now()->addHours($this->config['expiration_hours']);
 
             // Update contact with invitation details
-            $contact->update([
-                'invitation_token' => Hash::make($token),
-                'invitation_sent_at' => now(),
-                'invitation_expires_at' => $expiresAt,
-                'invitation_sent_by' => $sentBy->id,
-                'invitation_status' => 'sent',
-                'has_portal_access' => true,
-            ]);
+            // Note: invitation_token is in $guarded, so we must set it directly
+            $contact->invitation_token = Hash::make($token);
+            $contact->invitation_sent_at = now();
+            $contact->invitation_expires_at = $expiresAt;
+            $contact->invitation_sent_by = $sentBy->id;
+            $contact->invitation_status = 'sent';
+            $contact->has_portal_access = true;
+            $contact->save();
 
             // Send invitation email
             $emailSent = $this->sendInvitationEmail($contact, $token);
             
             if (!$emailSent) {
                 // Rollback invitation status if email failed
-                $contact->update([
-                    'invitation_status' => 'failed',
-                    'invitation_token' => null,
-                ]);
+                $contact->invitation_token = null;
+                $contact->invitation_status = 'failed';
+                $contact->save();
                 
                 return $this->errorResponse('Failed to send invitation email. Please check your email configuration.');
             }
@@ -188,18 +187,18 @@ class PortalInvitationService
             $contact = $validationResult['contact'];
 
             // Set password and mark invitation as accepted
-            $contact->update([
-                'password_hash' => Hash::make($password),
-                'password_changed_at' => now(),
-                'invitation_accepted_at' => now(),
-                'invitation_status' => 'accepted',
-                'invitation_token' => null,
-                'email_verified_at' => now(),
-                'must_change_password' => false,
-            ]);
-
-            // Reset any failed login attempts
-            $contact->resetFailedLoginAttempts();
+            // Note: password_hash and invitation_token are in $guarded, so we must set them directly
+            $contact->password_hash = Hash::make($password);
+            $contact->invitation_token = null;
+            $contact->password_changed_at = now();
+            $contact->invitation_accepted_at = now();
+            $contact->invitation_status = 'accepted';
+            $contact->email_verified_at = now();
+            $contact->must_change_password = false;
+            // Reset failed login attempts
+            $contact->failed_login_count = 0;
+            $contact->locked_until = null;
+            $contact->save();
 
             // Log activity
             activity()
@@ -240,11 +239,11 @@ class PortalInvitationService
             return $this->errorResponse('No active invitation to revoke');
         }
 
-        $contact->update([
-            'invitation_token' => null,
-            'invitation_status' => 'revoked',
-            'has_portal_access' => false,
-        ]);
+        // Note: invitation_token is in $guarded, so we must set it directly
+        $contact->invitation_token = null;
+        $contact->invitation_status = 'revoked';
+        $contact->has_portal_access = false;
+        $contact->save();
 
         // Log activity
         activity()
@@ -542,12 +541,22 @@ class PortalInvitationService
     protected function logCommunication(Contact $contact, ?User $user, string $action, string $subject, string $notes): void
     {
         try {
+            // Skip logging if no user (e.g., when contact accepts invitation themselves)
+            // Communication logs require a user_id
+            if (! $user) {
+                Log::info('Skipping communication log - no user context', [
+                    'contact_id' => $contact->id,
+                    'action' => $action,
+                ]);
+                return;
+            }
+
             // Use portal_invitation type for all invitation-related communications
             $type = 'portal_invitation';
 
             CommunicationLog::create([
                 'client_id' => $contact->client_id,
-                'user_id' => $user ? $user->id : null,
+                'user_id' => $user->id,
                 'contact_id' => $contact->id,
                 'type' => $type,
                 'channel' => 'email',
