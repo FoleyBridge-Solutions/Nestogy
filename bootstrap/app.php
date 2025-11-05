@@ -61,10 +61,12 @@ $app = Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\SetupWizardMiddleware::class, // Check if setup is needed last
         ]);
 
-        // Add session security to authenticated routes only
-        $middleware->group('auth', [
-            \App\Http\Middleware\SessionSecurityMiddleware::class,
-        ]);
+        // SessionSecurityMiddleware disabled - was not in use before commit 10316cd78
+        // It stores too much session data causing 400 header size errors
+        // TODO: Re-enable after optimizing session storage
+        // $middleware->group('auth', [
+        //     \App\Http\Middleware\SessionSecurityMiddleware::class,
+        // ]);
 
         // Force HTTPS in production environment
         if (($_ENV['APP_ENV'] ?? '') === 'production') {
