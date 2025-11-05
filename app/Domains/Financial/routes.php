@@ -121,8 +121,12 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('financial')->name('finan
         Route::delete('/builder/draft', [\App\Domains\Contract\Controllers\ContractBuilderController::class, 'clearDraft'])->name('builder.draft.clear');
     });
 
-    // Contract routes (resource route comes after specific routes to avoid conflicts)
-    Route::resource('contracts', ContractController::class);
+    // Contract Wizard routes (Livewire components)
+    Route::get('contracts/create', \App\Livewire\Contracts\ContractWizard::class)->name('contracts.create');
+    Route::get('contracts/{contract}/edit', \App\Livewire\Contracts\ContractWizard::class)->name('contracts.edit');
+    
+    // Contract routes (resource route - excluding create and edit since we use wizard)
+    Route::resource('contracts', ContractController::class)->except(['create', 'edit']);
 
     // Additional contract routes
     Route::get('contracts-dashboard', [ContractController::class, 'dashboard'])->name('contracts.dashboard');
