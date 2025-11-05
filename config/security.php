@@ -48,6 +48,7 @@ return [
         'timeout_warning' => env('SESSION_TIMEOUT_WARNING', 5), // minutes before timeout
         'remember_timeout' => env('REMEMBER_TIMEOUT', 43200), // minutes (30 days)
         'single_session' => env('SESSION_SINGLE_SESSION', false), // Prevent multiple simultaneous sessions
+        'max_concurrent' => env('SESSION_MAX_CONCURRENT', 3), // Maximum concurrent sessions per user (0 = unlimited)
         'regenerate_id' => env('SESSION_REGENERATE_ID', true),
         'secure_cookie' => env('SESSION_SECURE_COOKIE', true), // HTTPS only
         'same_site' => env('SESSION_SAME_SITE', 'lax'), // strict, lax, none
