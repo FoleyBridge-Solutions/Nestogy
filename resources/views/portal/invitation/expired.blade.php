@@ -1,6 +1,9 @@
 @extends('layouts.guest')
 
 @section('content')
+@php
+    $supportDomain = config('app.url_host') ?: (parse_url(config('app.url'), PHP_URL_HOST) ?: 'nestogy.io');
+@endphp
 <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
     <div class="max-w-md w-full space-y-8">
         <div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
@@ -49,8 +52,8 @@
             <div class="mt-6 text-center">
                 <p class="text-sm text-gray-600">
                     Need assistance? Contact support at
-                    <a href="mailto:support@{{ config('app.url_host', parse_url(config('app.url'), PHP_URL_HOST)) }}" class="font-medium text-indigo-600 hover:text-indigo-500">
-                        support@{{ config('app.url_host', parse_url(config('app.url'), PHP_URL_HOST)) }}
+                    <a href="mailto:support@{{ $supportDomain }}" class="font-medium text-indigo-600 hover:text-indigo-500">
+                        support@{{ $supportDomain }}
                     </a>
                 </p>
             </div>

@@ -39,6 +39,12 @@ class PortalInvitationController extends Controller
         $contact = $this->invitationService->validateToken($token);
 
         if (! $contact) {
+            // Log for debugging
+            Log::warning('Portal invitation token validation failed', [
+                'token_preview' => substr($token, 0, 10) . '...',
+                'token_length' => strlen($token),
+            ]);
+            
             return view('portal.invitation.expired');
         }
 
@@ -88,8 +94,8 @@ class PortalInvitationController extends Controller
 
         // Auto-login if configured
         if ($result['data']['auto_login']) {
-            // Use the existing portal auth service for login
-            Auth::guard('portal')->login($contact);
+            // Use the existing client auth guard for login
+            Auth::guard('client')->login($contact);
             $request->session()->regenerate();
 
             return redirect()->route('client.dashboard')
