@@ -38,7 +38,7 @@ class PortalInvitationService
             'max_per_contact_per_day' => 5,
             'max_per_client_per_day' => 20,
             'require_email_verification' => true,
-            'auto_login_after_acceptance' => true,
+            'auto_login_after_acceptance' => false,  // Temporarily disabled for debugging
             'password_requirements' => [
                 'min_length' => 8,
                 'require_uppercase' => true,
