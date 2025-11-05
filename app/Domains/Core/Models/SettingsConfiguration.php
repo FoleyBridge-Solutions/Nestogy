@@ -111,17 +111,28 @@ class SettingsConfiguration extends Model
      */
     public static function getSettings(int $companyId, string $domain, string $category): array
     {
-        $cacheKey = "settings_{$companyId}_{$domain}_{$category}";
+        try {
+            $cacheKey = "settings_{$companyId}_{$domain}_{$category}";
 
-        return Cache::remember($cacheKey, now()->addHours(1), function () use ($companyId, $domain, $category) {
-            $config = self::where('company_id', $companyId)
-                ->where('domain', $domain)
-                ->where('category', $category)
-                ->where('is_active', true)
-                ->first();
+            return Cache::remember($cacheKey, now()->addHours(1), function () use ($companyId, $domain, $category) {
+                $config = self::where('company_id', $companyId)
+                    ->where('domain', $domain)
+                    ->where('category', $category)
+                    ->where('is_active', true)
+                    ->first();
 
-            return $config ? $config->settings : [];
-        });
+                return $config ? $config->settings : [];
+            });
+        } catch (\Exception $e) {
+            // Database error - return empty array to trigger defaults
+            \Log::error("SettingsConfiguration: Database error in getSettings", [
+                'company_id' => $companyId,
+                'domain' => $domain,
+                'category' => $category,
+                'error' => $e->getMessage()
+            ]);
+            return [];
+        }
     }
 
     /**

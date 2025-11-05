@@ -9,6 +9,11 @@ use Illuminate\Support\Facades\Config;
 class ConfigHelper
 {
     /**
+     * Request-level cache to prevent duplicate queries in same request
+     */
+    private static $requestCache = [];
+
+    /**
      * Get Nestogy configuration value
      */
     public static function get(string $key, $default = null)
@@ -379,25 +384,51 @@ class ConfigHelper
      */
     public static function securitySetting(?int $companyId, string $category, string $key, $default = null)
     {
+        // Check request-level cache first
+        $cacheKey = "req_{$companyId}_{$category}_{$key}";
+        if (isset(self::$requestCache[$cacheKey])) {
+            return self::$requestCache[$cacheKey];
+        }
+
         // Get company ID if not provided
         if ($companyId === null) {
             $user = Auth::user();
             if (!$user || !$user->company_id) {
                 // No authenticated user, fall back to static config
-                return Config::get("security.{$key}", $default);
+                $result = Config::get("security.{$key}", $default);
+                self::$requestCache[$cacheKey] = $result;
+                return $result;
             }
             $companyId = $user->company_id;
         }
 
-        // Get settings from database
-        $settings = SettingsConfiguration::getSettings(
-            $companyId,
-            SettingsConfiguration::DOMAIN_SECURITY,
-            $category
-        );
+        try {
+            // Get settings from database (already cached for 1 hour)
+            $settings = SettingsConfiguration::getSettings(
+                $companyId,
+                SettingsConfiguration::DOMAIN_SECURITY,
+                $category
+            );
 
-        // Return setting value or default
-        return $settings[$key] ?? Config::get("security.{$key}", $default);
+            // Return setting value or default
+            $result = $settings[$key] ?? Config::get("security.{$key}", $default);
+            
+            // Cache for this request
+            self::$requestCache[$cacheKey] = $result;
+            
+            return $result;
+        } catch (\Exception $e) {
+            // Database error - fall back to config
+            \Log::warning("ConfigHelper: Failed to get security setting", [
+                'company_id' => $companyId,
+                'category' => $category,
+                'key' => $key,
+                'error' => $e->getMessage()
+            ]);
+            $result = Config::get("security.{$key}", $default);
+            self::$requestCache[$cacheKey] = $result;
+            return $result;
+        }
     }
 
     /**

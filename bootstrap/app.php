@@ -53,11 +53,16 @@ $app = Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             \App\Http\Middleware\LogSignupRequests::class, // Log all signup requests
             \App\Http\Middleware\RememberTokenMiddleware::class,
-            \App\Http\Middleware\SessionSecurityMiddleware::class, // Session timeout and security
+            // SessionSecurityMiddleware moved to auth group to avoid running on unauthenticated routes
             \App\Http\Middleware\SetBouncerScope::class, // Ensure Bouncer scope is set
             \App\Http\Middleware\ConfigureCompanyMail::class, // Configure mail for company
             \App\Http\Middleware\AutoVerifyEmailWithoutSMTP::class, // Auto-verify emails when SMTP not configured
             \App\Http\Middleware\SetupWizardMiddleware::class, // Check if setup is needed last
+        ]);
+
+        // Add session security to authenticated routes only
+        $middleware->group('auth', [
+            \App\Http\Middleware\SessionSecurityMiddleware::class,
         ]);
 
         // Force HTTPS in production environment

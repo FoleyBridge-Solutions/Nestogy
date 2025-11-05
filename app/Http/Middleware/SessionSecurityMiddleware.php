@@ -20,6 +20,11 @@ use Symfony\Component\HttpFoundation\Response;
 class SessionSecurityMiddleware
 {
     /**
+     * Request-level cache for settings to prevent duplicate queries
+     */
+    private static $settingsCache = [];
+
+    /**
      * Handle an incoming request.
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
@@ -62,37 +67,64 @@ class SessionSecurityMiddleware
      */
     protected function checkSessionTimeout(): bool
     {
-        $lastActivity = Session::get('last_activity');
-        if (! $lastActivity) {
-            return true;
-        }
+        try {
+            $lastActivity = Session::get('last_activity');
+            if (! $lastActivity) {
+                return true;
+            }
 
-        // Get company ID for settings lookup
-        $companyId = Auth::check() ? Auth::user()->company_id : null;
+            // Get company ID for settings lookup
+            $companyId = Auth::check() ? Auth::user()->company_id : null;
 
-        // Get timeout from database settings (in minutes), convert to seconds
-        $timeoutMinutes = ConfigHelper::securitySetting($companyId, 'authentication', 'session_idle_timeout', 30);
-        $timeout = $timeoutMinutes * 60; // Convert minutes to seconds
-        
-        $idleTime = time() - $lastActivity;
-
-        if ($idleTime > $timeout) {
-            return false;
-        }
-
-        // Check absolute timeout (maximum session duration)
-        $sessionStart = Session::get('session_start');
-        if ($sessionStart) {
-            // Get session lifetime from database settings (in minutes), convert to seconds
-            $lifetimeMinutes = ConfigHelper::securitySetting($companyId, 'authentication', 'session_lifetime', 120);
-            $absoluteTimeout = $lifetimeMinutes * 60; // Convert minutes to seconds
+            // Cache key for this request
+            $cacheKey = "session_settings_{$companyId}";
             
-            if (time() - $sessionStart > $absoluteTimeout) {
+            if (!isset(self::$settingsCache[$cacheKey])) {
+                // Get timeout from database settings (in minutes), with fallback
+                $timeoutMinutes = ConfigHelper::securitySetting(
+                    $companyId, 
+                    'authentication', 
+                    'session_idle_timeout', 
+                    config('session.lifetime', 30)
+                );
+                $lifetimeMinutes = ConfigHelper::securitySetting(
+                    $companyId, 
+                    'authentication', 
+                    'session_lifetime', 
+                    config('session.lifetime', 120)
+                );
+                self::$settingsCache[$cacheKey] = [
+                    'timeout' => $timeoutMinutes * 60,
+                    'lifetime' => $lifetimeMinutes * 60
+                ];
+            }
+            
+            $timeout = self::$settingsCache[$cacheKey]['timeout'];
+            $idleTime = time() - $lastActivity;
+
+            if ($idleTime > $timeout) {
                 return false;
             }
-        }
 
-        return true;
+            // Check absolute timeout (maximum session duration)
+            $sessionStart = Session::get('session_start');
+            if ($sessionStart) {
+                $absoluteTimeout = self::$settingsCache[$cacheKey]['lifetime'];
+                
+                if (time() - $sessionStart > $absoluteTimeout) {
+                    return false;
+                }
+            }
+
+            return true;
+        } catch (\Exception $e) {
+            // Log but don't fail the request
+            \Log::warning("SessionSecurityMiddleware: checkSessionTimeout error", [
+                'error' => $e->getMessage()
+            ]);
+            // Allow request to proceed with config defaults
+            return true;
+        }
     }
 
     /**
@@ -100,26 +132,38 @@ class SessionSecurityMiddleware
      */
     protected function checkConcurrentSessions($user, string $currentSessionId): bool
     {
-        // Get concurrent session limit from database settings
-        $maxSessions = ConfigHelper::securitySetting($user->company_id, 'authentication', 'concurrent_sessions', 3);
-        
-        if ($maxSessions <= 0) {
-            return true; // No limit
+        try {
+            // Get concurrent session limit from database settings
+            $maxSessions = ConfigHelper::securitySetting($user->company_id, 'authentication', 'concurrent_sessions', 3);
+            
+            if ($maxSessions <= 0) {
+                return true; // No limit
+            }
+
+            // Get all active sessions for the user
+            $userSessionsKey = 'user_sessions_'.$user->id;
+            $activeSessions = Cache::get($userSessionsKey, []);
+
+            // Get timeout for filtering expired sessions
+            $cacheKey = "session_settings_{$user->company_id}";
+            if (!isset(self::$settingsCache[$cacheKey])) {
+                $timeoutMinutes = ConfigHelper::securitySetting($user->company_id, 'authentication', 'session_idle_timeout', 30);
+                self::$settingsCache[$cacheKey] = ['timeout' => $timeoutMinutes * 60];
+            }
+            $timeout = self::$settingsCache[$cacheKey]['timeout'];
+
+            // Remove expired sessions
+            $activeSessions = array_filter($activeSessions, function ($session) use ($timeout) {
+                return isset($session['last_activity']) &&
+                       (time() - $session['last_activity']) < $timeout;
+            });
+        } catch (\Exception $e) {
+            // Log but don't fail
+            \Log::warning("SessionSecurityMiddleware: checkConcurrentSessions error", [
+                'error' => $e->getMessage()
+            ]);
+            return true; // Allow request to proceed
         }
-
-        // Get all active sessions for the user
-        $userSessionsKey = 'user_sessions_'.$user->id;
-        $activeSessions = Cache::get($userSessionsKey, []);
-
-        // Get timeout for filtering expired sessions
-        $timeoutMinutes = ConfigHelper::securitySetting($user->company_id, 'authentication', 'session_idle_timeout', 30);
-        $timeout = $timeoutMinutes * 60;
-
-        // Remove expired sessions
-        $activeSessions = array_filter($activeSessions, function ($session) use ($timeout) {
-            return isset($session['last_activity']) &&
-                   (time() - $session['last_activity']) < $timeout;
-        });
 
         // Add current session if not exists
         if (! isset($activeSessions[$currentSessionId])) {

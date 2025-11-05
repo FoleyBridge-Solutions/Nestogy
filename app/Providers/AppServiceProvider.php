@@ -121,20 +121,18 @@ class AppServiceProvider extends ServiceProvider
 
     /**
      * Configure password validation rules based on security settings
+     * Uses config-based defaults to avoid database queries on every boot
      */
     protected function configurePasswordValidation(): void
     {
         Password::defaults(function () {
-            // Try to get settings from authenticated user's company
-            // If no user is authenticated, use config defaults
-            $companyId = Auth::check() ? Auth::user()->company_id : null;
-            
-            // Get password settings from database (with config fallback)
-            $minLength = ConfigHelper::securitySetting($companyId, 'authentication', 'password_min_length', 12);
-            $requireUppercase = ConfigHelper::securitySetting($companyId, 'authentication', 'password_require_uppercase', true);
-            $requireLowercase = ConfigHelper::securitySetting($companyId, 'authentication', 'password_require_lowercase', true);
-            $requireNumbers = ConfigHelper::securitySetting($companyId, 'authentication', 'password_require_numbers', true);
-            $requireSymbols = ConfigHelper::securitySetting($companyId, 'authentication', 'password_require_symbols', true);
+            // Use simple config-based defaults, not database
+            // Database-driven password rules can be applied at validation time, not globally
+            $minLength = config('security.password.min_length', 12);
+            $requireUppercase = config('security.password.require_uppercase', true);
+            $requireLowercase = config('security.password.require_lowercase', true);
+            $requireNumbers = config('security.password.require_numbers', true);
+            $requireSymbols = config('security.password.require_symbols', false);
 
             $rule = Password::min($minLength);
 
