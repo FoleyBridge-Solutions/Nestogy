@@ -76,6 +76,11 @@ class PortalInvitationController extends Controller
         $result = $this->invitationService->acceptInvitation($token, $request->password);
 
         if (! $result['success']) {
+            Log::error('Portal invitation acceptance failed', [
+                'token' => substr($token, 0, 10) . '...',
+                'result' => $result,
+            ]);
+            
             throw ValidationException::withMessages([
                 'password' => [$result['message']],
             ]);
@@ -94,13 +99,28 @@ class PortalInvitationController extends Controller
 
         // Auto-login if configured
         if ($result['data']['auto_login']) {
+            // Refresh the contact to ensure all attributes are current
+            $contact->refresh();
+            
             // Use the existing client auth guard for login
-            Auth::guard('client')->login($contact);
+            Auth::guard('client')->login($contact, true);  // true = remember
             $request->session()->regenerate();
+            
+            Log::info('Portal invitation auto-login successful', [
+                'contact_id' => $contact->id,
+                'contact_email' => $contact->email,
+                'auth_check' => Auth::guard('client')->check(),
+                'auth_id' => Auth::guard('client')->id(),
+            ]);
 
             return redirect()->route('client.dashboard')
                 ->with('success', 'Welcome! Your account has been successfully set up.');
         }
+
+        Log::info('Portal invitation accepted, redirecting to login', [
+            'contact_id' => $contact->id,
+            'contact_email' => $contact->email,
+        ]);
 
         return redirect()->route('client.login')
             ->with('success', 'Your password has been set successfully. Please log in to continue.');
