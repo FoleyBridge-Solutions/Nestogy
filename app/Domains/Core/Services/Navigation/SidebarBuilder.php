@@ -253,6 +253,8 @@ class SidebarBuilder
                     'icon' => $item['icon'],
                     'key' => $key,
                     'params' => $item['params'] ?? [],
+                    'requires_client' => $item['requires_client'] ?? false,
+                    'permission' => $item['permission'] ?? null,
                 ];
             }
         }
