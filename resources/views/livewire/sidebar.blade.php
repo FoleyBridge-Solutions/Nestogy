@@ -7,30 +7,34 @@
         @if(isset($sidebarConfig['title']) && !$this->mobile)
         <!-- Sidebar Header -->
         <div class="flex-shrink-0 px-3 py-3 border-b border-zinc-200 dark:border-zinc-700 bg-gradient-to-r from-[color-mix(in_oklab,var(--color-accent),white_95%)] to-[color-mix(in_oklab,var(--color-accent),white_90%)] dark:from-zinc-800 dark:to-zinc-900">
-            <div class="flex items-center space-x-3">
-                @if(isset($sidebarConfig['icon']))
-                <div class="flex-shrink-0">
-                    <flux:icon name="{{ $sidebarConfig['icon'] }}" class="w-6 h-6 text-[var(--color-accent)]" />
+            @if($selectedClient)
+                <!-- Client Switcher when client is selected -->
+                <div class="w-full">
+                    @livewire('client-switcher')
                 </div>
-                @endif
-                <div class="flex-1 min-w-0">
-                    <flux:heading size="sm" class="text-zinc-900 dark:text-zinc-100 truncate">
-                        {{ $sidebarConfig['title'] }}
-                    </flux:heading>
-                    @if(isset($sidebarConfig['subtitle']))
-                        <flux:text size="xs" class="text-zinc-600 dark:text-zinc-400 truncate">
-                            {{ $sidebarConfig['subtitle'] }}
-                        </flux:text>
-                    @elseif($selectedClient)
-                        <flux:text size="xs" class="text-zinc-600 dark:text-zinc-400 truncate">
-                            {{ $selectedClient->display_name ?? $selectedClient->name }}
-                        </flux:text>
+            @else
+                <!-- Default header when no client selected -->
+                <div class="flex items-center space-x-3">
+                    @if(isset($sidebarConfig['icon']))
+                    <div class="flex-shrink-0">
+                        <flux:icon name="{{ $sidebarConfig['icon'] }}" class="w-6 h-6 text-[var(--color-accent)]" />
+                    </div>
                     @endif
+                    <div class="flex-1 min-w-0">
+                        <flux:heading size="sm" class="text-zinc-900 dark:text-zinc-100 truncate">
+                            {{ $sidebarConfig['title'] }}
+                        </flux:heading>
+                        @if(isset($sidebarConfig['subtitle']))
+                            <flux:text size="xs" class="text-zinc-600 dark:text-zinc-400 truncate">
+                                {{ $sidebarConfig['subtitle'] }}
+                            </flux:text>
+                        @endif
+                    </div>
+                    <div class="flex-shrink-0">
+                        <div class="w-2 h-2 bg-[var(--color-accent)] rounded-full animate-pulse"></div>
+                    </div>
                 </div>
-                <div class="flex-shrink-0">
-                    <div class="w-2 h-2 bg-[var(--color-accent)] rounded-full animate-pulse"></div>
-                </div>
-            </div>
+            @endif
         </div>
         @endif
 

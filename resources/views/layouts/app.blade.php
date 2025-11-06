@@ -158,7 +158,7 @@
     <flux:header class="bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-700 sticky top-0 z-50">
         <!-- Single Row Navigation with Everything -->
         <flux:navbar class="w-full px-4">
-            <!-- Brand (Far Left) -->
+            <!-- Brand (Far Left) - Fixed width to match sidebar -->
             @php
                 $company = Auth::user()?->company;
                 $companyBranding = $company?->branding ?? [];
@@ -166,30 +166,37 @@
                 $logoDark = $companyBranding['logo_dark_url'] ?? $logoLight;
                 $companyName = $company?->name ?? config('app.name', 'Nestogy');
             @endphp
-            <flux:brand href="{{ route('dashboard') }}" 
-                        logo="{{ $logoLight }}" 
-                        name="{{ $companyName }}"
-                        class="dark:hidden" />
-            <flux:brand href="{{ route('dashboard') }}" 
-                        logo="{{ $logoDark }}" 
-                        name="{{ $companyName }}"
-                        class="hidden dark:flex" />
+            <div class="w-64 flex-shrink-0">
+                <flux:brand href="{{ route('dashboard') }}" 
+                            logo="{{ $logoLight }}" 
+                            name="{{ $companyName }}"
+                            class="dark:hidden truncate" />
+                <flux:brand href="{{ route('dashboard') }}" 
+                            logo="{{ $logoDark }}" 
+                            name="{{ $companyName }}"
+                            class="hidden dark:flex truncate" />
+            </div>
             
             <!-- Mobile Toggle -->
             @if($sidebarContext ?? $activeDomain ?? null)
                 <flux:sidebar.toggle class="lg:hidden" icon="bars-2" />
             @endif
             
-            <!-- Main Navigation - App name serves as primary dashboard link -->
+            <!-- Vertical Separator (only show if client switcher will be shown) -->
+            @if(!session('selected_client_id') && (auth()->user()->can('clients.view') || auth()->user()->can('clients.*')))
+                <div class="h-8 w-px bg-zinc-200 dark:bg-zinc-700 mx-3"></div>
+            @endif
             
-            <flux:spacer />
-            <!-- Client Switcher -->
-            @livewire('client-switcher')
+            <!-- Client Switcher (Left side) - Only show when no client selected AND user has permission -->
+            @if(!session('selected_client_id') && (auth()->user()->can('clients.view') || auth()->user()->can('clients.*')))
+                @livewire('client-switcher')
+            @endif
+            
+            <!-- Command Palette (Full width center) -->
+            @livewire('command-palette')
             
             <!-- Navbar Timer -->
             @livewire('navbar-timer')
-            
-            <!-- Command Palette loaded in main layout -->
             
             {{-- Global keyboard shortcut for command palette --}}
             <script>
@@ -205,9 +212,10 @@
                             class="max-lg:hidden"
                             aria-label="Settings" />
             <flux:navbar.item icon="information-circle" 
-                            href="#" 
+                            href="{{ route('docs.index') }}" 
                             class="max-lg:hidden"
-                            aria-label="Help" />
+                            aria-label="Help & Documentation"
+                            title="View Documentation" />
             
             <!-- Profile Dropdown -->
             @auth
@@ -226,6 +234,7 @@
                     
                     <flux:navmenu.item href="{{ route('users.profile') }}" icon="user" class="text-zinc-800 dark:text-white">Profile</flux:navmenu.item>
                     <flux:navmenu.item href="{{ route('settings.index') }}" icon="cog-6-tooth" class="text-zinc-800 dark:text-white">Settings</flux:navmenu.item>
+                    <flux:navmenu.item href="{{ route('docs.index') }}" icon="question-mark-circle" class="text-zinc-800 dark:text-white">Help & Documentation</flux:navmenu.item>
                     
                     <flux:navmenu.separator />
                     

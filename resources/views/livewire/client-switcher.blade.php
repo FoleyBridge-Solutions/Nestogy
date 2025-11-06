@@ -4,16 +4,16 @@
         <flux:dropdown position="bottom" align="start" width="320">
             <button 
                 type="button" 
-                class="flex items-center gap-3 p-2 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+                class="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
             >
                 <flux:avatar size="sm" :name="$this->currentClient->name" />
-                <div class="flex-1 text-left">
-                    <flux:heading size="sm">{{ Str::limit($this->currentClient->name, 25) }}</flux:heading>
+                <div class="flex-1 text-left min-w-0">
+                    <flux:heading size="sm" class="truncate">{{ $this->currentClient->name }}</flux:heading>
                     @if($this->currentClient->company_name && $this->currentClient->company_name !== $this->currentClient->name)
-                        <flux:text size="sm" class="text-zinc-500">{{ Str::limit($this->currentClient->company_name, 25) }}</flux:text>
+                        <flux:text size="xs" class="text-zinc-500 truncate">{{ $this->currentClient->company_name }}</flux:text>
                     @endif
                 </div>
-                <flux:icon name="chevron-down" class="w-4 h-4 text-zinc-400" />
+                <flux:icon name="chevron-down" class="w-4 h-4 text-zinc-400 flex-shrink-0" />
             </button>
 
             <flux:popover class="!p-5 max-h-[600px] overflow-y-auto">
