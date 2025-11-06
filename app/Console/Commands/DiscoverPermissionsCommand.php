@@ -213,21 +213,21 @@ class DiscoverPermissionsCommand extends Command
 
         foreach ($discovered as $perm) {
             try {
-                $ability = Bouncer::ability()->firstOrNew(['name' => $perm['name']]);
-                
-                $isNew = !$ability->exists;
-                
-                $ability->title = $perm['title'];
-                $ability->entity_type = null; // Global permissions
-                $ability->only_owned = false;
-                $ability->options = [
-                    'category' => $perm['category'],
-                    'discovered_from' => $perm['source_type'],
-                ];
-                
-                $ability->save();
+                // Use updateOrCreate to handle PostgreSQL ID sequence issues
+                $result = Bouncer::ability()->updateOrCreate(
+                    ['name' => $perm['name']],
+                    [
+                        'title' => $perm['title'],
+                        'entity_type' => null, // Global permissions
+                        'only_owned' => false,
+                        'options' => [
+                            'category' => $perm['category'],
+                            'discovered_from' => $perm['source_type'],
+                        ],
+                    ]
+                );
 
-                $isNew ? $created++ : $updated++;
+                $result->wasRecentlyCreated ? $created++ : $updated++;
 
             } catch (\Exception $e) {
                 $errors++;
