@@ -1,3 +1,7 @@
+@extends('layouts.app')
+
+@section('title', 'Edit Time Entry')
+
 @php
     $sidebarContext = 'hr';
     $breadcrumbs = [
@@ -7,8 +11,8 @@
     ];
 @endphp
 
-<x-layouts.app>
-    <div class="max-w-3xl mx-auto">
+@section('content')
+<div class="max-w-3xl mx-auto">
         <flux:card>
             <form method="POST" action="{{ route('hr.time-entries.update', $entry) }}">
                 @csrf
@@ -93,4 +97,4 @@
             </form>
         </flux:card>
     </div>
-</x-layouts.app>
+@endsection
