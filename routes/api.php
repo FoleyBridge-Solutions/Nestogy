@@ -56,10 +56,10 @@ Route::prefix('auth')->name('api.auth.')->group(function () {
 Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function () {
 
     // Dashboard API
+    // Note: Dashboard routes are defined in app/Domains/Core/routes.php
+    // Keeping only stats and recent-activity here to avoid duplicates
     Route::prefix('dashboard')->name('api.dashboard.')->group(function () {
         Route::get('stats', [App\Domains\Core\Controllers\DashboardController::class, 'getData'])->name('stats');
-        Route::get('notifications', [App\Domains\Core\Controllers\DashboardController::class, 'getNotifications'])->name('notifications');
-        Route::patch('notifications/{id}/read', [App\Domains\Core\Controllers\DashboardController::class, 'markNotificationRead'])->name('notifications.read');
         Route::get('recent-activity', [App\Domains\Core\Controllers\DashboardController::class, 'getData'])->name('recent-activity');
     });
 
