@@ -1,689 +1,550 @@
-<div>
-    <div class="space-y-3" wire:poll.30s="refreshTicketData">
-        {{-- Flash Messages --}}
-        @if (session()->has('message'))
-            <flux:toast variant="success">{{ session('message') }}</flux:toast>
-        @endif
-        @if (session()->has('error'))
-            <flux:toast variant="danger">{{ session('error') }}</flux:toast>
-        @endif
+<div wire:poll.30s="refreshTicketData">
+    {{-- Main Content Container --}}
+    <div class="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {{-- Left: Main Content Area --}}
+        <div class="lg:col-span-2 xl:col-span-3 space-y-6">
+            {{-- Header Card --}}
+            <flux:card class="space-y-4">
+                <div class="flex items-start justify-between gap-4">
+                    <div class="flex-1 min-w-0 space-y-3">
+                        {{-- Ticket Number & Title --}}
+                        <div class="flex items-baseline gap-2">
+                            <flux:heading size="xl">#{{ $ticket->ticket_number ?? $ticket->number }}</flux:heading>
+                            <flux:separator vertical class="h-6" />
+                            <flux:heading size="lg">{{ $ticket->subject }}</flux:heading>
+                        </div>
 
-    {{-- Ultra-Compact Header --}}
-    <flux:card>
-        <div class="px-3 py-2">
-            {{-- Single Line Header --}}
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-2 flex-1 min-w-0">
-                    {{-- Ticket Info --}}
-                    <span class="font-bold">#{{ $ticket->ticket_number ?? $ticket->number }}</span>
-                    <span class="text-gray-400">|</span>
-                    <span class="font-medium truncate">{{ $ticket->subject }}</span>
+                        {{-- Badges Row --}}
+                        <div class="flex flex-wrap items-center gap-2">
+                            <flux:badge variant="solid" size="sm" color="{{
+                                match(strtolower($ticket->status)) {
+                                    'closed' => 'zinc',
+                                    'open' => 'blue',
+                                    'in_progress', 'in progress' => 'indigo',
+                                    'pending', 'on hold' => 'amber',
+                                    'resolved' => 'green',
+                                    default => 'red'
+                                }
+                            }}">
+                                {{ ucfirst(str_replace('_', ' ', $ticket->status)) }}
+                            </flux:badge>
 
-                    {{-- Status & Priority --}}
-                    <flux:badge color="{{
-                        $ticket->status === 'open' ? 'green' :
-                        ($ticket->status === 'in_progress' ? 'blue' :
-                        ($ticket->status === 'pending' ? 'amber' :
-                        ($ticket->status === 'resolved' ? 'purple' :
-                        ($ticket->status === 'closed' ? 'zinc' : 'red'))))
-                    }}">
-                        {{ ucfirst(str_replace('_', ' ', $ticket->status)) }}
-                    </flux:badge>
+                            <flux:badge variant="solid" size="sm" color="{{
+                                match(strtolower($ticket->priority)) {
+                                    'critical' => 'red',
+                                    'urgent' => 'orange',
+                                    'high' => 'amber',
+                                    'medium' => 'yellow',
+                                    'low' => 'zinc',
+                                    default => 'zinc'
+                                }
+                            }}">
+                                {{ ucfirst($ticket->priority) }}
+                            </flux:badge>
 
-                    <flux:badge color="{{
-                        $ticket->priority === 'critical' ? 'red' :
-                        ($ticket->priority === 'urgent' ? 'red' :
-                        ($ticket->priority === 'high' ? 'orange' :
-                        ($ticket->priority === 'medium' ? 'yellow' :
-                        ($ticket->priority === 'low' ? 'gray' : 'zinc'))))
-                    }}">
-                        {{ ucfirst($ticket->priority) }}
-                    </flux:badge>
+                            <flux:separator vertical class="h-4" />
 
-                    {{-- Key Info Inline --}}
-                    <span class="text-gray-400">|</span>
-                    <span class="text-sm text-gray-600">
-                        <strong>Client:</strong>
-                        @if($ticket->client)
-                            <a href="{{ route('clients.show', $ticket->client) }}" class="text-blue-600 hover:underline">{{ $ticket->client->name }}</a>
-                        @else
-                            -
-                        @endif
-                    </span>
-                    <span class="text-gray-400">|</span>
-                    <span class="text-sm text-gray-600"><strong>Contact:</strong> {{ $ticket->contact?->name ?? '-' }}</span>
-                    <span class="text-gray-400">|</span>
-                    <span class="text-sm text-gray-600"><strong>Assignee:</strong> {{ $ticket->assignee?->name ?? 'Unassigned' }}</span>
+                            <flux:text size="sm">
+                                <strong>Client:</strong>
+                                @if($ticket->client)
+                                    <flux:link href="{{ route('clients.show', $ticket->client) }}">
+                                        {{ $ticket->client->name }}
+                                    </flux:link>
+                                @else
+                                    -
+                                @endif
+                            </flux:text>
 
-                    @php
-                        $totalMinutes = $ticket->timeLogs->sum('minutes_worked') ?? 0;
-                    @endphp
-                    @if($totalMinutes > 0)
-                        <span class="text-gray-400">|</span>
-                        <span class="text-sm text-gray-600"><strong>Time:</strong> {{ floor($totalMinutes / 60) }}h {{ $totalMinutes % 60 }}m</span>
-                    @endif
+                            <flux:separator vertical class="h-4" />
 
-                    @if($ticket->priorityQueue && $ticket->priorityQueue->sla_deadline)
-                        @php
-                            $deadline = \Carbon\Carbon::parse($ticket->priorityQueue->sla_deadline);
-                            $isBreached = now()->isAfter($deadline);
-                        @endphp
-                        <span class="text-gray-400">|</span>
-                        <span class="text-sm {{ $isBreached ? 'text-red-600 font-bold' : 'text-green-600' }}">
-                            <strong>SLA:</strong> {{ $isBreached ? 'BREACHED' : $deadline->diffForHumans(null, true) }}
-                        </span>
-                    @endif
+                            <flux:text size="sm">
+                                <strong>Contact:</strong> {{ $ticket->contact?->name ?? '-' }}
+                            </flux:text>
 
-                    <span class="text-gray-400">|</span>
-                    <span class="text-sm text-gray-500">{{ $ticket->created_at->diffForHumans() }}</span>
-                </div>
+                            <flux:separator vertical class="h-4" />
 
-                {{-- Timer Display --}}
-                @if($activeTimer)
-                    <div class="flex items-center gap-2 px-2 py-1 bg-emerald-100 dark:bg-emerald-900/20 rounded text-sm" wire:poll.1s="updateElapsedTime">
-                        <div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                        <span class="font-mono font-bold text-emerald-700 dark:text-emerald-400">
-                            {{ $elapsedTime }}
-                        </span>
-                        <button type="button" wire:click="stopTimer" class="inline-flex items-center gap-1 px-2 py-1 text-sm font-medium text-white bg-red-600 rounded hover:bg-red-700">
-                            <flux:icon.stop class="size-3" />
-                            Stop
-                        </button>
-                    </div>
-                @else
-                    <button type="button" wire:click="startTimer" class="inline-flex items-center gap-1 px-2 py-1 text-sm font-medium text-white bg-emerald-600 rounded hover:bg-emerald-700">
-                        <flux:icon.play class="size-3" />
-                        Start Timer
-                    </button>
-                @endif
+                            <flux:text size="sm">
+                                <strong>Assignee:</strong> {{ $ticket->assignee?->name ?? 'Unassigned' }}
+                            </flux:text>
+                        </div>
 
-                {{-- Actions --}}
-                <div class="flex items-center gap-1 ml-2">
-                    <flux:button variant="ghost" size="sm" wire:click="toggleWatch">
-                        <flux:icon.eye class="size-4 {{ $isWatching ? 'text-yellow-600' : '' }}" />
-                    </flux:button>
-                    <flux:button variant="ghost" size="sm" href="{{ route('tickets.edit', $ticket) }}">
-                        <flux:icon.pencil class="size-4" />
-                    </flux:button>
-                    <flux:dropdown>
-                        <flux:button variant="ghost" size="sm">
-                            <flux:icon.ellipsis-horizontal class="size-4" />
-                        </flux:button>
-                        <flux:menu>
-                            <flux:menu.item wire:click="$set('showStatusChangeModal', true)">
-                                <flux:icon.arrow-path class="size-4" />
-                                Status
-                            </flux:menu.item>
-                            <flux:menu.item wire:click="cloneTicket">
-                                <flux:icon.document-duplicate class="size-4" />
-                                Clone
-                            </flux:menu.item>
-                            <flux:menu.item href="{{ route('tickets.pdf', $ticket) }}" target="_blank">
-                                <flux:icon.document-arrow-down class="size-4" />
-                                PDF
-                            </flux:menu.item>
-                            <flux:menu.separator />
-                            <flux:menu.item variant="danger" wire:click="archiveTicket">
-                                <flux:icon.archive-box class="size-4" />
-                                Archive
-                            </flux:menu.item>
-                        </flux:menu>
-                    </flux:dropdown>
-                </div>
-            </div>
-        </div>
-    </flux:card>
-
-    {{-- Inline Metrics Bar --}}
-    <div class="bg-gray-50 dark:bg-gray-800 px-2 py-1 rounded">
-        <div class="flex items-center justify-between text-sm">
-            <div class="flex items-center gap-3">
-                <div class="flex items-center gap-1">
-                    <span class="text-gray-500">Age:</span>
-                    <span class="font-medium">{{ $ticket->created_at->diffForHumans(null, true) }}</span>
-                </div>
-                <div class="flex items-center gap-1">
-                    <span class="text-gray-500">Comments:</span>
-                    <span class="font-medium">{{ $ticket->comments->count() }}</span>
-                    <span class="text-gray-400">({{ $ticket->comments->where('is_internal', false)->count() }} public)</span>
-                </div>
-                <div class="flex items-center gap-1">
-                    <span class="text-gray-500">Updates:</span>
-                    <span class="font-medium">{{ $ticket->updated_at->diffForHumans() }}</span>
-                </div>
-                @if($ticket->watchers->count() > 0)
-                    <div class="flex items-center gap-1">
-                        <span class="text-gray-500">Watchers:</span>
-                        <span class="font-medium">{{ $ticket->watchers->count() }}</span>
-                    </div>
-                @endif
-                @if($ticket->resolved_at)
-                    <div class="flex items-center gap-1">
-                        <span class="text-gray-500">Resolved:</span>
-                        <span class="font-medium text-green-600">{{ $ticket->resolved_at->diffForHumans() }}</span>
-                    </div>
-                @endif
-                @if($ticket->reopened_at)
-                    <div class="flex items-center gap-1">
-                        <span class="text-gray-500">Reopened:</span>
-                        <span class="font-medium text-yellow-600">{{ $ticket->reopened_at->diffForHumans() }}</span>
-                    </div>
-                @endif
-            </div>
-
-            {{-- Quick Stats --}}
-            <div class="flex items-center gap-4">
-                @if($ticket->project)
-                    <a href="{{ route('projects.show', $ticket->project) }}" class="text-blue-600 hover:underline">
-                        <flux:icon.briefcase class="size-3 inline" /> {{ $ticket->project->name }}
-                    </a>
-                @endif
-                @if($ticket->asset)
-                    <a href="{{ route('assets.show', $ticket->asset) }}" class="text-blue-600 hover:underline">
-                        <flux:icon.server class="size-3 inline" /> {{ $ticket->asset->name }}
-                    </a>
-                @endif
-            </div>
-        </div>
-    </div>
-
-    {{-- Main Content Grid --}}
-    <div class="grid grid-cols-1 lg:grid-cols-4 gap-2">
-        {{-- Left Column: Main Content (3/4) --}}
-        <div class="lg:col-span-3 space-y-2">
-
-            {{-- Description Card --}}
-            <flux:card>
-                <div class="p-3">
-                    <div class="flex items-center justify-between mb-2">
-                        <h3 class="font-semibold">Description</h3>
-                        <div class="flex items-center gap-2">
-                            @if($ticket->sentiment_label)
-                                <span class="text-xs px-2 py-1 rounded {{
-                                    $ticket->sentiment_label === 'positive' ? 'bg-green-100 text-green-700' :
-                                    ($ticket->sentiment_label === 'negative' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700')
-                                }}">
-                                    Sentiment: {{ ucfirst($ticket->sentiment_label) }}
-                                    @if($ticket->sentiment_confidence)
-                                        ({{ round($ticket->sentiment_confidence * 100) }}%)
-                                    @endif
-                                </span>
+                        {{-- Metadata Row --}}
+                        <div class="flex flex-wrap items-center gap-3">
+                            <flux:text size="xs" variant="subtle">
+                                <strong>Age:</strong> {{ $ticket->created_at->diffForHumans(null, true) }}
+                            </flux:text>
+                            <flux:text size="xs" variant="subtle">
+                                <strong>Comments:</strong> {{ $ticket->comments->count() }}
+                            </flux:text>
+                            <flux:text size="xs" variant="subtle">
+                                <strong>Updated:</strong> {{ $ticket->updated_at->diffForHumans() }}
+                            </flux:text>
+                            @php
+                                $totalMinutes = $ticket->timeLogs->sum('minutes_worked') ?? 0;
+                            @endphp
+                            @if($totalMinutes > 0)
+                                <flux:text size="xs" variant="subtle">
+                                    <strong>Time:</strong> {{ floor($totalMinutes / 60) }}h {{ $totalMinutes % 60 }}m
+                                </flux:text>
                             @endif
                         </div>
                     </div>
-                    <div class="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
-                        {{ $ticket->details ?? $ticket->description ?? 'No description provided.' }}
+
+                    {{-- Action Buttons --}}
+                    <div class="flex items-center gap-2">
+                        @if($activeTimer)
+                            <flux:button variant="filled" color="emerald" size="sm" wire:poll.1s="updateElapsedTime">
+                                {{ $elapsedTime }}
+                            </flux:button>
+                            <flux:button variant="danger" size="sm" wire:click="stopTimer">Stop</flux:button>
+                        @else
+                            <flux:button variant="filled" color="emerald" size="sm" wire:click="startTimer" icon="play">
+                                Start Timer
+                            </flux:button>
+                        @endif
+
+                        <flux:button variant="ghost" size="sm" icon="eye" wire:click="toggleWatch" 
+                            class="{{ $isWatching ? 'text-yellow-500' : '' }}" />
+
+                        <flux:button variant="ghost" size="sm" icon="pencil" href="{{ route('tickets.edit', $ticket) }}" />
+
+                        <flux:dropdown>
+                            <flux:button variant="ghost" size="sm" icon="ellipsis-horizontal" />
+                            <flux:menu>
+                                <flux:menu.item wire:click="$set('showStatusChangeModal', true)" icon="arrow-path">
+                                    Change Status
+                                </flux:menu.item>
+                                <flux:menu.item wire:click="cloneTicket" icon="document-duplicate">
+                                    Clone
+                                </flux:menu.item>
+                                <flux:menu.item href="{{ route('tickets.pdf', $ticket) }}" target="_blank" icon="document-arrow-down">
+                                    PDF
+                                </flux:menu.item>
+                                <flux:menu.separator />
+                                <flux:menu.item wire:click="archiveTicket" icon="archive-box" variant="danger">
+                                    Archive
+                                </flux:menu.item>
+                            </flux:menu>
+                        </flux:dropdown>
                     </div>
-
-                    @if($ticket->resolution_summary)
-                        <div class="mt-3 p-3 bg-green-50 dark:bg-green-900/20 rounded border-l-3 border-green-500">
-                            <div class="text-xs font-semibold text-green-800 dark:text-green-300 mb-1">Resolution</div>
-                            <div class="text-sm text-green-700 dark:text-green-400">
-                                {{ $ticket->resolution_summary }}
-                            </div>
-                        </div>
-                    @endif
-
-                    @if($ticket->vendor_ticket_number)
-                        <div class="mt-2 pt-2 border-t text-xs text-gray-500">
-                            Vendor Ticket: <span class="font-medium">{{ $ticket->vendor_ticket_number }}</span>
-                        </div>
-                    @endif
                 </div>
             </flux:card>
 
-            {{-- Comments & Activity Timeline --}}
-            <flux:card>
-                <div class="p-3">
-                    <div class="flex items-center justify-between mb-3">
-                        <h3 class="text-sm font-semibold">Activity Timeline</h3>
-                        <div class="flex items-center gap-2 text-xs">
-                            <button wire:click="$set('showInternalNotes', !$showInternalNotes)" class="text-gray-500 hover:text-gray-700">
-                                {{ $showInternalNotes ?? true ? 'Hide' : 'Show' }} Internal
-                            </button>
-                        </div>
+            {{-- Description Card --}}
+            <flux:card class="space-y-4">
+                <flux:heading size="lg">Description</flux:heading>
+                <flux:text>{{ $ticket->details ?? $ticket->description ?? 'No description provided.' }}</flux:text>
+
+                @if($ticket->resolution_summary)
+                    <flux:separator />
+                    <div>
+                        <flux:heading size="sm" class="flex items-center gap-2 mb-2">
+                            <flux:icon.check-circle class="text-green-600" />
+                            Resolution
+                        </flux:heading>
+                        <flux:text>{{ $ticket->resolution_summary }}</flux:text>
+                        <flux:text size="xs" variant="subtle" class="mt-2">
+                            Resolved by {{ $ticket->resolver->name ?? 'System' }} • {{ $ticket->resolved_at->format('M d, Y g:i A') }}
+                        </flux:text>
+                    </div>
+                @endif
+            </flux:card>
+
+            {{-- Activity Timeline Card --}}
+            <flux:card class="space-y-6">
+                <div class="flex items-center justify-between">
+                    <flux:heading size="lg">Activity Timeline</flux:heading>
+                    <flux:button variant="ghost" size="xs">Hide Internal</flux:button>
+                </div>
+
+                {{-- Comment Form --}}
+                <form wire:submit.prevent="addComment" class="space-y-4">
+                    <div class="relative">
+                        <flux:textarea
+                            wire:model.live.debounce.500ms="comment"
+                            placeholder="Add comment..."
+                            rows="3"
+                        />
+                        @if($draftSaved)
+                            <div class="absolute top-2 right-2">
+                                <flux:badge color="green" size="xs">
+                                    <flux:icon.check class="size-3" /> Draft saved
+                                </flux:badge>
+                            </div>
+                        @endif
                     </div>
                     
-                    {{-- Compact Comment Form --}}
-                    <div class="mb-3">
-                        <form wire:submit.prevent="addComment">
-                            <flux:textarea
-                                wire:model="comment"
-                                placeholder="Add comment..."
-                                rows="2"
-                                class="text-sm"
-                            />
-                            
-                            <div class="flex items-center justify-between mt-2">
-                                <div class="flex items-center gap-3 text-xs">
-                                    <label class="flex items-center gap-1">
-                                        <input type="checkbox" wire:model="internalNote" class="rounded text-xs" />
-                                        <span>Internal</span>
-                                    </label>
-                                    <label class="flex items-center gap-1">
-                                        <input type="checkbox" wire:model="timeTracking" class="rounded text-xs" />
-                                        <span>Log Time</span>
-                                    </label>
-                                    @if($ticket->status === 'resolved' || $ticket->status === 'closed')
-                                        <label class="flex items-center gap-1">
-                                            <input type="checkbox" wire:model="reopenOnComment" class="rounded text-xs" />
-                                            <span>Reopen</span>
-                                        </label>
-                                    @endif
-                                </div>
-
-                                <flux:button type="submit" variant="primary" size="xs">
-                                    <flux:icon.plus class="size-3" />
-                                    Comment
-                                </flux:button>
-                            </div>
-                            
-                            @if($timeTracking)
-                                <div class="grid grid-cols-2 gap-4 mt-4">
-                                    <flux:input
-                                        type="number"
-                                        wire:model="timeSpent"
-                                        placeholder="Hours spent"
-                                        step="0.25"
-                                        min="0"
-                                    />
-                                    <flux:input
-                                        wire:model="timeDescription"
-                                        placeholder="Time log description"
-                                    />
-                                </div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <flux:checkbox wire:model.live="internalNote" label="Internal" />
+                            <flux:checkbox wire:model.live="timeTracking" label="Log Time" />
+                            @if(in_array($ticket->status, ['resolved', 'closed']))
+                                <flux:checkbox wire:model.live="reopenOnComment" label="Reopen" />
                             @endif
                             
-                            <div class="mt-3">
-                                <flux:input
-                                    type="file"
-                                    wire:model="attachments"
-                                    multiple
-                                    accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,.xls,.xlsx"
-                                />
-                                @error('attachments.*')
-                                    <span class="text-red-500 text-sm">{{ $message }}</span>
-                                @enderror
-                            </div>
-                        </form>
+                            <flux:button variant="ghost" size="xs" type="button" as="label">
+                                <flux:icon.paper-clip /> Choose files
+                                <input type="file" wire:model="attachments" multiple 
+                                       accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,.xls,.xlsx" class="hidden" />
+                            </flux:button>
+                        </div>
+
+                        <flux:button type="submit" variant="primary" size="sm" wire:loading.attr="disabled" wire:target="addComment">
+                            <span wire:loading.remove wire:target="addComment" class="flex items-center gap-1">
+                                <flux:icon.plus variant="micro" />
+                                Comment
+                            </span>
+                            <span wire:loading wire:target="addComment" class="flex items-center gap-1">
+                                <flux:icon.arrow-path variant="micro" class="animate-spin" />
+                                Posting...
+                            </span>
+                        </flux:button>
                     </div>
                     
-                                    {{-- Comments List --}}
-                                    <div class="space-y-4">
-                                        @forelse($ticket->comments->sortByDesc('created_at') ?? [] as $comment)
-                                            <div class="flex gap-3 {{ $comment->is_internal ? 'bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-lg' : '' }}">
-                                                <flux:avatar size="sm">
-                                                    {{ substr($comment->author?->name ?? 'S', 0, 2) }}
-                                                </flux:avatar>
-
-                                                <div class="flex-1">
-                                                    <div class="flex items-center justify-between">
-                                                        <div>
-                                                            <span class="font-medium">{{ $comment->author?->name ?? 'System' }}</span>
-                                                            <span class="text-sm text-gray-500 ml-2">
-                                                                {{ $comment->created_at?->diffForHumans() ?? '' }}
-                                                            </span>
-                                                            @if($comment->is_internal)
-                                                                <flux:badge variant="warning" size="xs" class="ml-2">Internal</flux:badge>
-                                                            @endif
-                                                            @if($comment->is_system)
-                                                                <flux:badge variant="outline" size="xs" class="ml-2">System</flux:badge>
-                                                            @endif
-                                                        </div>
-
-                                                        @if($comment->author_id === Auth::id() && $comment->created_at?->diffInMinutes(now()) < 30)
-                                                            <flux:dropdown>
-                                                                <flux:button variant="ghost" size="xs">
-                                                                    <flux:icon.ellipsis-horizontal class="size-3" />
-                                                                </flux:button>
-                                                                <flux:menu>
-                                                                    <flux:menu.item wire:click="editComment({{ $comment->id }})">
-                                                                        <flux:icon.pencil class="size-3" />
-                                                                        Edit
-                                                                    </flux:menu.item>
-                                                                    <flux:menu.item wire:click="deleteComment({{ $comment->id }})" variant="danger">
-                                                                        <flux:icon.trash class="size-3" />
-                                                                        Delete
-                                                                    </flux:menu.item>
-                                                                </flux:menu>
-                                                            </flux:dropdown>
-                                                        @endif
-                                                    </div>
-
-                                                    <div class="mt-1 text-gray-700 dark:text-gray-300">
-                                                        {!! nl2br(e($comment->content)) !!}
-                                                    </div>
-
-                                                    @if($comment->attachments && count($comment->attachments) > 0)
-                                                        <div class="flex flex-wrap gap-2 mt-2">
-                                                            @foreach($comment->attachments as $attachment)
-                                                                <a href="{{ Storage::url($attachment->path) }}"
-                                                                   target="_blank"
-                                                                   class="text-blue-600 hover:underline text-sm flex items-center gap-1">
-                                                                    <flux:icon.paper-clip class="size-3" />
-                                                                    {{ $attachment->filename }}
-                                                                </a>
-                                                            @endforeach
-                                                        </div>
-                                                    @endif
-                                                </div>
-                                            </div>
-                                        @empty
-                                            <p class="text-gray-500 text-center py-4">No comments yet. Be the first to comment!</p>
-                                        @endforelse
-                                    </div>
-                                </div>
-                            </flux:card>
+                    @if($timeTracking)
+                        <div class="grid grid-cols-2 gap-4">
+                            <flux:input
+                                type="number"
+                                wire:model="timeSpent"
+                                label="Hours"
+                                placeholder="1.5"
+                                step="0.25"
+                                min="0"
+                            />
+                            <flux:input
+                                wire:model="timeDescription"
+                                label="Description"
+                                placeholder="What did you work on?"
+                            />
                         </div>
-
-        {{-- Right Column: Dense Sidebar (1/4) --}}
-        <div class="space-y-2">
-            {{-- Quick Actions --}}
-            <flux:card>
-                <div class="p-3">
-                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Quick Actions</h3>
+                    @endif
                     
-                    <div class="space-y-2">
-                        {{-- Status --}}
-                        <div>
-                            <label class="text-xs text-gray-500">Status</label>
-                            <flux:select wire:model="status" wire:change="updateStatus" size="sm">
+                    @if($attachments)
+                        <div wire:loading wire:target="attachments">
+                            <flux:text size="xs" class="flex items-center gap-1">
+                                <flux:icon.arrow-path class="animate-spin" /> Uploading files...
+                            </flux:text>
+                        </div>
+                    @endif
+                    @error('attachments.*')
+                        <flux:text size="xs" variant="danger">{{ $message }}</flux:text>
+                    @enderror
+                </form>
+
+                <flux:separator />
+
+                {{-- Comments List --}}
+                <div class="space-y-4">
+                    @forelse($ticket->comments->sortByDesc('created_at') ?? [] as $comment)
+                        <flux:card class="group {{ $comment->is_internal ? '!bg-amber-50 dark:!bg-amber-900/10' : '' }}">
+                            <div class="flex items-start gap-3">
+                                <flux:avatar size="sm">{{ substr($comment->author?->name ?? 'S', 0, 2) }}</flux:avatar>
+
+                                <div class="flex-1 space-y-2">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-2">
+                                            <flux:text variant="strong">{{ $comment->author?->name ?? 'System' }}</flux:text>
+                                            <flux:text size="sm" variant="subtle">
+                                                {{ $comment->created_at?->format('M d, Y g:i A') ?? '' }}
+                                            </flux:text>
+                                            @if($comment->is_internal)
+                                                <flux:badge color="amber" size="xs">Internal</flux:badge>
+                                            @endif
+                                            @if($comment->is_system)
+                                                <flux:badge color="zinc" size="xs">System</flux:badge>
+                                            @endif
+                                        </div>
+
+                                        @if($comment->author_id === Auth::id() && $comment->created_at?->diffInMinutes(now()) < 30)
+                                            <flux:dropdown>
+                                                <flux:button variant="ghost" size="xs" class="opacity-0 group-hover:opacity-100">
+                                                    <flux:icon.ellipsis-horizontal />
+                                                </flux:button>
+                                                <flux:menu>
+                                                    <flux:menu.item wire:click="editComment({{ $comment->id }})" icon="pencil">Edit</flux:menu.item>
+                                                    <flux:menu.item wire:click="deleteComment({{ $comment->id }})" icon="trash" variant="danger">Delete</flux:menu.item>
+                                                </flux:menu>
+                                            </flux:dropdown>
+                                        @endif
+                                    </div>
+
+                                    @if($editingCommentId === $comment->id)
+                                        <div class="space-y-2">
+                                            <flux:textarea wire:model.live="editingCommentText" rows="3" />
+                                            <div class="flex gap-2">
+                                                <flux:button wire:click="updateComment" variant="primary" size="xs">Save</flux:button>
+                                                <flux:button wire:click="cancelEditComment" variant="ghost" size="xs">Cancel</flux:button>
+                                            </div>
+                                        </div>
+                                    @else
+                                        <flux:text>{!! nl2br(e($comment->content)) !!}</flux:text>
+                                    @endif
+
+                                    @if($comment->attachments && count($comment->attachments) > 0)
+                                        <div class="flex flex-wrap gap-2">
+                                            @foreach($comment->attachments as $attachment)
+                                                <flux:link href="{{ Storage::url($attachment->path) }}" target="_blank">
+                                                    <flux:icon.paper-clip class="size-3" /> {{ $attachment->filename }}
+                                                </flux:link>
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        </flux:card>
+                    @empty
+                        <div class="text-center py-12">
+                            <flux:icon.chat-bubble-left-right class="w-12 h-12 mx-auto opacity-20 mb-3" />
+                            <flux:text variant="subtle">No comments yet. Be the first to comment!</flux:text>
+                        </div>
+                    @endforelse
+                </div>
+            </flux:card>
+        </div>
+
+        {{-- Right: Sidebar --}}
+        <div class="lg:col-span-1 space-y-6">
+            {{-- Quick Actions Card --}}
+            <flux:card class="space-y-4">
+                <flux:heading size="sm">Quick Actions</flux:heading>
+                
+                <div class="space-y-3">
+                    <flux:field>
+                        <flux:label>Status</flux:label>
+                        <div class="relative">
+                            <flux:select wire:model="status" wire:change="updateStatus">
                                 @foreach($statuses as $statusOption)
-                                    <option value="{{ $statusOption }}">
-                                        {{ ucfirst(str_replace('_', ' ', $statusOption)) }}
-                                    </option>
+                                    <option value="{{ $statusOption }}">{{ ucfirst(str_replace('_', ' ', $statusOption)) }}</option>
                                 @endforeach
                             </flux:select>
+                            <div wire:loading wire:target="updateStatus" class="absolute right-2 top-2.5">
+                                <flux:icon.arrow-path class="size-3 animate-spin" />
+                            </div>
                         </div>
+                    </flux:field>
 
-                        {{-- Priority --}}
-                        <div>
-                            <label class="text-xs text-gray-500">Priority</label>
-                            <flux:select wire:model="priority" wire:change="updatePriority" size="sm">
+                    <flux:field>
+                        <flux:label>Priority</flux:label>
+                        <div class="relative">
+                            <flux:select wire:model="priority" wire:change="updatePriority">
                                 @foreach($priorities as $priorityOption)
-                                    <option value="{{ $priorityOption }}">
-                                        {{ ucfirst($priorityOption) }}
-                                    </option>
+                                    <option value="{{ $priorityOption }}">{{ ucfirst($priorityOption) }}</option>
                                 @endforeach
                             </flux:select>
+                            <div wire:loading wire:target="updatePriority" class="absolute right-2 top-2.5">
+                                <flux:icon.arrow-path class="size-3 animate-spin" />
+                            </div>
                         </div>
+                    </flux:field>
 
-                        {{-- Assignee --}}
-                        <div>
-                            <label class="text-xs text-gray-500">Assignee</label>
-                            <flux:select wire:model="assignedTo" wire:change="updateAssignee" size="sm">
+                    <flux:field>
+                        <flux:label>Assignee</flux:label>
+                        <div class="relative">
+                            <flux:select wire:model="assignedTo" wire:change="updateAssignee">
                                 <option value="">Unassigned</option>
                                 @foreach($technicians as $tech)
                                     <option value="{{ $tech->id }}">{{ $tech->name }}</option>
                                 @endforeach
                             </flux:select>
+                            <div wire:loading wire:target="updateAssignee" class="absolute right-2 top-2.5">
+                                <flux:icon.arrow-path class="size-3 animate-spin" />
+                            </div>
                         </div>
-                    </div>
+                    </flux:field>
                 </div>
             </flux:card>
 
-            {{-- Dense Information Panel --}}
-            <flux:card>
-                <div class="p-3">
-                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Details</h3>
+            {{-- Details Card --}}
+            <flux:card class="space-y-4">
+                <flux:heading size="sm">Details</flux:heading>
+                
+                <div class="space-y-3">
+                    <div>
+                        <flux:subheading>Created</flux:subheading>
+                        <flux:text size="sm">{{ $ticket->created_at->format('M d, Y g:i A') }}</flux:text>
+                    </div>
 
-                    <dl class="space-y-1 text-xs">
-                        <div class="flex justify-between py-1 border-b border-gray-100">
-                            <dt class="text-gray-500">Created</dt>
-                            <dd class="font-medium">{{ $ticket->created_at->format('M d, g:i A') }}</dd>
+                    @if($ticket->closed_at)
+                        <div>
+                            <flux:subheading>Closed</flux:subheading>
+                            <flux:text size="sm">{{ $ticket->closed_at->format('M d, Y g:i A') }}</flux:text>
                         </div>
+                    @endif
 
-                        @if($ticket->scheduled_at)
-                            <div class="flex justify-between py-1 border-b border-gray-100">
-                                <dt class="text-gray-500">Scheduled</dt>
-                                <dd class="font-medium text-blue-600">{{ $ticket->scheduled_at->format('M d, g:i A') }}</dd>
-                            </div>
-                        @endif
+                    <div>
+                        <flux:subheading>Requester</flux:subheading>
+                        <flux:text size="sm">{{ $ticket->requester?->name ?? 'Unknown' }}</flux:text>
+                    </div>
 
-                        @if($ticket->closed_at)
-                            <div class="flex justify-between py-1 border-b border-gray-100">
-                                <dt class="text-gray-500">Closed</dt>
-                                <dd class="font-medium">{{ $ticket->closed_at->format('M d, g:i A') }}</dd>
-                            </div>
-                        @endif
-
-                        <div class="flex justify-between py-1 border-b border-gray-100">
-                            <dt class="text-gray-500">Requester</dt>
-                            <dd class="font-medium truncate max-w-[120px]" title="{{ $ticket->requester?->name ?? $ticket->contact?->name ?? 'Unknown' }}">
-                                {{ $ticket->requester?->name ?? $ticket->contact?->name ?? 'Unknown' }}
-                            </dd>
+                    @if($ticket->category)
+                        <div>
+                            <flux:subheading>Category</flux:subheading>
+                            <flux:badge size="sm">{{ $ticket->category }}</flux:badge>
                         </div>
-
-                        @if($ticket->location)
-                            <div class="flex justify-between py-1 border-b border-gray-100">
-                                <dt class="text-gray-500">Location</dt>
-                                <dd class="font-medium truncate max-w-[120px]">{{ $ticket->location->name }}</dd>
-                            </div>
-                        @endif
-
-                        @if($ticket->vendor)
-                            <div class="flex justify-between py-1 border-b border-gray-100">
-                                <dt class="text-gray-500">Vendor</dt>
-                                <dd class="font-medium truncate max-w-[120px]">{{ $ticket->vendor->name }}</dd>
-                            </div>
-                        @endif
-
-                        @if($ticket->invoice)
-                            <div class="flex justify-between py-1">
-                                <dt class="text-gray-500">Invoice</dt>
-                                <dd>
-                                    <a href="{{ route('invoices.show', $ticket->invoice) }}" class="text-blue-600 hover:underline font-medium">
-                                        #{{ $ticket->invoice->number }}
-                                    </a>
-                                </dd>
-                            </div>
-                        @endif
-                    </dl>
+                    @endif
                 </div>
             </flux:card>
 
-            {{-- Time & SLA Summary --}}
-            <flux:card>
-                <div class="p-3">
-                    <div class="flex items-center justify-between mb-2">
-                        <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Time & SLA</h3>
-                        <flux:button variant="ghost" size="xs" wire:click="$set('showTimeEntryModal', true)">
-                            <flux:icon.plus class="size-3" />
-                        </flux:button>
-                    </div>
-
-                    @php
-                        $totalMinutes = $ticket->timeLogs->sum('minutes_worked') ?? 0;
-                        $billableMinutes = $ticket->timeLogs->where('billable', true)->sum('minutes_worked') ?? 0;
-                    @endphp
-
-                    <div class="space-y-2">
-                        {{-- Time Summary --}}
-                        <div class="bg-gray-50 dark:bg-gray-800 rounded p-2">
-                            <div class="flex justify-between items-center">
-                                <span class="text-xs text-gray-500">Total Time</span>
-                                <span class="text-sm font-bold">{{ floor($totalMinutes / 60) }}h {{ $totalMinutes % 60 }}m</span>
-                            </div>
-                            @if($billableMinutes > 0)
-                                <div class="flex justify-between items-center mt-1">
-                                    <span class="text-xs text-gray-500">Billable</span>
-                                    <span class="text-xs font-medium text-green-600">{{ floor($billableMinutes / 60) }}h {{ $billableMinutes % 60 }}m</span>
-                                </div>
-                            @endif
-                        </div>
-
-                        {{-- SLA Status --}}
-                        @if($ticket->priorityQueue && $ticket->priorityQueue->sla_deadline)
-                            @php
-                                $deadline = \Carbon\Carbon::parse($ticket->priorityQueue->sla_deadline);
-                                $now = now();
-                                $totalHours = $ticket->created_at->diffInHours($deadline);
-                                $elapsedHours = $ticket->created_at->diffInHours($now);
-                                $progress = min(100, ($elapsedHours / $totalHours) * 100);
-                                $isBreached = $now->isAfter($deadline);
-                            @endphp
-
-                            <div class="space-y-1">
-                                <div class="flex justify-between text-xs">
-                                    <span class="text-gray-500">SLA Progress</span>
-                                    <span class="{{ $isBreached ? 'text-red-600 font-bold' : ($progress > 75 ? 'text-yellow-600' : 'text-green-600') }}">
-                                        {{ round($progress) }}%
-                                    </span>
-                                </div>
-                                <div class="w-full bg-gray-200 rounded-full h-1.5">
-                                    <div class="{{ $isBreached ? 'bg-red-600' : ($progress > 75 ? 'bg-yellow-500' : 'bg-green-500') }} h-1.5 rounded-full"
-                                         style="width: {{ min(100, $progress) }}%"></div>
-                                </div>
-                                <div class="text-xs text-gray-500">
-                                    {{ $isBreached ? 'Breached' : 'Due' }}: {{ $deadline->format('M d, g:i A') }}
-                                </div>
-                            </div>
-                        @endif
-
-                        {{-- Recent Time Entries --}}
-                        @if($ticket->timeLogs->count() > 0)
-                            <div class="border-t pt-2 mt-2">
-                                <div class="text-xs font-medium text-gray-600 mb-1">Recent Entries</div>
-                                @foreach($ticket->timeLogs->take(3) as $log)
-                                    <div class="text-xs text-gray-600 py-0.5">
-                                        {{ $log->user?->name }}: {{ floor(($log->minutes_worked ?? $log->minutes ?? 0) / 60) }}h {{ ($log->minutes_worked ?? $log->minutes ?? 0) % 60 }}m
-                                        @if($log->billable)
-                                            <span class="text-green-600">•</span>
-                                        @endif
-                                    </div>
-                                @endforeach
-                                @if($ticket->timeLogs->count() > 3)
-                                    <a href="#" wire:click="$set('showTimeModal', true)" class="text-xs text-blue-600 hover:underline">
-                                        +{{ $ticket->timeLogs->count() - 3 }} more
-                                    </a>
-                                @endif
-                            </div>
-                        @endif
-                    </div>
+            {{-- Time & SLA Card --}}
+            <flux:card class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <flux:heading size="sm">Time & SLA</flux:heading>
+                    <flux:button variant="ghost" size="xs" wire:click="$set('showTimeEntryModal', true)" icon="plus" />
                 </div>
-            </flux:card>
 
-            {{-- Watchers & Related --}}
-            <flux:card>
-                <div class="p-3">
-                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Related</h3>
+                @php
+                    $totalMinutes = $ticket->timeLogs->sum('minutes_worked') ?? 0;
+                    $billableMinutes = $ticket->timeLogs->where('billable', true)->sum('minutes_worked') ?? 0;
+                @endphp
 
-                    <div class="space-y-2">
-                        {{-- Watchers --}}
-                        @if($ticket->watchers->count() > 0)
-                            <div>
-                                <div class="text-xs text-gray-500 mb-1">Watchers ({{ $ticket->watchers->count() }})</div>
-                                <div class="flex flex-wrap gap-1">
-                                    @foreach($ticket->watchers->take(3) as $watcher)
-                                        <span class="text-xs px-2 py-0.5 bg-gray-100 rounded">{{ $watcher->user?->name ?? 'Unknown' }}</span>
-                                    @endforeach
-                                    @if($ticket->watchers->count() > 3)
-                                        <span class="text-xs text-gray-500">+{{ $ticket->watchers->count() - 3 }}</span>
-                                    @endif
-                                </div>
-                            </div>
-                        @endif
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <flux:text size="sm" variant="subtle">Total Time</flux:text>
+                        <flux:text variant="strong">{{ floor($totalMinutes / 60) }}h {{ $totalMinutes % 60 }}m</flux:text>
+                    </div>
+                    @if($billableMinutes > 0)
+                        <div class="flex justify-between items-center">
+                            <flux:text size="sm" variant="subtle">Billable</flux:text>
+                            <flux:text size="sm" color="green">{{ floor($billableMinutes / 60) }}h {{ $billableMinutes % 60 }}m</flux:text>
+                        </div>
+                    @endif
 
-                        {{-- Related Tickets Count --}}
+                    @if($ticket->priorityQueue && $ticket->priorityQueue->sla_deadline)
+                        <flux:separator />
                         @php
-                            $relatedCount = App\Domains\Ticket\Models\Ticket::where('company_id', $ticket->company_id)
-                                ->where('id', '!=', $ticket->id)
-                                ->where('client_id', $ticket->client_id)
-                                ->count();
+                            $deadline = \Carbon\Carbon::parse($ticket->priorityQueue->sla_deadline);
+                            $isBreached = now()->isAfter($deadline);
                         @endphp
-                        @if($relatedCount > 0)
-                            <div class="text-xs">
-                                <a href="{{ route('tickets.index', ['client_id' => $ticket->client_id]) }}" class="text-blue-600 hover:underline">
-                                    {{ $relatedCount }} related {{ Str::plural('ticket', $relatedCount) }} for this client
-                                </a>
-                            </div>
-                        @endif
+                        <div>
+                            <flux:text size="sm" variant="subtle">SLA: {{ $isBreached ? 'Breached' : 'Due' }}</flux:text>
+                            <flux:text size="xs" class="{{ $isBreached ? 'text-red-600' : 'text-green-600' }}">
+                                {{ $deadline->format('M d, g:i A') }}
+                            </flux:text>
+                        </div>
+                    @endif
 
-                        {{-- Files Count --}}
-                        @php
-                            $attachmentCount = $ticket->comments->flatMap->attachments->count();
-                        @endphp
-                        @if($attachmentCount > 0)
-                            <div class="text-xs text-gray-600">
-                                <flux:icon.paper-clip class="size-3 inline" /> {{ $attachmentCount }} {{ Str::plural('file', $attachmentCount) }} attached
+                    @if($ticket->timeLogs->count() > 0)
+                        <flux:separator />
+                        <flux:subheading>Recent Entries</flux:subheading>
+                        @foreach($ticket->timeLogs->take(3) as $log)
+                            <div class="flex justify-between">
+                                <flux:text size="xs" variant="subtle">{{ $log->user?->name }}</flux:text>
+                                <flux:text size="xs">{{ floor(($log->minutes_worked ?? 0) / 60) }}h {{ ($log->minutes_worked ?? 0) % 60 }}m</flux:text>
                             </div>
-                        @endif
-                    </div>
+                        @endforeach
+                    @endif
                 </div>
+            </flux:card>
+
+            {{-- Related Card --}}
+            <flux:card class="space-y-4">
+                <flux:heading size="sm">Related</flux:heading>
+
+                @if($ticket->watchers->count() > 0)
+                    <div>
+                        <flux:subheading>Watchers ({{ $ticket->watchers->count() }})</flux:subheading>
+                        <div class="flex flex-wrap gap-1 mt-1">
+                            @foreach($ticket->watchers->take(3) as $watcher)
+                                <flux:badge size="xs">{{ $watcher->user?->name }}</flux:badge>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+
+                @php
+                    $attachmentCount = $ticket->comments->flatMap->attachments->count();
+                    $relatedCount = App\Domains\Ticket\Models\Ticket::where('company_id', $ticket->company_id)
+                        ->where('id', '!=', $ticket->id)
+                        ->where('client_id', $ticket->client_id)
+                        ->count();
+                @endphp
+
+                @if($attachmentCount > 0)
+                    <flux:text size="sm">
+                        <flux:icon.paper-clip class="inline size-3" /> 
+                        {{ $attachmentCount }} {{ Str::plural('file', $attachmentCount) }}
+                    </flux:text>
+                @endif
+
+                @if($relatedCount > 0)
+                    <flux:link href="{{ route('tickets.index', ['client_id' => $ticket->client_id]) }}">
+                        {{ $relatedCount }} related {{ Str::plural('ticket', $relatedCount) }}
+                    </flux:link>
+                @endif
             </flux:card>
         </div>
     </div>
 
-    {{-- Timer Completion Modal --}}
+    {{-- Modals --}}
     @livewire('timer-completion-modal')
 
-    {{-- Status Change Modal --}}
-    <flux:modal wire:model="showStatusChangeModal" title="Change Ticket Status">
-        <form wire:submit.prevent="updateStatus">
-            <div class="space-y-4">
-                <flux:select wire:model="newStatus" label="New Status" required>
-                    <option value="">Select status...</option>
-                    @foreach($statuses as $statusOption)
-                        <option value="{{ $statusOption }}">
-                            {{ ucfirst(str_replace('_', ' ', $statusOption)) }}
-                        </option>
-                    @endforeach
-                </flux:select>
+    <flux:modal name="status-change" wire:model="showStatusChangeModal">
+        <form wire:submit.prevent="updateStatus" class="space-y-6">
+            <flux:heading size="lg">Change Status</flux:heading>
+            
+            <flux:select wire:model="newStatus" label="New Status" required>
+                <option value="">Select status...</option>
+                @foreach($statuses as $statusOption)
+                    <option value="{{ $statusOption }}">{{ ucfirst(str_replace('_', ' ', $statusOption)) }}</option>
+                @endforeach
+            </flux:select>
 
-                <flux:textarea
-                    wire:model="statusChangeReason"
-                    label="Reason for Change"
-                    placeholder="Explain why you're changing the status..."
-                    rows="3"
-                    required
-                />
-            </div>
+            <flux:textarea
+                wire:model="statusChangeReason"
+                label="Reason"
+                placeholder="Why are you changing the status?"
+                rows="3"
+                required
+            />
 
-            <div class="flex justify-end gap-2 mt-6">
-                <flux:button variant="ghost" wire:click="$set('showStatusChangeModal', false)">
-                    Cancel
-                </flux:button>
-                <flux:button type="submit" variant="primary">
-                    Update Status
-                </flux:button>
+            <div class="flex gap-2 justify-end">
+                <flux:button variant="ghost" wire:click="$set('showStatusChangeModal', false)">Cancel</flux:button>
+                <flux:button type="submit" variant="primary">Update</flux:button>
             </div>
         </form>
     </flux:modal>
 
-    {{-- Time Entry Modal --}}
-    <flux:modal wire:model="showTimeEntryModal" title="Add Time Entry">
-        <form wire:submit.prevent="addTimeEntry">
-            <div class="space-y-4">
-                <flux:input
-                    type="number"
-                    wire:model="timeSpent"
-                    label="Time Spent (hours)"
-                    placeholder="e.g., 1.5"
-                    step="0.25"
-                    min="0"
-                    required
-                />
+    <flux:modal name="time-entry" wire:model="showTimeEntryModal">
+        <form wire:submit.prevent="addTimeEntry" class="space-y-6">
+            <flux:heading size="lg">Add Time Entry</flux:heading>
+            
+            <flux:input
+                type="number"
+                wire:model="timeSpent"
+                label="Hours"
+                placeholder="1.5"
+                step="0.25"
+                min="0"
+                required
+            />
 
-                <flux:textarea
-                    wire:model="timeDescription"
-                    label="Description"
-                    placeholder="What did you work on?"
-                    rows="3"
-                    required
-                />
+            <flux:textarea
+                wire:model="timeDescription"
+                label="Description"
+                placeholder="What did you work on?"
+                rows="3"
+                required
+            />
 
-                <flux:checkbox wire:model="billable" label="Billable" />
-            </div>
+            <flux:checkbox wire:model="billable" label="Billable" />
 
-            <div class="flex justify-end gap-2 mt-6">
-                <flux:button variant="ghost" wire:click="$set('showTimeEntryModal', false)">
-                    Cancel
-                </flux:button>
-                <flux:button type="submit" variant="primary">
-                    Add Entry
-                </flux:button>
+            <div class="flex gap-2 justify-end">
+                <flux:button variant="ghost" wire:click="$set('showTimeEntryModal', false)">Cancel</flux:button>
+                <flux:button type="submit" variant="primary">Add Entry</flux:button>
             </div>
         </form>
     </flux:modal>
-    </div>
+
+    @script
+    <script>
+        $wire.on('draftSavedIndicator', () => {
+            setTimeout(() => $wire.set('draftSaved', false), 2000);
+        });
+
+        $wire.on('ticketUpdated', (event) => {
+            const ticketId = Array.isArray(event) ? event[0].ticketId : event.ticketId;
+            if (ticketId === {{ $ticket->id }}) $wire.$refresh();
+        });
+    </script>
+    @endscript
 </div>

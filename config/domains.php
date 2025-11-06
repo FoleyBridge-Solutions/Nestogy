@@ -49,6 +49,20 @@ return [
         ],
     ],
 
+    'Documentation' => [
+        'enabled' => true,
+        'apply_grouping' => false,  // Routes define their own grouping
+        'priority' => 10,  // Load early for public access
+        'description' => 'Public documentation and user guides',
+        'tags' => ['documentation', 'help', 'guides', 'public'],
+        'features' => [
+            'public_access' => true,
+            'search' => true,
+            'livewire' => true,
+            'seo_optimized' => true,
+        ],
+    ],
+
     'Email' => [
         'enabled' => true,
         'apply_grouping' => false,  // Routes define their own prefix and name

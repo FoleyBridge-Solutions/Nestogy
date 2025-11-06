@@ -1,8 +1,8 @@
 # Nestogy ERP - MSP Management Platform
 
-![Laravel](https://img.shields.io/badge/Laravel-12.x-red.svg)
-![PHP](https://img.shields.io/badge/PHP-8.2+-purple.svg)
-![Livewire](https://img.shields.io/badge/Livewire-3.0-pink.svg)
+![Laravel](https://img.shields.io/badge/Laravel-12.36-red.svg)
+![PHP](https://img.shields.io/badge/PHP-8.4-purple.svg)
+![Livewire](https://img.shields.io/badge/Livewire-3.6-pink.svg)
 ![Tailwind](https://img.shields.io/badge/Tailwind-4.0-blue.svg)
 ![License](https://img.shields.io/badge/license-Proprietary-green.svg)
 
@@ -14,42 +14,54 @@
 
 The platform is actively in development with the following domains implemented:
 
-- **13 Active Domains** with 314+ domain-specific PHP classes
-- **163 Database Migrations** defining comprehensive data structures  
-- **154 Recent Updates** (2025) showing active development
+- **20 Active Domains** with 400+ domain-specific PHP classes
+- **149 Database Migrations** and seeders defining comprehensive data structures  
+- **Active Development** (November 2025) with continuous improvements
 - **Session-Based Architecture** for clean client context management
-- **Flux UI Pro v2.0** for modern, consistent UI components
+- **Flux UI Pro v2.6** for modern, consistent UI components
+- **PostgreSQL Primary** with MariaDB/MySQL support
 
 ## 🏗️ Architecture
 
 ### Domain-Driven Design Structure
 
-The application follows DDD principles with 13 bounded contexts:
+The application follows DDD principles with 20 bounded contexts:
 
-- **Asset** - Equipment and inventory management
-- **Client** - Customer relationship management with contacts, locations, and communications
+- **Asset** - Equipment and inventory management with RMM integration
+- **Client** - Customer relationship management with contacts, locations, and portal access
+- **Collections** - Collections management for unpaid invoices
+- **Company** - Multi-tenant company management and settings
 - **Contract** - Service agreements, SLAs, and contract lifecycle management
+- **Core** - Core system functionality including navigation and settings
 - **Email** - Full email system with accounts, messages, folders, attachments, and signatures
-- **Financial** - Billing, invoicing, payments, and analytics
-- **Integration** - Third-party service connectors and API integrations
+- **Financial** - Billing, invoicing, payments, credit notes, and analytics
+- **HR** - Human resources, employee management, and break tracking
+- **Integration** - Third-party service connectors (Tactical RMM, Stripe, etc.)
 - **Knowledge** - Documentation and knowledge base management
 - **Lead** - Sales pipeline and lead management
 - **Marketing** - Campaign and communication tools
+- **PhysicalMail** - Physical mail integration and tracking
 - **Product** - Service catalog and product management  
 - **Project** - Project management with tasks and milestones
 - **Report** - Analytics, reporting, and business intelligence
 - **Security** - Authentication, authorization, and access control
+- **Tax** - Tax calculation and jurisdiction management
 - **Ticket** - Help desk with SLA management, workflows, and time tracking
 
 ### Technology Stack
 
-- **Backend**: Laravel 12.27.0, PHP 8.2+
-- **Frontend**: Livewire 3, Alpine.js, Tailwind CSS 4
-- **UI Components**: Flux UI Pro v2.0 (Commercial License)
-- **Database**: MySQL/PostgreSQL with 163+ migrations
-- **Authentication**: Laravel Fortify with 2FA support
-- **Authorization**: Silber Bouncer for roles and permissions
+- **Backend**: Laravel 12.36.1, PHP 8.4.13
+- **Frontend**: Livewire 3.6.4, Alpine.js 3.14, Tailwind CSS 4
+- **UI Components**: Flux UI Pro v2.6 (Commercial License)
+- **Database**: PostgreSQL 13+ (primary), MySQL 8.0+/MariaDB 10.5+ (supported)
+- **Queue**: Redis, Database
+- **Real-time**: Laravel Reverb 1.6 (WebSocket server)
+- **Authentication**: Laravel Fortify with 2FA support (Google2FA)
+- **Authorization**: Silber Bouncer v1.0 for roles and permissions
 - **Session Management**: Custom NavigationService for client context
+- **File Processing**: Intervention Image 3.3, Spatie Media Library 11.1
+- **PDF Generation**: Spatie Laravel PDF 1.6, DomPDF 3.1
+- **Testing**: PHPUnit 11.5, Paratest 7.8
 
 ## ✨ Implemented Features
 
@@ -135,24 +147,26 @@ The application follows DDD principles with 13 bounded contexts:
 
 ## 📖 Documentation
 
-- [Installation Guide](docs/INSTALL.md)
-- [Development Guide](docs/DEVELOPMENT.md)
-- [Deployment Commands](docs/DEPLOYMENT_COMMANDS.md)
-- [Feature List](docs/NESTOGY_FEATURE_LIST.md)
-- [Claude AI Integration](docs/CLAUDE.md)
-- [AI Agents Documentation](docs/AGENTS.md)
-- [Architecture Documentation](docs/architecture/)
-- [Style Guide](docs/STYLE_GUIDE.md)
+- [Quick Start Guide](docs/QUICKSTART.md) - Get up and running quickly
+- [Development Guide](docs/DEVELOPMENT.md) - Development environment and best practices
+- [Configuration Guide](docs/CONFIGURATION.md) - System configuration
+- [Deployment Guide](docs/DEPLOYMENT.md) - Production deployment
+- [Testing Guide](docs/TESTING.md) - Testing practices and coverage
+- [Repository Guidelines](docs/REPOSITORY_GUIDELINES.md)
+- [Antipatterns](docs/antipatterns.md) - Code quality tracking
+- [VoIP Tax System](docs/voip-tax-system.md) - Domain-specific documentation
+- [Service Management](docs/SERVICE_MANAGEMENT_SYSTEM.md)
 
 ## 🚀 Getting Started
 
 ### Prerequisites
 
-- PHP 8.2 or higher
+- PHP 8.4 or higher
 - Composer 2.x
 - Node.js 18.x or higher
-- MySQL 8.0+ or PostgreSQL 13+
-- Redis (optional, for caching)
+- PostgreSQL 13+ (recommended) or MySQL 8.0+/MariaDB 10.5+
+- Redis (recommended, for caching and queues)
+- Supervisor (recommended, for queue workers)
 
 ### Installation
 

@@ -1,6 +1,6 @@
 # Nestogy MSP Platform - Quick Start Guide
 
-Get the Nestogy MSP Platform up and running quickly with this streamlined guide. The platform uses Laravel 12 with modern base class architecture for 45% code reduction and 2-3x faster development.
+Get the Nestogy MSP Platform up and running quickly with this streamlined guide. The platform uses Laravel 12.36 with modern base class architecture for 45% code reduction and 2-3x faster development.
 
 For detailed instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
 
@@ -8,11 +8,12 @@ For detailed instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
 
 - Ubuntu/Debian server with sudo access
 - Apache2 web server
-- MySQL 8.0+ database server
-- PHP 8.2+ with required extensions
-- Laravel 12 requirements
-- Composer installed
+- PostgreSQL 13+ (recommended) or MySQL 8.0+/MariaDB 10.5+ database server
+- PHP 8.4+ with required extensions
+- Laravel 12.36 requirements
+- Composer 2.x installed
 - Node.js 18+ and npm installed
+- Redis server (recommended for caching and queues)
 
 ## Quick Installation (5 Minutes)
 
@@ -67,6 +68,14 @@ sudo systemctl restart apache2
 
 ### Database Setup
 
+For PostgreSQL (Recommended):
+```sql
+CREATE DATABASE nestogy_erp WITH ENCODING 'UTF8';
+CREATE USER nestogy_user WITH PASSWORD 'your_secure_password';
+GRANT ALL PRIVILEGES ON DATABASE nestogy_erp TO nestogy_user;
+```
+
+For MySQL/MariaDB:
 ```sql
 CREATE DATABASE nestogy_erp CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 CREATE USER 'nestogy_user'@'localhost' IDENTIFIED BY 'your_secure_password';
@@ -82,12 +91,26 @@ APP_ENV=production
 APP_DEBUG=false
 APP_URL=http://your-server-ip
 
-DB_CONNECTION=mysql
+# PostgreSQL (Recommended)
+DB_CONNECTION=pgsql
 DB_HOST=127.0.0.1
-DB_PORT=3306
+DB_PORT=5432
 DB_DATABASE=nestogy_erp
 DB_USERNAME=nestogy_user
 DB_PASSWORD=your_secure_password
+
+# OR MySQL/MariaDB
+# DB_CONNECTION=mysql
+# DB_HOST=127.0.0.1
+# DB_PORT=3306
+# DB_DATABASE=nestogy_erp
+# DB_USERNAME=nestogy_user
+# DB_PASSWORD=your_secure_password
+
+# Cache & Queue (Redis recommended)
+CACHE_DRIVER=redis
+QUEUE_CONNECTION=redis
+SESSION_DRIVER=redis
 
 # Optional: Configure email
 MAIL_MAILER=smtp
@@ -288,5 +311,5 @@ php artisan queue:retry all
 ---
 
 **Version**: 2.0.0
-**Last Updated**: August 2024
-**Platform**: Laravel 12 + Modern Base Class Architecture
+**Last Updated**: November 2025
+**Platform**: Laravel 12.36 + PHP 8.4 + Modern Base Class Architecture

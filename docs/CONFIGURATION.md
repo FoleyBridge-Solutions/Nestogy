@@ -289,4 +289,4 @@ When migrating from the old system:
 
 ---
 
-**Version**: 1.0.0 | **Last Updated**: January 2024 | **Platform**: Laravel 11 + PHP 8.2+
+**Version**: 1.0.0 | **Last Updated**: November 2025 | **Platform**: Laravel 12.36 + PHP 8.4

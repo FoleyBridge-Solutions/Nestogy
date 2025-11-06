@@ -14,7 +14,7 @@ class Login extends Component
 
     public string $code = '';
 
-    public bool $remember = false;
+    public $remember = false;
 
     protected function rules()
     {

@@ -121,12 +121,12 @@ class ContactIndex extends BaseIndexComponent
             [
                 'label' => 'View',
                 'icon' => 'eye',
-                'href' => route('clients.contacts.show', [$this->clientId, $item->id]),
+                'href' => route('clients.contacts.show', $item),
             ],
             [
                 'label' => 'Edit',
                 'icon' => 'pencil',
-                'href' => route('clients.contacts.edit', [$this->clientId, $item->id]),
+                'href' => route('clients.contacts.edit', $item),
             ],
             [
                 'label' => 'Delete',

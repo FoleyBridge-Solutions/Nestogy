@@ -220,7 +220,7 @@ $pageSubtitle = $contact->title;
                     <div>
                         <dt class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Reports To</dt>
                         <dd class="mt-1">
-                            <flux:link href="{{ route('clients.contacts.show', $contact->reportsTo) }}">
+                            <flux:link href="{{ route('clients.contacts.show', $contact->reportsTo->id) }}">
                                 {{ $contact->reportsTo->name }}
                                 @if($contact->reportsTo->title)
                                     ({{ $contact->reportsTo->title }})

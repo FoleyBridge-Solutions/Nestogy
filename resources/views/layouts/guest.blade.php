@@ -147,6 +147,9 @@
     <!-- Livewire Scripts -->
     @livewireScripts
 
+    <!-- Flux Scripts -->
+    @fluxScripts
+
     @RegisterServiceWorkerScript
 </body>
 </html>

@@ -19,35 +19,35 @@ This guide provides comprehensive instructions for deploying the Nestogy MSP Pla
 
 ### Minimum Requirements
 
-- **Operating System**: Ubuntu 20.04 LTS or newer, Debian 11 or newer
-- **Web Server**: Apache 2.4.41 or newer
-- **PHP**: 8.2 or newer
-- **Database**: MySQL 8.0 or newer / MariaDB 10.5 or newer
+- **Operating System**: Ubuntu 22.04 LTS or newer, Debian 11 or newer
+- **Web Server**: Apache 2.4.41 or newer, Nginx 1.18+ (supported)
+- **PHP**: 8.4 or newer
+- **Database**: PostgreSQL 13+ (recommended) or MySQL 8.0+/MariaDB 10.5+
 - **RAM**: 4GB minimum (8GB recommended)
 - **Storage**: 20GB minimum (50GB recommended)
 - **CPU**: 2 cores minimum (4 cores recommended)
+- **Redis**: 6.x or newer (recommended for caching and queues)
 
 ### Required PHP Extensions
 
 ```bash
-php8.2-cli
-php8.2-common
-php8.2-mysql
-php8.2-xml
-php8.2-xmlrpc
-php8.2-curl
-php8.2-gd
-php8.2-imagick
-php8.2-dev
-php8.2-imap
-php8.2-mbstring
-php8.2-opcache
-php8.2-redis
-php8.2-soap
-php8.2-zip
-php8.2-intl
-php8.2-bcmath
-php8.2-fpm
+php8.4-cli
+php8.4-common
+php8.4-pgsql       # For PostgreSQL
+php8.4-mysql       # For MySQL/MariaDB (if using)
+php8.4-xml
+php8.4-curl
+php8.4-gd
+php8.4-imagick
+php8.4-imap
+php8.4-mbstring
+php8.4-opcache
+php8.4-redis
+php8.4-soap
+php8.4-zip
+php8.4-intl
+php8.4-bcmath
+php8.4-fpm
 ```
 
 ### Additional Software
@@ -78,21 +78,35 @@ php8.2-fpm
 # Update system packages
 sudo apt update && sudo apt upgrade -y
 
-# Install Apache and MySQL
-sudo apt install -y apache2 mysql-server
+# Install Apache and PostgreSQL (or MySQL)
+sudo apt install -y apache2 postgresql postgresql-contrib
+# OR for MySQL: sudo apt install -y apache2 mysql-server
 
 # Install PHP and extensions
-sudo apt install -y php8.2 php8.2-cli php8.2-common php8.2-mysql \
-    php8.2-xml php8.2-xmlrpc php8.2-curl php8.2-gd php8.2-imagick \
-    php8.2-dev php8.2-imap php8.2-mbstring php8.2-opcache php8.2-redis \
-    php8.2-soap php8.2-zip php8.2-intl php8.2-bcmath php8.2-fpm
+sudo apt install -y php8.4 php8.4-cli php8.4-common php8.4-pgsql \
+    php8.4-mysql php8.4-xml php8.4-curl php8.4-gd php8.4-imagick \
+    php8.4-imap php8.4-mbstring php8.4-opcache php8.4-redis \
+    php8.4-soap php8.4-zip php8.4-intl php8.4-bcmath php8.4-fpm
 
 # Install additional tools
 sudo apt install -y git composer nodejs npm redis-server supervisor unzip
 ```
 
-### 2. Configure MySQL
+### 2. Configure Database
 
+For PostgreSQL (Recommended):
+```bash
+# Switch to postgres user
+sudo -u postgres psql
+
+# In PostgreSQL shell
+CREATE DATABASE nestogy_msp WITH ENCODING 'UTF8';
+CREATE USER nestogy_user WITH PASSWORD 'strong_password_here';
+GRANT ALL PRIVILEGES ON DATABASE nestogy_msp TO nestogy_user;
+\q
+```
+
+For MySQL/MariaDB:
 ```bash
 # Secure MySQL installation
 sudo mysql_secure_installation
@@ -148,12 +162,34 @@ APP_ENV=production
 APP_DEBUG=false
 APP_URL=https://your-domain.com
 
-DB_CONNECTION=mysql
+# PostgreSQL (Recommended)
+DB_CONNECTION=pgsql
 DB_HOST=127.0.0.1
-DB_PORT=3306
+DB_PORT=5432
 DB_DATABASE=nestogy_msp
 DB_USERNAME=nestogy_user
 DB_PASSWORD=your_database_password
+
+# OR MySQL/MariaDB
+# DB_CONNECTION=mysql
+# DB_HOST=127.0.0.1
+# DB_PORT=3306
+# DB_DATABASE=nestogy_msp
+# DB_USERNAME=nestogy_user
+# DB_PASSWORD=your_database_password
+
+# Cache, Queue, and Session (Redis recommended)
+CACHE_DRIVER=redis
+QUEUE_CONNECTION=redis
+SESSION_DRIVER=redis
+REDIS_HOST=127.0.0.1
+REDIS_PORT=6379
+
+# Broadcasting (Laravel Reverb)
+BROADCAST_DRIVER=reverb
+REVERB_APP_ID=your-app-id
+REVERB_APP_KEY=your-app-key
+REVERB_APP_SECRET=your-app-secret
 
 MAIL_MAILER=smtp
 MAIL_HOST=your-smtp-host
@@ -163,10 +199,6 @@ MAIL_PASSWORD=your-email-password
 MAIL_ENCRYPTION=tls
 MAIL_FROM_ADDRESS=noreply@your-domain.com
 MAIL_FROM_NAME="${APP_NAME}"
-
-CACHE_DRIVER=redis
-QUEUE_CONNECTION=redis
-SESSION_DRIVER=redis
 ```
 
 ### 5. Run Database Migrations and Seeders
@@ -406,7 +438,7 @@ rm -rf .git .gitignore .gitattributes README.md
 
 ### 1. PHP OPcache Configuration
 
-Edit `/etc/php/8.2/fpm/conf.d/10-opcache.ini`:
+Edit `/etc/php/8.4/fpm/conf.d/10-opcache.ini`:
 
 ```ini
 opcache.enable=1
@@ -688,5 +720,6 @@ sudo php artisan up
 
 ---
 
-Last Updated: January 2024
-Version: 1.0.0
+**Last Updated**: November 2025
+**Version**: 2.0.0
+**Platform**: Laravel 12.36 + PHP 8.4 + PostgreSQL 13+

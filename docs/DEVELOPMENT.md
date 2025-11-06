@@ -21,12 +21,13 @@ This guide helps developers set up a local development environment for the Nesto
 
 ### Prerequisites
 
-- **PHP** 8.2+ with required extensions
+- **PHP** 8.4+ with required extensions
 - **Composer** 2.0+
 - **Node.js** 18.0+ & npm
-- **MySQL** 8.0+ or **MariaDB** 10.5+
-- **Redis** (optional, for caching and queues)
+- **PostgreSQL** 13+ (recommended) or **MySQL** 8.0+ / **MariaDB** 10.5+
+- **Redis** (recommended, for caching and queues)
 - **Git** for version control
+- **Supervisor** (optional, for queue workers)
 
 ### Local Installation
 
@@ -61,17 +62,26 @@ This guide helps developers set up a local development environment for the Nesto
    APP_DEBUG=true
    APP_URL=http://localhost:8000
    
-   DB_CONNECTION=mysql
+   # PostgreSQL (Recommended)
+   DB_CONNECTION=pgsql
    DB_HOST=127.0.0.1
-   DB_PORT=3306
+   DB_PORT=5432
    DB_DATABASE=nestogy_dev
    DB_USERNAME=your_username
    DB_PASSWORD=your_password
    
-   # Use database for sessions in development
-   SESSION_DRIVER=database
-   CACHE_DRIVER=database
-   QUEUE_CONNECTION=database
+   # OR MySQL/MariaDB
+   # DB_CONNECTION=mysql
+   # DB_HOST=127.0.0.1
+   # DB_PORT=3306
+   # DB_DATABASE=nestogy_dev
+   # DB_USERNAME=your_username
+   # DB_PASSWORD=your_password
+   
+   # Use Redis for better performance
+   CACHE_DRIVER=redis
+   QUEUE_CONNECTION=redis
+   SESSION_DRIVER=redis
    
    # Mail settings for local development
    MAIL_MAILER=log
@@ -80,6 +90,20 @@ This guide helps developers set up a local development environment for the Nesto
    ```
 
 5. **Database setup**
+   
+   For PostgreSQL:
+   ```bash
+   # Create database
+   psql -U postgres -c "CREATE DATABASE nestogy_dev WITH ENCODING 'UTF8';"
+   
+   # Run migrations
+   php artisan migrate
+   
+   # Seed database with sample data
+   php artisan db:seed
+   ```
+   
+   For MySQL/MariaDB:
    ```bash
    # Create database
    mysql -u root -p -e "CREATE DATABASE nestogy_dev CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
@@ -1000,4 +1024,4 @@ php artisan benchmark:run
 
 ---
 
-**Version**: 2.0.0 | **Last Updated**: August 2024 | **Platform**: Laravel 12 + PHP 8.2+ + Modern Architecture
+**Version**: 2.0.0 | **Last Updated**: November 2025 | **Platform**: Laravel 12.36 + PHP 8.4 + Modern Architecture

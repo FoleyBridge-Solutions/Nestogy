@@ -195,7 +195,10 @@ class TicketShow extends Component
             $this->refreshTicketData();
             $this->status = $this->ticket->status;
 
-            session()->flash('message', 'Comment added successfully.');
+            Flux::toast(
+                text: 'Comment added successfully',
+                variant: 'success'
+            );
         } catch (\Illuminate\Validation\ValidationException $e) {
             throw $e;
         } catch (\Exception $e) {
@@ -205,7 +208,10 @@ class TicketShow extends Component
                 'user_id' => Auth::id(),
             ]);
 
-            session()->flash('error', 'Failed to add comment. Please try again.');
+            Flux::toast(
+                text: 'Failed to add comment. Please try again.',
+                variant: 'danger'
+            );
         }
     }
 
@@ -230,7 +236,13 @@ class TicketShow extends Component
             $this->status = $this->newStatus;
             $this->reset(['showStatusChangeModal', 'newStatus', 'statusChangeReason']);
 
-            session()->flash('message', 'Ticket status updated successfully.');
+            // Broadcast event for real-time updates
+            $this->dispatch('ticketUpdated', ticketId: $this->ticket->id);
+
+            Flux::toast(
+                text: 'Ticket status updated successfully',
+                variant: 'success'
+            );
         } catch (\Illuminate\Validation\ValidationException $e) {
             throw $e;
         } catch (\Exception $e) {
@@ -240,13 +252,16 @@ class TicketShow extends Component
                 'user_id' => Auth::id(),
             ]);
 
-            session()->flash('error', 'Failed to update status. Please try again.');
+            Flux::toast(
+                text: 'Failed to update status. Please try again.',
+                variant: 'danger'
+            );
         }
     }
 
     public function updatePriority()
     {
-        $this->validate(['priority' => 'required|in:low,medium,high,urgent']);
+        $this->validate(['priority' => 'required|in:low,medium,high,urgent,critical']);
 
         $oldPriority = $this->ticket->priority;
         $this->ticket->priority = $this->priority;
@@ -261,7 +276,13 @@ class TicketShow extends Component
             );
         }
 
-        session()->flash('message', 'Priority updated successfully.');
+        // Broadcast event for real-time updates
+        $this->dispatch('ticketUpdated', ticketId: $this->ticket->id);
+
+        Flux::toast(
+            text: 'Priority updated successfully',
+            variant: 'success'
+        );
     }
 
     public function updateAssignee()
@@ -283,7 +304,14 @@ class TicketShow extends Component
         }
 
         $this->ticket->refresh();
-        session()->flash('message', 'Assignee updated successfully.');
+
+        // Broadcast event for real-time updates
+        $this->dispatch('ticketUpdated', ticketId: $this->ticket->id);
+
+        Flux::toast(
+            text: 'Assignee updated successfully',
+            variant: 'success'
+        );
     }
 
     public function toggleWatch()
@@ -292,13 +320,21 @@ class TicketShow extends Component
 
         if ($watcher) {
             $watcher->delete();
-            session()->flash('message', 'You are no longer watching this ticket.');
+            $this->ticket->load('watchers.user');
+            
+            Flux::toast(
+                text: 'You are no longer watching this ticket',
+                variant: 'info'
+            );
         } else {
             $this->ticket->watchers()->create(['user_id' => Auth::id()]);
-            session()->flash('message', 'You are now watching this ticket.');
+            $this->ticket->load('watchers.user');
+            
+            Flux::toast(
+                text: 'You are now watching this ticket',
+                variant: 'success'
+            );
         }
-
-        $this->ticket->load('watchers.user');
     }
 
     public function deleteComment($commentId)
@@ -311,9 +347,16 @@ class TicketShow extends Component
         if ($comment && $comment->created_at->diffInMinutes(now()) < 30) {
             $comment->delete();
             $this->ticket->load('comments.author', 'comments.attachments');
-            session()->flash('message', 'Comment deleted successfully.');
+            
+            Flux::toast(
+                text: 'Comment deleted successfully',
+                variant: 'success'
+            );
         } else {
-            session()->flash('error', 'You can only delete your own comments within 30 minutes of posting.');
+            Flux::toast(
+                text: 'You can only delete your own comments within 30 minutes of posting',
+                variant: 'danger'
+            );
         }
     }
 
@@ -336,6 +379,10 @@ class TicketShow extends Component
             return;
         }
 
+        $this->validate([
+            'editingCommentText' => 'required|min:5|max:5000',
+        ]);
+
         $comment = TicketComment::where('id', $this->editingCommentId)
             ->where('ticket_id', $this->ticket->id)
             ->where('author_id', Auth::id())
@@ -345,8 +392,17 @@ class TicketShow extends Component
             $comment->update(['content' => $this->editingCommentText]);
             $this->reset(['editingCommentId', 'editingCommentText']);
             $this->ticket->load('comments.author', 'comments.attachments');
-            session()->flash('message', 'Comment updated successfully.');
+            
+            Flux::toast(
+                text: 'Comment updated successfully',
+                variant: 'success'
+            );
         }
+    }
+
+    public function cancelEditComment()
+    {
+        $this->reset(['editingCommentId', 'editingCommentText']);
     }
 
     public function cloneTicket()
@@ -359,7 +415,10 @@ class TicketShow extends Component
         $newTicket->subject = 'Copy of: '.$this->ticket->subject;
         $newTicket->save();
 
-        session()->flash('message', 'Ticket cloned successfully.');
+        Flux::toast(
+            text: 'Ticket cloned successfully',
+            variant: 'success'
+        );
 
         return redirect()->route('tickets.show', $newTicket);
     }
@@ -367,7 +426,11 @@ class TicketShow extends Component
     public function archiveTicket()
     {
         $this->ticket->update(['archived_at' => now()]);
-        session()->flash('message', 'Ticket archived successfully.');
+        
+        Flux::toast(
+            text: 'Ticket archived successfully',
+            variant: 'success'
+        );
 
         return redirect()->route('tickets.index');
     }
@@ -381,7 +444,11 @@ class TicketShow extends Component
         if ($entry) {
             $entry->delete();
             $this->ticket->load('timeLogs.user');
-            session()->flash('message', 'Time entry deleted successfully.');
+            
+            Flux::toast(
+                text: 'Time entry deleted successfully',
+                variant: 'success'
+            );
         }
     }
 
@@ -508,7 +575,10 @@ class TicketShow extends Component
         $this->reset(['timeSpent', 'timeDescription', 'showTimeEntryModal']);
         $this->billable = true; // Reset to default
 
-        session()->flash('message', 'Time entry added successfully.');
+        Flux::toast(
+            text: 'Time entry added successfully',
+            variant: 'success'
+        );
     }
 
     public function saveDraft()
@@ -520,6 +590,17 @@ class TicketShow extends Component
                 now()->addDays(1)
             );
             $this->draftSaved = true;
+            
+            // Reset the draft saved indicator after 2 seconds
+            $this->dispatch('draftSavedIndicator');
+        }
+    }
+
+    public function updatedComment($value)
+    {
+        // Auto-save draft when comment changes
+        if (strlen($value) > 5) {
+            $this->saveDraft();
         }
     }
 

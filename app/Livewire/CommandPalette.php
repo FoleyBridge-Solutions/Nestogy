@@ -38,7 +38,8 @@ class CommandPalette extends Component
 
     public function handleOpen($data = [])
     {
-        $currentRoute = $data['currentRoute'] ?? null;
+        // Support both array and string data
+        $currentRoute = is_array($data) ? ($data['currentRoute'] ?? null) : null;
         $this->open($currentRoute);
     }
 

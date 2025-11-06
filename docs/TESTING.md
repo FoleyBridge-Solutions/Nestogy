@@ -735,9 +735,13 @@ If you have questions about testing:
 
 1. Check this documentation first
 2. Review existing tests in `tests/` for examples
-3. Check `/docs/TESTING_IMPROVEMENT_PLAN.md` for detailed guidance
+3. Check comprehensive test documentation in root directory
 4. Ask the development team
 
 ---
 
 **Remember**: Tests are not optional - they protect revenue, data integrity, and user security. Write tests for every feature!
+
+---
+
+**Version**: 2.0.0 | **Last Updated**: November 2025 | **Platform**: Laravel 12.36 + PHP 8.4 + PHPUnit 11.5

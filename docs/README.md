@@ -25,11 +25,12 @@ Nestogy is a comprehensive ERP system designed for Managed Service Providers (MS
 - **Integrations** - RMM tools, email sync, payment gateways, physical mail
 
 ### Tech Stack
-- **Backend:** Laravel 12, PHP 8.2+
-- **Frontend:** Livewire 3, Flux/Flux Pro, Alpine.js, Tailwind CSS
-- **Database:** PostgreSQL (primary), MariaDB (supported)
-- **Queue:** Redis
-- **Testing:** PHPUnit
+- **Backend:** Laravel 12.36, PHP 8.4
+- **Frontend:** Livewire 3.6, Flux/Flux Pro v2.6, Alpine.js 3.14, Tailwind CSS 4
+- **Database:** PostgreSQL 13+ (primary), MySQL 8.0+/MariaDB 10.5+ (supported)
+- **Cache/Queue:** Redis 6+
+- **Real-time:** Laravel Reverb 1.6
+- **Testing:** PHPUnit 11.5, Paratest 7.8
 
 ## Getting Started
 
@@ -45,4 +46,4 @@ Nestogy is a comprehensive ERP system designed for Managed Service Providers (MS
 
 ## License
 
-MIT License
+Proprietary - All rights reserved by FoleyBridge Solutions
