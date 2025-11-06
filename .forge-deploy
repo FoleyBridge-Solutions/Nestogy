@@ -1,9 +1,39 @@
 #!/usr/bin/env bash
 set -e
 
-echo "Deployment started..."
+echo "🚀 Deployment started..."
 
-# No custom nginx config - handled by support ticket
-# Just run standard Laravel Cloud deployment
+# Navigate to site directory (Laravel Cloud auto-handles this)
+cd $FORGE_SITE_PATH
 
-echo "Deployment finished!"
+# Pull latest code (Laravel Cloud does this automatically)
+echo "📦 Installing dependencies..."
+composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+
+# Run database migrations
+echo "🗄️  Running migrations..."
+php artisan migrate --force
+
+# ✨ NEW: Auto-discover and sync permissions from policies
+echo "🔍 Discovering permissions from code..."
+php artisan permissions:discover --sync
+
+# Clear and cache configuration
+echo "🗂️  Caching configuration..."
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+
+# Clear application cache
+echo "🧹 Clearing application cache..."
+php artisan cache:clear
+
+# Restart queue workers (if using queues)
+echo "♻️  Restarting queue workers..."
+php artisan queue:restart
+
+# Optimize for production
+echo "⚡ Optimizing for production..."
+php artisan optimize
+
+echo "✅ Deployment finished successfully!"

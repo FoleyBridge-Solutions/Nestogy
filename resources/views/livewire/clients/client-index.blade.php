@@ -57,9 +57,9 @@
                 <flux:icon.arrow-up-tray class="size-4" />
                 Import
             </flux:button>
-            <flux:button variant="primary" href="{{ route('clients.create') }}">
+            <flux:button variant="primary" wire:click="createClient">
                 <flux:icon.plus class="size-4" />
-                Add Client
+                Add {{ $showLeads ? 'Lead' : 'Client' }}
             </flux:button>
         </div>
     </flux:card>

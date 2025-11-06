@@ -120,10 +120,16 @@ class CreateClient extends Component
 
     public function mount()
     {
-        $this->isLead = request()->has('lead');
+        $this->isLead = request()->has('lead') || request()->boolean('lead');
         $this->availableTags = Tag::where('company_id', auth()->user()->company_id)
             ->orderBy('name')
             ->get();
+    }
+    
+    public function updatedIsLead($value)
+    {
+        // Convert to boolean since radio buttons might return strings
+        $this->isLead = filter_var($value, FILTER_VALIDATE_BOOLEAN);
     }
 
     public function updatedType($value)

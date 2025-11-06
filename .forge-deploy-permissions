@@ -1,0 +1,9 @@
+# Add this to your .forge-deploy script
+
+# Auto-discover and sync permissions from policies
+php artisan permissions:discover --sync
+
+# Clear caches
+php artisan config:cache
+php artisan cache:clear
+

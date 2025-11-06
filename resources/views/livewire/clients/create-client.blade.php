@@ -22,9 +22,27 @@
 
             <flux:tab.panel name="basic">
                 <flux:card class="space-y-6">
+                    <!-- Lead/Client Toggle -->
+                    <div>
+                        <flux:heading size="md" class="mb-3">Record Type</flux:heading>
+                        <flux:radio.group wire:model.live="isLead" variant="segmented">
+                            <flux:radio :value="false" icon="user-group" label="Client" />
+                            <flux:radio :value="true" icon="user-plus" label="Lead" />
+                        </flux:radio.group>
+                        <flux:description class="mt-2">
+                            @if($isLead)
+                                Leads are potential customers that haven't been converted yet.
+                            @else
+                                Clients are active customers you're doing business with.
+                            @endif
+                        </flux:description>
+                    </div>
+
+                    <flux:separator variant="subtle" />
+
                     <!-- Client Type Selection -->
                     <div>
-                        <flux:heading size="md" class="mb-3">Client Type</flux:heading>
+                        <flux:heading size="md" class="mb-3">{{ $isLead ? 'Lead' : 'Client' }} Type</flux:heading>
                         <flux:radio.group wire:model.live="type" variant="segmented">
                             <flux:radio value="individual" icon="user" label="Individual" />
                             <flux:radio value="business" icon="building-office" label="Business" />

@@ -192,6 +192,11 @@ class ClientIndex extends BaseIndexComponent
         return Excel::download(new ClientsExport($this->showLeads), $filename);
     }
 
+    public function createClient()
+    {
+        return redirect()->route('clients.create', $this->showLeads ? ['lead' => 1] : []);
+    }
+
     public function render()
     {
         $clients = $this->getItems();
