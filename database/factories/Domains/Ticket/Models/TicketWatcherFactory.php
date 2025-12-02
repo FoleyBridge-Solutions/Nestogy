@@ -15,7 +15,7 @@ class TicketWatcherFactory extends Factory
     public function definition(): array
     {
         return [
-            'company_id' => Company::factory(),
+            'company_id' => 1, // Don't create new companies - use existing
             'ticket_id' => Ticket::factory(),
             'user_id' => User::factory(),
             'email' => $this->faker->safeEmail(),

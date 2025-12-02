@@ -325,7 +325,8 @@ class ContractContactAssignment extends Model
     public function hasReachedTicketLimit(): bool
     {
         if ($this->max_tickets_per_month === -1) {
-            return false; // Unlimited
+            // Even "unlimited" should have abuse detection
+            return $this->isAbusingTicketLimit();
         }
 
         return $this->current_month_tickets >= $this->max_tickets_per_month;
@@ -337,10 +338,171 @@ class ContractContactAssignment extends Model
     public function hasReachedSupportHoursLimit(): bool
     {
         if ($this->max_support_hours_per_month === -1) {
-            return false; // Unlimited
+            // Even "unlimited" should have abuse detection
+            return $this->isAbusingHoursLimit();
         }
 
         return $this->current_month_support_hours >= $this->max_support_hours_per_month;
+    }
+
+    /**
+     * Detect potential abuse of "unlimited" ticket plans
+     * 
+     * @return bool True if usage pattern suggests abuse
+     */
+    public function isAbusingTicketLimit(): bool
+    {
+        // Configurable thresholds for abuse detection
+        $softLimit = config('billing.abuse.soft_ticket_limit', 100); // Alert threshold
+        $hardLimit = config('billing.abuse.hard_ticket_limit', 500); // Block threshold
+        
+        // Hard limit - definitely abuse
+        if ($this->current_month_tickets >= $hardLimit) {
+            \Log::warning('Potential ticket abuse detected (hard limit)', [
+                'contract_id' => $this->contract_id,
+                'contact_id' => $this->contact_id,
+                'tickets_this_month' => $this->current_month_tickets,
+                'threshold' => $hardLimit,
+            ]);
+            return true;
+        }
+
+        // Soft limit - needs review
+        if ($this->current_month_tickets >= $softLimit) {
+            \Log::info('High ticket usage detected (soft limit)', [
+                'contract_id' => $this->contract_id,
+                'contact_id' => $this->contact_id,
+                'tickets_this_month' => $this->current_month_tickets,
+                'threshold' => $softLimit,
+            ]);
+            
+            // Don't block yet, but flag for review
+            $this->flagForReview('high_ticket_usage');
+        }
+
+        return false;
+    }
+
+    /**
+     * Detect potential abuse of "unlimited" hours plans
+     * 
+     * @return bool True if usage pattern suggests abuse
+     */
+    public function isAbusingHoursLimit(): bool
+    {
+        // Configurable thresholds
+        $softLimit = config('billing.abuse.soft_hours_limit', 200); // Alert threshold
+        $hardLimit = config('billing.abuse.hard_hours_limit', 500); // Block threshold
+        
+        // Hard limit - definitely abuse
+        if ($this->current_month_support_hours >= $hardLimit) {
+            \Log::warning('Potential hours abuse detected (hard limit)', [
+                'contract_id' => $this->contract_id,
+                'contact_id' => $this->contact_id,
+                'hours_this_month' => $this->current_month_support_hours,
+                'threshold' => $hardLimit,
+            ]);
+            return true;
+        }
+
+        // Soft limit - needs review
+        if ($this->current_month_support_hours >= $softLimit) {
+            \Log::info('High hours usage detected (soft limit)', [
+                'contract_id' => $this->contract_id,
+                'contact_id' => $this->contact_id,
+                'hours_this_month' => $this->current_month_support_hours,
+                'threshold' => $softLimit,
+            ]);
+            
+            $this->flagForReview('high_hours_usage');
+        }
+
+        return false;
+    }
+
+    /**
+     * Detect anomalous usage patterns (spike detection)
+     * 
+     * @return array Analysis results
+     */
+    public function detectAnomalousUsage(): array
+    {
+        $analysis = [
+            'is_anomalous' => false,
+            'severity' => 'normal',
+            'alerts' => [],
+        ];
+
+        // Get usage history
+        $history = $this->usage_history ?? [];
+        
+        if (count($history) < 3) {
+            // Not enough data for anomaly detection
+            return $analysis;
+        }
+
+        // Calculate average from last 3 months
+        $recentHistory = array_slice($history, -3);
+        $avgTickets = array_sum(array_column($recentHistory, 'tickets')) / count($recentHistory);
+        $avgHours = array_sum(array_column($recentHistory, 'support_hours')) / count($recentHistory);
+
+        // Current month usage
+        $currentTickets = $this->current_month_tickets ?? 0;
+        $currentHours = $this->current_month_support_hours ?? 0;
+
+        // Spike detection: >200% of average = anomaly
+        $ticketSpikeThreshold = config('billing.abuse.spike_threshold', 2.0); // 200%
+        
+        if ($avgTickets > 0 && $currentTickets > ($avgTickets * $ticketSpikeThreshold)) {
+            $analysis['is_anomalous'] = true;
+            $analysis['severity'] = $currentTickets > ($avgTickets * 3) ? 'critical' : 'warning';
+            $analysis['alerts'][] = "Ticket volume is " . round(($currentTickets / $avgTickets) * 100) . "% of normal";
+        }
+
+        if ($avgHours > 0 && $currentHours > ($avgHours * $ticketSpikeThreshold)) {
+            $analysis['is_anomalous'] = true;
+            $analysis['severity'] = $currentHours > ($avgHours * 3) ? 'critical' : 'warning';
+            $analysis['alerts'][] = "Support hours are " . round(($currentHours / $avgHours) * 100) . "% of normal";
+        }
+
+        // Log if anomalous
+        if ($analysis['is_anomalous']) {
+            \Log::warning('Anomalous usage pattern detected', [
+                'contract_id' => $this->contract_id,
+                'contact_id' => $this->contact_id,
+                'severity' => $analysis['severity'],
+                'current_tickets' => $currentTickets,
+                'avg_tickets' => $avgTickets,
+                'current_hours' => $currentHours,
+                'avg_hours' => $avgHours,
+                'alerts' => $analysis['alerts'],
+            ]);
+
+            $this->flagForReview('usage_anomaly');
+        }
+
+        return $analysis;
+    }
+
+    /**
+     * Flag contract for manual review
+     */
+    protected function flagForReview(string $reason): void
+    {
+        $metadata = $this->metadata ?? [];
+        
+        $metadata['flagged_for_review'] = true;
+        $metadata['flag_reason'] = $reason;
+        $metadata['flagged_at'] = now()->toISOString();
+        $metadata['current_usage'] = [
+            'tickets' => $this->current_month_tickets,
+            'hours' => $this->current_month_support_hours,
+        ];
+
+        $this->update(['metadata' => $metadata]);
+
+        // Optionally send notification to admin
+        // event(new ContractFlaggedForReview($this, $reason));
     }
 
     /**
@@ -656,6 +818,50 @@ class ContractContactAssignment extends Model
     {
         return $query->where('auto_upgrade_tier', true)
             ->where('status', self::STATUS_ACTIVE);
+    }
+
+    /**
+     * Scope for assignments flagged for review (abuse detection)
+     */
+    public function scopeFlaggedForReview($query)
+    {
+        return $query->whereNotNull('metadata->flagged_for_review')
+            ->where('metadata->flagged_for_review', true);
+    }
+
+    /**
+     * Check if contract is flagged for review
+     */
+    public function isFlaggedForReview(): bool
+    {
+        $metadata = $this->metadata ?? [];
+        return ($metadata['flagged_for_review'] ?? false) === true;
+    }
+
+    /**
+     * Get flag reason if flagged
+     */
+    public function getFlagReason(): ?string
+    {
+        if (!$this->isFlaggedForReview()) {
+            return null;
+        }
+
+        $metadata = $this->metadata ?? [];
+        return $metadata['flag_reason'] ?? 'Unknown';
+    }
+
+    /**
+     * Clear review flag
+     */
+    public function clearReviewFlag(): void
+    {
+        $metadata = $this->metadata ?? [];
+        unset($metadata['flagged_for_review']);
+        unset($metadata['flag_reason']);
+        unset($metadata['flagged_at']);
+        
+        $this->update(['metadata' => $metadata]);
     }
 
     /**

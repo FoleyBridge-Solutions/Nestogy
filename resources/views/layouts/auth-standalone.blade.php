@@ -34,6 +34,9 @@
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     
+    <!-- Livewire Styles -->
+    @livewireStyles
+    
     <!-- Auth Theme Context for JavaScript -->
     <script>
         window.AUTH_THEME = localStorage.getItem('auth_theme') || 'auto';
@@ -134,6 +137,9 @@
 
     <!-- Additional Scripts -->
     @stack('scripts')
+    
+    <!-- Livewire Scripts -->
+    @livewireScripts
     
     @fluxScripts
     

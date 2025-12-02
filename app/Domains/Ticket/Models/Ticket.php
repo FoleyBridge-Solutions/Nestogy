@@ -12,6 +12,7 @@ use App\Domains\Project\Models\Project;
 use App\Domains\Core\Models\User;
 use App\Domains\Project\Models\Vendor;
 use App\Traits\BelongsToCompany;
+use App\Traits\HasAIAnalysis;
 use App\Traits\HasArchive;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -28,7 +29,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  */
 class Ticket extends Model
 {
-    use BelongsToCompany, HasArchive, HasFactory;
+    use BelongsToCompany, HasAIAnalysis, HasArchive, HasFactory;
 
     /**
      * Create a new factory instance for the model.
@@ -49,6 +50,7 @@ class Ticket extends Model
         'priority',
         'status',
         'billable',
+        'billing_status',
         'scheduled_at',
         'onsite',
         'vendor_ticket_number',
@@ -82,6 +84,14 @@ class Ticket extends Model
         'sentiment_label',
         'sentiment_analyzed_at',
         'sentiment_confidence',
+        // AI analysis fields
+        'ai_summary',
+        'ai_sentiment',
+        'ai_category',
+        'ai_category_confidence',
+        'ai_priority_suggestion',
+        'ai_suggestions',
+        'ai_analyzed_at',
     ];
 
     protected $casts = [
@@ -119,6 +129,10 @@ class Ticket extends Model
         'estimated_resolution_at' => 'datetime',
         'sentiment_score' => 'decimal:2',
         'sentiment_confidence' => 'decimal:2',
+        // AI analysis fields
+        'ai_suggestions' => 'array',
+        'ai_analyzed_at' => 'datetime',
+        'ai_category_confidence' => 'decimal:2',
     ];
 
     /**
@@ -872,6 +886,65 @@ class Ticket extends Model
         };
     }
 
+    /**
+     * Get billing status information
+     */
+    public function getBillingStatus(): array
+    {
+        // Already invoiced
+        if ($this->invoice_id) {
+            return [
+                'status' => 'invoiced',
+                'label' => 'Invoiced',
+                'color' => 'green',
+                'icon' => 'check-circle',
+                'description' => 'Invoice created',
+            ];
+        }
+
+        // Covered by contract
+        if ($this->billing_status === 'covered') {
+            return [
+                'status' => 'covered',
+                'label' => 'Covered',
+                'color' => 'blue',
+                'icon' => 'shield-check',
+                'description' => 'Covered by contract limits',
+            ];
+        }
+
+        // Not billable
+        if (!$this->billable) {
+            return [
+                'status' => 'not_billable',
+                'label' => 'Non-Billable',
+                'color' => 'zinc',
+                'icon' => 'x-circle',
+                'description' => 'Marked as non-billable',
+            ];
+        }
+
+        // Ready to bill (closed/resolved and billable)
+        if (in_array(strtolower($this->status), ['closed', 'resolved'])) {
+            return [
+                'status' => 'pending',
+                'label' => 'Ready to Bill',
+                'color' => 'amber',
+                'icon' => 'currency-dollar',
+                'description' => 'Ready to generate invoice',
+            ];
+        }
+
+        // In progress (not ready yet)
+        return [
+            'status' => 'in_progress',
+            'label' => 'In Progress',
+            'color' => 'zinc',
+            'icon' => 'clock',
+            'description' => 'Ticket not yet closed',
+        ];
+    }
+
     // ===========================================
     // SCOPES
     // ===========================================
@@ -1095,6 +1168,9 @@ class Ticket extends Model
                 'escalation_level' => 0,
                 'is_active' => true,
             ]);
+
+            // Fire TicketCreated event
+            event(new \App\Events\TicketCreated($ticket));
         });
 
         // Update priority queue when ticket is updated
@@ -1103,6 +1179,24 @@ class Ticket extends Model
                 $ticket->priorityQueue->update([
                     'priority_score' => $ticket->calculatePriorityScore(),
                 ]);
+            }
+
+            // Fire events based on status changes
+            if ($ticket->wasChanged('status')) {
+                $newStatus = $ticket->status;
+                $oldStatus = $ticket->getOriginal('status');
+
+                // Fire TicketClosed event
+                if ($newStatus === self::STATUS_CLOSED && $oldStatus !== self::STATUS_CLOSED) {
+                    event(new \App\Events\TicketClosed($ticket));
+                }
+            }
+
+            // Fire event when ticket is resolved
+            if ($ticket->wasChanged('is_resolved')) {
+                if ($ticket->is_resolved && !$ticket->getOriginal('is_resolved')) {
+                    event(new \App\Events\TicketResolved($ticket));
+                }
             }
         });
     }

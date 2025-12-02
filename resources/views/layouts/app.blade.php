@@ -167,11 +167,11 @@
                 $companyName = $company?->name ?? config('app.name', 'Nestogy');
             @endphp
             <div class="w-64 flex-shrink-0">
-                <flux:brand href="{{ route('dashboard') }}" 
+                <flux:brand href="{{ auth()->check() ? route('dashboard') : url('/') }}" 
                             logo="{{ $logoLight }}" 
                             name="{{ $companyName }}"
                             class="dark:hidden truncate" />
-                <flux:brand href="{{ route('dashboard') }}" 
+                <flux:brand href="{{ auth()->check() ? route('dashboard') : url('/') }}" 
                             logo="{{ $logoDark }}" 
                             name="{{ $companyName }}"
                             class="hidden dark:flex truncate" />
@@ -183,14 +183,16 @@
             @endif
             
             <!-- Vertical Separator (only show if client switcher will be shown) -->
-            @if(!session('selected_client_id') && (auth()->user()->can('clients.view') || auth()->user()->can('clients.*')))
-                <div class="h-8 w-px bg-zinc-200 dark:bg-zinc-700 mx-3"></div>
-            @endif
-            
-            <!-- Client Switcher (Left side) - Only show when no client selected AND user has permission -->
-            @if(!session('selected_client_id') && (auth()->user()->can('clients.view') || auth()->user()->can('clients.*')))
-                @livewire('client-switcher')
-            @endif
+            @auth
+                @if(!session('selected_client_id') && (auth()->user()->can('clients.view') || auth()->user()->can('clients.*')))
+                    <div class="h-8 w-px bg-zinc-200 dark:bg-zinc-700 mx-3"></div>
+                @endif
+
+                <!-- Client Switcher (Left side) - Only show when no client selected AND user has permission -->
+                @if(!session('selected_client_id') && (auth()->user()->can('clients.view') || auth()->user()->can('clients.*')))
+                    @livewire('client-switcher')
+                @endif
+            @endauth
             
             <!-- Command Palette (Full width center) -->
             @livewire('command-palette')

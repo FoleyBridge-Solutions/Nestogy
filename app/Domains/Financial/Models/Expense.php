@@ -171,6 +171,14 @@ class Expense extends Model
     }
 
     /**
+     * Get the bank transaction for this expense
+     */
+    public function bankTransaction()
+    {
+        return $this->belongsTo(\App\Domains\Financial\Models\BankTransaction::class, 'bank_transaction_id');
+    }
+
+    /**
      * Get the user who rejected this expense
      */
     public function rejectedBy()

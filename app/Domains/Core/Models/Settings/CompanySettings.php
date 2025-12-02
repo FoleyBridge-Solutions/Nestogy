@@ -32,6 +32,11 @@ class CompanySettings extends SettingCategory
             'theme',
             'timezone',
             'date_format',
+            'ai_enabled',
+            'ai_openrouter_api_key',
+            'ai_default_model',
+            'ai_temperature',
+            'ai_max_tokens',
         ];
     }
 
@@ -230,6 +235,63 @@ class CompanySettings extends SettingCategory
     public function setStartPage(string $page): self
     {
         $this->set('start_page', $page);
+        return $this;
+    }
+
+    // ========== AI Settings Getters/Setters ==========
+
+    public function getAiEnabled(): bool
+    {
+        return $this->get('ai_enabled', false);
+    }
+
+    public function setAiEnabled(bool $enabled): self
+    {
+        $this->set('ai_enabled', $enabled);
+        return $this;
+    }
+
+    public function getAiApiKey(): ?string
+    {
+        return $this->get('ai_openrouter_api_key');
+    }
+
+    public function setAiApiKey(?string $apiKey): self
+    {
+        $this->set('ai_openrouter_api_key', $apiKey);
+        return $this;
+    }
+
+    public function getAiDefaultModel(): string
+    {
+        return $this->get('ai_default_model', 'openai/gpt-3.5-turbo');
+    }
+
+    public function setAiDefaultModel(string $model): self
+    {
+        $this->set('ai_default_model', $model);
+        return $this;
+    }
+
+    public function getAiTemperature(): float
+    {
+        return $this->get('ai_temperature', 0.7);
+    }
+
+    public function setAiTemperature(float $temperature): self
+    {
+        $this->set('ai_temperature', $temperature);
+        return $this;
+    }
+
+    public function getAiMaxTokens(): int
+    {
+        return $this->get('ai_max_tokens', 1000);
+    }
+
+    public function setAiMaxTokens(int $maxTokens): self
+    {
+        $this->set('ai_max_tokens', $maxTokens);
         return $this;
     }
 }

@@ -35,8 +35,8 @@ class ProjectTaskSeeder extends Seeder
                     'priority' => fake()->randomElement(['low', 'medium', 'high', 'urgent']),
                     'start_date' => fake()->dateTimeBetween($project->start_date ?? '-1 month', 'now'),
                     'due_date' => fake()->optional(0.8)->dateTimeBetween('now', '+2 months'),
-                    'estimated_hours' => fake()->optional(0.6)->randomFloat(1, 1, 40),
-                    'actual_hours' => fake()->optional(0.4)->randomFloat(1, 1, 50),
+                    'estimated_hours' => fake()->optional(0.6)->numberBetween(1, 40),
+                    'actual_hours' => fake()->optional(0.4)->numberBetween(1, 50),
                     'created_at' => fake()->dateTimeBetween('-6 months', 'now'),
                     'updated_at' => fake()->dateTimeBetween('-1 month', 'now'),
                 ]);

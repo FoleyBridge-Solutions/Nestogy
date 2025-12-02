@@ -141,6 +141,24 @@ class NavigationRegistry
             'section' => 'products',
             'order' => 30,
         ]);
+
+        static::register('financial', 'bank-connections', [
+            'label' => 'Bank Connections',
+            'icon' => 'building-library',
+            'route' => 'financial.bank-connections.index',
+            'permission' => 'financial.bank-connections.view',
+            'section' => 'banking',
+            'order' => 10,
+        ]);
+
+        static::register('financial', 'bank-transactions', [
+            'label' => 'Bank Transactions',
+            'icon' => 'receipt-percent',
+            'route' => 'financial.bank-transactions.index',
+            'permission' => 'financial.bank-transactions.view',
+            'section' => 'banking',
+            'order' => 20,
+        ]);
     }
 
     protected static function registerTicketsDomain(): void

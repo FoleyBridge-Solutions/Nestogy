@@ -68,6 +68,7 @@ class Company extends Model
         'branding',
         'company_info',
         'social_links',
+        'ai_settings',
         'client_record_id',
         'is_active',
         'suspended_at',
@@ -116,6 +117,7 @@ class Company extends Model
         'branding' => 'array',
         'company_info' => 'array',
         'social_links' => 'array',
+        'ai_settings' => 'array',
     ];
 
     /**

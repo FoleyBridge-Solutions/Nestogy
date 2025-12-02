@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict o0WKrvcOIrSR7abqcc4IzEk1SJVfnhJjFzP9AAUC16JpR8RXn502IIwbchx5yt0
+\restrict fvBJ26OWcTpPZJ5IQ1Ucy7eUNEqkZOFEEwibAlIi6Phz7wNewBebMPsCqd1BwBo
 
 -- Dumped from database version 16.10 (Ubuntu 16.10-0ubuntu0.24.04.1)
 -- Dumped by pg_dump version 16.10 (Ubuntu 16.10-0ubuntu0.24.04.1)
@@ -585,6 +585,47 @@ CREATE SEQUENCE public.auto_payments_id_seq
 --
 
 ALTER SEQUENCE public.auto_payments_id_seq OWNED BY public.auto_payments.id;
+
+
+--
+-- Name: billing_audit_logs; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.billing_audit_logs (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    user_id bigint,
+    action character varying(255) NOT NULL,
+    entity_type character varying(255),
+    entity_id bigint,
+    ticket_id bigint,
+    invoice_id bigint,
+    description text,
+    metadata json,
+    ip_address character varying(45),
+    user_agent text,
+    created_at timestamp(0) without time zone,
+    updated_at timestamp(0) without time zone
+);
+
+
+--
+-- Name: billing_audit_logs_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.billing_audit_logs_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: billing_audit_logs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.billing_audit_logs_id_seq OWNED BY public.billing_audit_logs.id;
 
 
 --
@@ -2015,6 +2056,13 @@ CREATE TABLE public.clients (
     archived_at timestamp(0) without time zone,
     accessed_at timestamp(0) without time zone,
     created_by bigint,
+    ai_summary text,
+    ai_health_score character varying(255),
+    ai_risk_level character varying(255),
+    ai_risk_confidence numeric(3,2),
+    ai_client_type character varying(255),
+    ai_insights json,
+    ai_analyzed_at timestamp(0) without time zone,
     CONSTRAINT clients_custom_rate_calculation_method_check CHECK (((custom_rate_calculation_method)::text = ANY (ARRAY[('fixed_rates'::character varying)::text, ('multipliers'::character varying)::text]))),
     CONSTRAINT clients_custom_time_rounding_method_check CHECK (((custom_time_rounding_method)::text = ANY (ARRAY[('none'::character varying)::text, ('up'::character varying)::text, ('down'::character varying)::text, ('nearest'::character varying)::text]))),
     CONSTRAINT clients_status_check CHECK (((status)::text = ANY (ARRAY[('active'::character varying)::text, ('inactive'::character varying)::text, ('suspended'::character varying)::text])))
@@ -2170,6 +2218,7 @@ CREATE TABLE public.companies (
     branding json,
     company_info json,
     social_links json,
+    ai_settings jsonb,
     CONSTRAINT companies_access_level_check CHECK (((access_level)::text = ANY (ARRAY[('full'::character varying)::text, ('limited'::character varying)::text, ('read_only'::character varying)::text]))),
     CONSTRAINT companies_billing_type_check CHECK (((billing_type)::text = ANY (ARRAY[('independent'::character varying)::text, ('parent_billed'::character varying)::text, ('shared'::character varying)::text]))),
     CONSTRAINT companies_company_type_check CHECK (((company_type)::text = ANY (ARRAY[('root'::character varying)::text, ('subsidiary'::character varying)::text, ('division'::character varying)::text]))),
@@ -5320,7 +5369,13 @@ CREATE TABLE public.email_messages (
     flags json,
     created_at timestamp(0) without time zone,
     updated_at timestamp(0) without time zone,
-    remote_id character varying(255)
+    remote_id character varying(255),
+    ai_summary text,
+    ai_sentiment character varying(255),
+    ai_priority character varying(255),
+    ai_suggested_reply text,
+    ai_action_items json,
+    ai_analyzed_at timestamp(0) without time zone
 );
 
 
@@ -6203,6 +6258,12 @@ CREATE TABLE public.leads (
     created_at timestamp(0) without time zone,
     updated_at timestamp(0) without time zone,
     deleted_at timestamp(0) without time zone,
+    ai_summary text,
+    ai_quality_score character varying(255),
+    ai_conversion_likelihood character varying(255),
+    ai_suggested_approach text,
+    ai_key_insights json,
+    ai_analyzed_at timestamp(0) without time zone,
     CONSTRAINT leads_priority_check CHECK (((priority)::text = ANY (ARRAY[('low'::character varying)::text, ('medium'::character varying)::text, ('high'::character varying)::text, ('urgent'::character varying)::text]))),
     CONSTRAINT leads_status_check CHECK (((status)::text = ANY (ARRAY[('new'::character varying)::text, ('contacted'::character varying)::text, ('qualified'::character varying)::text, ('unqualified'::character varying)::text, ('nurturing'::character varying)::text, ('converted'::character varying)::text, ('lost'::character varying)::text])))
 );
@@ -8164,7 +8225,13 @@ CREATE TABLE public.projects (
     completed_at timestamp(0) without time zone,
     archived_at timestamp(0) without time zone,
     deleted_at timestamp(0) without time zone,
-    client_id bigint NOT NULL
+    client_id bigint NOT NULL,
+    ai_summary text,
+    ai_risk_level character varying(255),
+    ai_risk_confidence numeric(3,2),
+    ai_progress_assessment character varying(255),
+    ai_recommendations json,
+    ai_analyzed_at timestamp(0) without time zone
 );
 
 
@@ -10795,6 +10862,14 @@ CREATE TABLE public.tickets (
     asset_id bigint,
     invoice_id bigint,
     project_id bigint,
+    billing_status character varying(255),
+    ai_summary text,
+    ai_sentiment text,
+    ai_category character varying(255),
+    ai_category_confidence integer,
+    ai_priority_suggestion character varying(255),
+    ai_suggestions text,
+    ai_analyzed_at timestamp(0) without time zone,
     CONSTRAINT tickets_sentiment_label_check CHECK (((sentiment_label)::text = ANY (ARRAY[('POSITIVE'::character varying)::text, ('WEAK_POSITIVE'::character varying)::text, ('NEUTRAL'::character varying)::text, ('WEAK_NEGATIVE'::character varying)::text, ('NEGATIVE'::character varying)::text])))
 );
 
@@ -11645,6 +11720,13 @@ ALTER TABLE ONLY public.audit_logs ALTER COLUMN id SET DEFAULT nextval('public.a
 --
 
 ALTER TABLE ONLY public.auto_payments ALTER COLUMN id SET DEFAULT nextval('public.auto_payments_id_seq'::regclass);
+
+
+--
+-- Name: billing_audit_logs id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.billing_audit_logs ALTER COLUMN id SET DEFAULT nextval('public.billing_audit_logs_id_seq'::regclass);
 
 
 --
@@ -13288,6 +13370,14 @@ ALTER TABLE ONLY public.audit_logs
 
 ALTER TABLE ONLY public.auto_payments
     ADD CONSTRAINT auto_payments_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: billing_audit_logs billing_audit_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.billing_audit_logs
+    ADD CONSTRAINT billing_audit_logs_pkey PRIMARY KEY (id);
 
 
 --
@@ -16443,6 +16533,34 @@ CREATE INDEX audit_logs_severity_index ON public.audit_logs USING btree (severit
 --
 
 CREATE INDEX audit_logs_user_id_index ON public.audit_logs USING btree (user_id);
+
+
+--
+-- Name: billing_audit_logs_company_id_action_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX billing_audit_logs_company_id_action_index ON public.billing_audit_logs USING btree (company_id, action);
+
+
+--
+-- Name: billing_audit_logs_company_id_user_id_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX billing_audit_logs_company_id_user_id_index ON public.billing_audit_logs USING btree (company_id, user_id);
+
+
+--
+-- Name: billing_audit_logs_created_at_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX billing_audit_logs_created_at_index ON public.billing_audit_logs USING btree (created_at);
+
+
+--
+-- Name: billing_audit_logs_entity_type_entity_id_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX billing_audit_logs_entity_type_entity_id_index ON public.billing_audit_logs USING btree (entity_type, entity_id);
 
 
 --
@@ -21892,6 +22010,13 @@ CREATE INDEX ticket_workflows_company_id_sort_order_index ON public.ticket_workf
 
 
 --
+-- Name: tickets_ai_analyzed_at_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX tickets_ai_analyzed_at_index ON public.tickets USING btree (ai_analyzed_at);
+
+
+--
 -- Name: tickets_archived_at_index; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -21920,6 +22045,13 @@ CREATE INDEX tickets_billable_index ON public.tickets USING btree (billable);
 
 
 --
+-- Name: tickets_billing_status_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX tickets_billing_status_index ON public.tickets USING btree (billing_status);
+
+
+--
 -- Name: tickets_client_id_index; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -21938,6 +22070,13 @@ CREATE INDEX tickets_client_id_status_index ON public.tickets USING btree (clien
 --
 
 CREATE INDEX tickets_closed_at_index ON public.tickets USING btree (closed_at);
+
+
+--
+-- Name: tickets_company_id_ai_analyzed_at_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX tickets_company_id_ai_analyzed_at_index ON public.tickets USING btree (company_id, ai_analyzed_at);
 
 
 --
@@ -22539,6 +22678,38 @@ ALTER TABLE ONLY public.auto_payments
 
 ALTER TABLE ONLY public.auto_payments
     ADD CONSTRAINT auto_payments_payment_method_id_foreign FOREIGN KEY (payment_method_id) REFERENCES public.payment_methods(id) ON DELETE SET NULL;
+
+
+--
+-- Name: billing_audit_logs billing_audit_logs_company_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.billing_audit_logs
+    ADD CONSTRAINT billing_audit_logs_company_id_foreign FOREIGN KEY (company_id) REFERENCES public.companies(id) ON DELETE CASCADE;
+
+
+--
+-- Name: billing_audit_logs billing_audit_logs_invoice_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.billing_audit_logs
+    ADD CONSTRAINT billing_audit_logs_invoice_id_foreign FOREIGN KEY (invoice_id) REFERENCES public.invoices(id) ON DELETE SET NULL;
+
+
+--
+-- Name: billing_audit_logs billing_audit_logs_ticket_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.billing_audit_logs
+    ADD CONSTRAINT billing_audit_logs_ticket_id_foreign FOREIGN KEY (ticket_id) REFERENCES public.tickets(id) ON DELETE SET NULL;
+
+
+--
+-- Name: billing_audit_logs billing_audit_logs_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.billing_audit_logs
+    ADD CONSTRAINT billing_audit_logs_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE SET NULL;
 
 
 --
@@ -26705,13 +26876,13 @@ ALTER TABLE ONLY public.widget_data_cache
 -- PostgreSQL database dump complete
 --
 
-\unrestrict o0WKrvcOIrSR7abqcc4IzEk1SJVfnhJjFzP9AAUC16JpR8RXn502IIwbchx5yt0
+\unrestrict fvBJ26OWcTpPZJ5IQ1Ucy7eUNEqkZOFEEwibAlIi6Phz7wNewBebMPsCqd1BwBo
 
 --
 -- PostgreSQL database dump
 --
 
-\restrict 4B3eT6uivuMxf5UxT3Wi4iyaPWOmnwdYDYaaU89rb9uHBacJ0Ibpbc7kyuCT5eq
+\restrict ud0UuGUxOaAG8lBZNUY9HOR6UQJIPr6dmU6JRM8xKHFnCgtClldPVUmwPYvAhAd
 
 -- Dumped from database version 16.10 (Ubuntu 16.10-0ubuntu0.24.04.1)
 -- Dumped by pg_dump version 16.10 (Ubuntu 16.10-0ubuntu0.24.04.1)
@@ -26999,6 +27170,16 @@ COPY public.migrations (id, migration, batch) FROM stdin;
 265	2025_10_27_212706_create_notification_logs_table	2
 266	2025_10_29_202938_enhance_client_services_table	2
 267	2025_10_29_215606_create_push_subscriptions_table	2
+268	2025_11_06_231644_create_billing_audit_logs_table	3
+269	2025_11_06_232700_add_billing_status_to_tickets_table	3
+270	2025_11_10_164851_add_ai_settings_to_companies_table	3
+271	2025_11_10_171908_add_ai_fields_to_tickets_table	3
+272	2025_11_10_174637_add_ai_fields_to_clients_table	3
+273	2025_11_10_174856_add_ai_fields_to_projects_table	3
+274	2025_11_10_175930_add_ai_fields_to_email_messages_table	3
+275	2025_11_10_175933_add_ai_fields_to_kb_articles_table	3
+276	2025_11_10_175934_add_ai_fields_to_contracts_table	3
+277	2025_11_10_180603_add_ai_fields_to_leads_table	3
 \.
 
 
@@ -27006,12 +27187,12 @@ COPY public.migrations (id, migration, batch) FROM stdin;
 -- Name: migrations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.migrations_id_seq', 267, true);
+SELECT pg_catalog.setval('public.migrations_id_seq', 277, true);
 
 
 --
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 4B3eT6uivuMxf5UxT3Wi4iyaPWOmnwdYDYaaU89rb9uHBacJ0Ibpbc7kyuCT5eq
+\unrestrict ud0UuGUxOaAG8lBZNUY9HOR6UQJIPr6dmU6JRM8xKHFnCgtClldPVUmwPYvAhAd
 

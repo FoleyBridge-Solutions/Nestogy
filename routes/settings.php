@@ -40,6 +40,9 @@ Route::prefix('settings')->name('settings.')->middleware(['auth', 'verified'])->
     Route::get('/billing-financial', function () {
         return redirect()->route('settings.category.show', ['domain' => 'financial', 'category' => 'billing']);
     })->name('billing-financial');
+    
+    // Ticket Billing Settings (Livewire component)
+    Route::get('/ticket-billing', \App\Livewire\Settings\TicketBillingSettings::class)->name('ticket-billing');
 
     Route::get('/integrations', function () {
         return redirect()->route('settings.category.show', ['domain' => 'integrations', 'category' => 'overview']);

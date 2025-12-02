@@ -1159,4 +1159,85 @@ class ContractClause extends Model
             $clause->updated_by = auth()->id();
         });
     }
+
+    /**
+     * Get default MSP contract clauses for seeding
+     *
+     * @return array
+     */
+    public static function getDefaultMSPClauses(): array
+    {
+        return [
+            [
+                'name' => 'Service Scope',
+                'category' => 'services',
+                'clause_type' => 'standard',
+                'content' => 'Provider agrees to furnish managed IT services including but not limited to network monitoring, help desk support, patch management, and cybersecurity services as detailed in Schedule A.',
+                'sort_order' => 10,
+            ],
+            [
+                'name' => 'Support Hours',
+                'category' => 'services',
+                'clause_type' => 'standard',
+                'content' => 'Provider will provide support services during {{service_hours}}. After-hours support is available at additional rates specified in Schedule B.',
+                'sort_order' => 20,
+            ],
+            [
+                'name' => 'Response Times',
+                'category' => 'sla',
+                'clause_type' => 'standard',
+                'content' => 'Provider commits to the following response times: Critical issues - {{critical_response_time}}, High Priority - {{high_priority_response_time}}, Normal Priority - {{normal_response_time}}.',
+                'sort_order' => 30,
+            ],
+            [
+                'name' => 'Payment Terms',
+                'category' => 'financial',
+                'clause_type' => 'standard',
+                'content' => 'Client agrees to pay {{monthly_rate}} per month, payable in advance. Payment is due Net {{payment_terms}} days from invoice date.',
+                'sort_order' => 40,
+            ],
+            [
+                'name' => 'Confidentiality',
+                'category' => 'legal',
+                'clause_type' => 'standard',
+                'content' => 'Both parties agree to maintain confidentiality of all proprietary information, trade secrets, and client data accessed during the term of this agreement.',
+                'sort_order' => 50,
+            ],
+            [
+                'name' => 'Data Security',
+                'category' => 'security',
+                'clause_type' => 'standard',
+                'content' => 'Provider agrees to implement industry-standard security measures including encryption, access controls, and regular security audits to protect Client data.',
+                'sort_order' => 60,
+            ],
+            [
+                'name' => 'Term and Termination',
+                'category' => 'legal',
+                'clause_type' => 'standard',
+                'content' => 'This agreement shall have an initial term of {{initial_term}} and shall automatically renew for successive {{renewal_term}} periods unless either party provides {{termination_notice}} days written notice.',
+                'sort_order' => 70,
+            ],
+            [
+                'name' => 'Limitation of Liability',
+                'category' => 'legal',
+                'clause_type' => 'standard',
+                'content' => 'Provider\'s total liability shall not exceed the fees paid by Client in the twelve (12) months preceding the claim, except for gross negligence or willful misconduct.',
+                'sort_order' => 80,
+            ],
+            [
+                'name' => 'Indemnification',
+                'category' => 'legal',
+                'clause_type' => 'standard',
+                'content' => 'Each party agrees to indemnify and hold harmless the other party from claims arising from their respective negligence, breach of this agreement, or violation of applicable laws.',
+                'sort_order' => 90,
+            ],
+            [
+                'name' => 'Governing Law',
+                'category' => 'legal',
+                'clause_type' => 'standard',
+                'content' => 'This agreement shall be governed by the laws of {{governing_state}} without regard to conflict of law principles.',
+                'sort_order' => 100,
+            ],
+        ];
+    }
 }

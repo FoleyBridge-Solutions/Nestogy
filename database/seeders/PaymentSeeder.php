@@ -28,11 +28,13 @@ class PaymentSeeder extends Seeder
                 ->create([
                     'company_id' => $invoice->company_id,
                     'client_id' => $invoice->client_id,
-                    'invoice_id' => $invoice->id,
                     'processed_by' => $users->where('company_id', $invoice->company_id)->random()->id,
                     'amount' => $invoice->amount,
                     'currency' => $invoice->currency_code,
                     'payment_date' => $paymentDate,
+                    'applied_amount' => $invoice->amount,
+                    'available_amount' => 0,
+                    'application_status' => 'fully_applied',
                 ]);
         }
 
@@ -48,12 +50,14 @@ class PaymentSeeder extends Seeder
                 ->create([
                     'company_id' => $invoice->company_id,
                     'client_id' => $invoice->client_id,
-                    'invoice_id' => $invoice->id,
                     'processed_by' => $users->where('company_id', $invoice->company_id)->random()->id,
                     'amount' => $partialAmount,
                     'currency' => $invoice->currency_code,
                     'payment_date' => $paymentDate,
                     'notes' => 'Partial payment received',
+                    'applied_amount' => $partialAmount,
+                    'available_amount' => 0,
+                    'application_status' => 'fully_applied',
                 ]);
         }
 
@@ -67,12 +71,14 @@ class PaymentSeeder extends Seeder
                 ->create([
                     'company_id' => $invoice->company_id,
                     'client_id' => $invoice->client_id,
-                    'invoice_id' => $invoice->id,
                     'processed_by' => $users->where('company_id', $invoice->company_id)->random()->id,
                     'amount' => $invoice->amount,
                     'currency' => $invoice->currency_code,
                     'payment_date' => fake()->dateTimeBetween($invoice->date, 'now'),
                     'notes' => 'Payment declined - insufficient funds',
+                    'applied_amount' => 0,
+                    'available_amount' => 0,
+                    'application_status' => 'unapplied',
                 ]);
         }
 

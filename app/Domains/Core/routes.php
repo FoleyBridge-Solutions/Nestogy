@@ -67,10 +67,8 @@ Route::middleware('web')->prefix('security')->name('security.')->group(function 
 // Additional auth route for checking suspicious login approval
 Route::middleware('web')->post('/auth/check-suspicious-login', [\App\Domains\Security\Controllers\Auth\LoginController::class, 'checkSuspiciousLoginApproval'])->name('auth.check-suspicious-login');
 
-// Custom secure authentication routes (override Fortify)
+// Custom authentication routes (company selection after login)
 Route::middleware(['web', 'guest'])->group(function () {
-    Route::get('/login', [\App\Domains\Security\Controllers\Auth\LoginController::class, 'showLoginForm'])->name('login');
-    Route::post('/login', [\App\Domains\Security\Controllers\Auth\LoginController::class, 'login']);
     Route::get('/auth/select-company', [\App\Domains\Security\Controllers\Auth\LoginController::class, 'showCompanySelection'])->name('auth.company-select');
     Route::post('/auth/select-company', [\App\Domains\Security\Controllers\Auth\LoginController::class, 'selectCompany']);
 });

@@ -7,8 +7,8 @@ use App\Domains\Company\Models\Company;
 use App\Domains\Lead\Models\Lead;
 use App\Domains\Product\Models\Product;
 use App\Domains\Financial\Models\Quote;
-use App\Domains\Financial\Models\QuoteItem;
 use App\Domains\Core\Models\User;
+use App\Domains\Financial\Models\Category;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 
@@ -33,8 +33,9 @@ class QuoteSeeder extends Seeder
                 ->get();
             $products = Product::where('company_id', $company->id)->get();
             $users = User::where('company_id', $company->id)->get();
+            $category = Category::where('company_id', $company->id)->first();
 
-            if ($users->isEmpty() || $products->isEmpty()) {
+            if ($users->isEmpty() || $products->isEmpty() || !$category) {
                 continue;
             }
 
@@ -43,49 +44,40 @@ class QuoteSeeder extends Seeder
                 $createdDate = fake()->dateTimeBetween('-3 months', 'now');
                 $validUntil = Carbon::parse($createdDate)->addDays(30);
 
-                $daysOld = Carbon::parse($createdDate)->diffInDays(now());
-
                 // Status based on age
                 if ($validUntil->isPast()) {
-                    $status = fake()->randomElement(['accepted', 'rejected', 'expired']);
+                    $status = fake()->randomElement(['approved', 'sent', 'draft']);
                 } else {
-                    $status = fake()->randomElement(['draft', 'sent', 'viewed']);
+                    $status = fake()->randomElement(['draft', 'sent', 'approved']);
                 }
 
                 $quote = Quote::create([
                     'company_id' => $company->id,
                     'client_id' => $client->id,
-                    'lead_id' => null,
-                    'user_id' => $users->random()->id,
-                    'quote_number' => 'Q-'.str_pad($totalQuotes + 1, 6, '0', STR_PAD_LEFT),
-                    'title' => fake()->randomElement([
-                        'Service Upgrade Proposal',
-                        'Annual Renewal Quote',
-                        'Additional Services Quote',
-                        'Hardware Refresh Proposal',
-                        'Security Enhancement Package',
-                        'Cloud Migration Proposal',
+                    'created_by' => $users->random()->id,
+                    'prefix' => 'Q',
+                    'number' => $totalQuotes + 1,
+                    'scope' => fake()->randomElement([
+                        'Service Upgrade',
+                        'Annual Renewal',
+                        'Additional Services',
+                        'Hardware Refresh',
+                        'Security Enhancement',
+                        'Cloud Migration',
                     ]),
                     'status' => $status,
-                    'valid_until' => $validUntil,
-                    'discount_type' => fake()->randomElement(['percentage', 'fixed', null]),
-                    'discount_value' => fake()->optional(0.3)->numberBetween(5, 20),
-                    'notes' => fake()->optional(0.5)->paragraph(),
-                    'terms_conditions' => 'Standard terms and conditions apply. Quote valid for 30 days.',
-                    'accepted_at' => $status === 'accepted' ?
-                        fake()->dateTimeBetween($createdDate, 'now') : null,
-                    'rejected_at' => $status === 'rejected' ?
-                        fake()->dateTimeBetween($createdDate, 'now') : null,
-                    'sent_at' => in_array($status, ['sent', 'viewed', 'accepted', 'rejected']) ?
-                        fake()->dateTimeBetween($createdDate, 'now') : null,
-                    'viewed_at' => in_array($status, ['viewed', 'accepted', 'rejected']) ?
-                        fake()->dateTimeBetween($createdDate, 'now') : null,
+                    'date' => Carbon::parse($createdDate)->format('Y-m-d'),
+                    'expire' => $validUntil->format('Y-m-d'),
+                    'discount_amount' => fake()->optional(0.3)->numberBetween(50, 500),
+                    'amount' => fake()->numberBetween(1000, 25000),
+                    'currency_code' => 'USD',
+                    'note' => fake()->optional(0.5)->paragraph(),
+                    'category_id' => $category->id,
+                    'sent_at' => $status === 'sent' ? fake()->dateTimeBetween($createdDate, 'now') : null,
                     'created_at' => $createdDate,
                     'updated_at' => fake()->dateTimeBetween($createdDate, 'now'),
                 ]);
 
-                // Add quote items
-                $this->createQuoteItems($quote, $products);
                 $totalQuotes++;
             }
 
@@ -94,93 +86,40 @@ class QuoteSeeder extends Seeder
                 $createdDate = fake()->dateTimeBetween('-2 months', 'now');
                 $validUntil = Carbon::parse($createdDate)->addDays(30);
 
-                $status = fake()->randomElement(['draft', 'sent', 'viewed', 'accepted', 'rejected']);
+                $status = fake()->randomElement(['draft', 'sent', 'approved']);
 
                 $quote = Quote::create([
                     'company_id' => $company->id,
-                    'client_id' => null,
-                    'lead_id' => $lead->id,
-                    'user_id' => $users->random()->id,
-                    'quote_number' => 'Q-'.str_pad($totalQuotes + 1, 6, '0', STR_PAD_LEFT),
-                    'title' => fake()->randomElement([
+                    'client_id' => $lead->client_id ?? Client::where('company_id', $company->id)->first()->id,
+                    'created_by' => $users->random()->id,
+                    'prefix' => 'Q',
+                    'number' => $totalQuotes + 1,
+                    'scope' => fake()->randomElement([
                         'Initial Service Proposal',
-                        'Managed IT Services Quote',
-                        'Complete IT Solution Package',
-                        'Starter Package Quote',
-                        'Enterprise Solution Proposal',
+                        'Managed IT Services',
+                        'Complete IT Solution',
+                        'Starter Package',
+                        'Enterprise Solution',
                     ]),
                     'status' => $status,
-                    'valid_until' => $validUntil,
-                    'discount_type' => fake()->randomElement(['percentage', 'fixed', null]),
-                    'discount_value' => fake()->optional(0.4)->numberBetween(10, 25),
-                    'notes' => fake()->optional(0.6)->paragraph(),
-                    'terms_conditions' => 'Standard terms and conditions apply. Quote valid for 30 days. First month free for new customers.',
-                    'accepted_at' => $status === 'accepted' ?
-                        fake()->dateTimeBetween($createdDate, 'now') : null,
-                    'rejected_at' => $status === 'rejected' ?
-                        fake()->dateTimeBetween($createdDate, 'now') : null,
-                    'sent_at' => in_array($status, ['sent', 'viewed', 'accepted', 'rejected']) ?
-                        fake()->dateTimeBetween($createdDate, 'now') : null,
-                    'viewed_at' => in_array($status, ['viewed', 'accepted', 'rejected']) ?
-                        fake()->dateTimeBetween($createdDate, 'now') : null,
+                    'date' => Carbon::parse($createdDate)->format('Y-m-d'),
+                    'expire' => $validUntil->format('Y-m-d'),
+                    'discount_amount' => fake()->optional(0.4)->numberBetween(100, 1000),
+                    'amount' => fake()->numberBetween(2000, 50000),
+                    'currency_code' => 'USD',
+                    'note' => fake()->optional(0.6)->paragraph(),
+                    'category_id' => $category->id,
+                    'sent_at' => $status === 'sent' ? fake()->dateTimeBetween($createdDate, 'now') : null,
                     'created_at' => $createdDate,
                     'updated_at' => fake()->dateTimeBetween($createdDate, 'now'),
                 ]);
 
-                // Add quote items
-                $this->createQuoteItems($quote, $products);
                 $totalQuotes++;
             }
 
-            $this->command->info("    ✓ Created quotes for {$company->name}");
+            $this->command->info("  Created quotes for {$company->name}");
         }
 
-        $this->command->info("Created {$totalQuotes} quotes total.");
-    }
-
-    private function createQuoteItems($quote, $products)
-    {
-        if ($products->isEmpty()) {
-            return;
-        }
-
-        $numItems = rand(2, 8);
-        $subtotal = 0;
-
-        for ($i = 0; $i < $numItems; $i++) {
-            $product = $products->random();
-            $quantity = fake()->numberBetween(1, 20);
-            $price = $product->price * fake()->randomFloat(2, 0.9, 1.1); // Allow some price flexibility
-            $total = $quantity * $price;
-            $subtotal += $total;
-
-            QuoteItem::create([
-                'quote_id' => $quote->id,
-                'product_id' => $product->id,
-                'name' => $product->name,
-                'description' => $product->description,
-                'quantity' => $quantity,
-                'price' => $price,
-                'total' => $total,
-                'sort_order' => $i,
-            ]);
-        }
-
-        // Apply discount if set
-        $discountAmount = 0;
-        if ($quote->discount_type === 'percentage' && $quote->discount_value) {
-            $discountAmount = $subtotal * ($quote->discount_value / 100);
-        } elseif ($quote->discount_type === 'fixed' && $quote->discount_value) {
-            $discountAmount = $quote->discount_value;
-        }
-
-        $tax = ($subtotal - $discountAmount) * 0.08; // 8% tax
-        $total = $subtotal - $discountAmount + $tax;
-
-        $quote->update([
-            'subtotal' => $subtotal,
-            'tax' => $tax,
-            'total' => $total,
-        ]);
+        $this->command->info("Created {$totalQuotes} quotes successfully.");
     }
 }

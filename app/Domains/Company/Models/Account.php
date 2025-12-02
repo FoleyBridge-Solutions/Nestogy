@@ -119,6 +119,22 @@ class Account extends Model
     }
 
     /**
+     * Get the Plaid item for this account.
+     */
+    public function plaidItem(): BelongsTo
+    {
+        return $this->belongsTo(\App\Domains\Financial\Models\PlaidItem::class, 'plaid_item_id');
+    }
+
+    /**
+     * Get bank transactions for this account.
+     */
+    public function bankTransactions(): HasMany
+    {
+        return $this->hasMany(\App\Domains\Financial\Models\BankTransaction::class);
+    }
+
+    /**
      * Get the type label.
      */
     public function getTypeLabel(): string

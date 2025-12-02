@@ -603,7 +603,7 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
 Route::prefix('webhooks')->name('api.webhooks.')->middleware('throttle:60,1')->group(function () {
     // Legacy webhooks
     // Route::post('stripe', [StripeWebhookController::class, 'handle'])->name('stripe'); // Removed - controller doesn't exist
-    // Route::post('plaid', [App\Http\Controllers\Integration\Controllers\PlaidWebhookController::class, 'handle'])->name('plaid'); // TODO: Check if exists
+    Route::post('plaid', [\App\Domains\Financial\Http\Controllers\Webhooks\PlaidWebhookController::class, 'handle'])->name('plaid');
     // Route::post('email', [App\Http\Controllers\Integration\Controllers\EmailWebhookController::class, 'handle'])->name('email'); // TODO: Check if exists
     // Route::post('sms', [App\Http\Controllers\Integration\Controllers\SmsWebhookController::class, 'handle'])->name('sms'); // TODO: Check if exists
 

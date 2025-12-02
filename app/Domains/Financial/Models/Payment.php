@@ -97,6 +97,11 @@ class Payment extends Model
             ->withPivot(['amount', 'applied_date', 'notes']);
     }
 
+    public function bankTransaction(): BelongsTo
+    {
+        return $this->belongsTo(BankTransaction::class, 'bank_transaction_id');
+    }
+
     public function getFormattedAmount(): string
     {
         return '$'.number_format($this->amount, 2);

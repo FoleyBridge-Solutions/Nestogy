@@ -15,7 +15,7 @@ class DatabaseSeeder extends Seeder
         if (app()->environment('local', 'development', 'testing')) {
             // Development/Local/Testing: Run dev seeder with test data
             $this->call([
-                Dev\DevDatabaseSeeder::class,
+                DevDatabaseSeeder::class,
             ]);
         } else {
             // Production/Staging: Run essential seeders only

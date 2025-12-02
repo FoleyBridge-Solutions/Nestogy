@@ -26,8 +26,8 @@ class TicketSeeder extends Seeder
         foreach ($companies as $company) {
             $this->command->info("Creating tickets for company: {$company->name}");
 
-            // Initialize ticket counter for this company
-            $ticketNumber = 1000;
+            // Initialize ticket counter for this company - use company ID to ensure uniqueness
+            $ticketNumber = ($company->id * 10000) + 1000;
 
             $clients = Client::where('company_id', $company->id)->get();
             $users = User::where('company_id', $company->id)->get();

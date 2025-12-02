@@ -37,7 +37,7 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
         Fortify::redirectUserForTwoFactorAuthenticationUsing(RedirectIfTwoFactorAuthenticatable::class);
 
-        // Configure Fortify to use existing views (no companies for security)
+        // Configure Fortify to use existing views
         Fortify::loginView(function () {
             return view('auth.login');
         });
@@ -56,6 +56,10 @@ class FortifyServiceProvider extends ServiceProvider
 
         Fortify::verifyEmailView(function () {
             return view('auth.verify');
+        });
+
+        Fortify::twoFactorChallengeView(function () {
+            return view('auth.two-factor-challenge');
         });
 
         // Configure rate limiting with database settings

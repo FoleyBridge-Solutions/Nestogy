@@ -6,6 +6,7 @@ use App\Domains\Client\Models\Client;
 use App\Domains\Core\Models\User;
 use App\Domains\Ticket\Models\Ticket;
 use App\Traits\BelongsToCompany;
+use App\Traits\HasAIAnalysis;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -35,7 +36,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class Project extends Model
 {
-    use BelongsToCompany, HasFactory, SoftDeletes;
+    use BelongsToCompany, HasFactory, SoftDeletes, HasAIAnalysis;
 
     /**
      * The table associated with the model.
@@ -54,6 +55,12 @@ class Project extends Model
         'manager_id',
         'completed_at',
         'client_id',
+        'ai_summary',
+        'ai_risk_level',
+        'ai_risk_confidence',
+        'ai_progress_assessment',
+        'ai_recommendations',
+        'ai_analyzed_at',
     ];
 
     /**
@@ -68,6 +75,9 @@ class Project extends Model
         'updated_at' => 'datetime',
         'completed_at' => 'datetime',
         'archived_at' => 'datetime',
+        'ai_recommendations' => 'array',
+        'ai_analyzed_at' => 'datetime',
+        'ai_risk_confidence' => 'decimal:2',
     ];
 
     /**

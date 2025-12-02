@@ -332,6 +332,31 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('financial')->name('finan
         Route::get('/reports', [\App\Domains\Financial\Controllers\TaxRateController::class, 'reports'])->name('reports');
     });
 
+    // Bank Connection Routes
+    Route::prefix('bank-connections')->name('bank-connections.')->group(function () {
+        Route::get('/', [\App\Domains\Financial\Controllers\BankConnectionController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Domains\Financial\Controllers\BankConnectionController::class, 'create'])->name('create');
+        Route::post('/', [\App\Domains\Financial\Controllers\BankConnectionController::class, 'store'])->name('store');
+        Route::get('/{item}', [\App\Domains\Financial\Controllers\BankConnectionController::class, 'show'])->name('show');
+        Route::post('/{item}/sync', [\App\Domains\Financial\Controllers\BankConnectionController::class, 'sync'])->name('sync');
+        Route::delete('/{item}', [\App\Domains\Financial\Controllers\BankConnectionController::class, 'destroy'])->name('destroy');
+        Route::post('/{item}/reauthorize', [\App\Domains\Financial\Controllers\BankConnectionController::class, 'reauthorize'])->name('reauthorize');
+    });
+
+    // Bank Transaction Routes
+    Route::prefix('bank-transactions')->name('bank-transactions.')->group(function () {
+        Route::get('/', [\App\Domains\Financial\Controllers\BankTransactionController::class, 'index'])->name('index');
+        Route::get('/{transaction}', [\App\Domains\Financial\Controllers\BankTransactionController::class, 'show'])->name('show');
+        Route::post('/{transaction}/reconcile', [\App\Domains\Financial\Controllers\BankTransactionController::class, 'reconcile'])->name('reconcile');
+        Route::post('/{transaction}/unreconcile', [\App\Domains\Financial\Controllers\BankTransactionController::class, 'unreconcile'])->name('unreconcile');
+        Route::post('/bulk-reconcile', [\App\Domains\Financial\Controllers\BankTransactionController::class, 'bulkReconcile'])->name('bulk-reconcile');
+        Route::post('/{transaction}/create-payment', [\App\Domains\Financial\Controllers\BankTransactionController::class, 'createPayment'])->name('create-payment');
+        Route::post('/{transaction}/create-expense', [\App\Domains\Financial\Controllers\BankTransactionController::class, 'createExpense'])->name('create-expense');
+        Route::post('/{transaction}/ignore', [\App\Domains\Financial\Controllers\BankTransactionController::class, 'ignore'])->name('ignore');
+        Route::post('/{transaction}/unignore', [\App\Domains\Financial\Controllers\BankTransactionController::class, 'unignore'])->name('unignore');
+        Route::post('/{transaction}/categorize', [\App\Domains\Financial\Controllers\BankTransactionController::class, 'categorize'])->name('categorize');
+    });
+
     // Additional utility routes
     Route::get('clients/search', [QuoteController::class, 'searchClients'])->name('clients.search');
 });

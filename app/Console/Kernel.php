@@ -336,6 +336,23 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping()
             ->appendOutputTo(storage_path('logs/texas-address-data.log'));
 
+        // Process pending ticket billing - Catch any tickets missed by event system (DISTRIBUTED)
+        $schedule->call(function () {
+            $scheduler = app(DistributedSchedulerService::class);
+            $scheduler->executeIfNotRunning('pending-ticket-billing-daily', function () {
+                \Artisan::call('billing:process-pending-tickets', [
+                    '--limit' => config('billing.ticket.batch_size', 100),
+                ]);
+            });
+        })
+            ->daily()
+            ->at('03:30')
+            ->name('pending-ticket-billing-distributed')
+            ->appendOutputTo(storage_path('logs/ticket-billing.log'));
+
+        // Bank syncing jobs
+        $schedule->job(new \App\Jobs\SyncAllPlaidAccounts)->dailyAt('02:00');
+        $schedule->job(new \App\Jobs\AutoReconcileTransactions)->dailyAt('03:00');
 
     }
 

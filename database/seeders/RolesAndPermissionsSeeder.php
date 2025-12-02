@@ -84,6 +84,14 @@ class RolesAndPermissionsSeeder extends Seeder
             'financial.expenses.create' => 'Create expenses',
             'financial.expenses.approve' => 'Approve expenses',
             'financial.reports' => 'View financial reports',
+            'financial.bank-connections.view' => 'View bank connections',
+            'financial.bank-connections.manage' => 'Manage bank connections',
+            'financial.bank-connections.sync' => 'Sync bank transactions',
+            'financial.bank-connections.export' => 'Export bank connections',
+            'financial.bank-transactions.view' => 'View bank transactions',
+            'financial.bank-transactions.manage' => 'Manage bank transactions',
+            'financial.bank-transactions.reconcile' => 'Reconcile bank transactions',
+            'financial.bank-transactions.export' => 'Export bank transactions',
 
             // Contract management
             'contracts.*' => 'Full contract management access',
@@ -155,6 +163,16 @@ class RolesAndPermissionsSeeder extends Seeder
             'system.logs' => 'View system logs',
             'system.audit' => 'View audit logs',
             'system.maintenance' => 'Perform system maintenance',
+
+            // Platform administration (Company 1 only - super-admin)
+            'platform.*' => 'Full platform administration access',
+            'platform.dashboard' => 'View platform dashboard',
+            'platform.companies.view' => 'View all tenant companies',
+            'platform.companies.suspend' => 'Suspend tenant companies',
+            'platform.companies.resume' => 'Resume tenant companies',
+            'platform.billing.view' => 'View platform billing',
+            'platform.billing.manage' => 'Manage platform subscriptions',
+            'platform.analytics.view' => 'View platform analytics',
         ];
 
         foreach ($abilities as $name => $title) {
@@ -223,6 +241,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'reports.*',
             'users.*',
             'settings.*',
+            'platform.*', // Platform admin access (only effective for company_id = 1)
         ]);
 
         // Technician - Technical work focused

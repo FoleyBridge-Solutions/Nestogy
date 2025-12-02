@@ -12,6 +12,7 @@ use App\Domains\Financial\Models\Quote;
 use App\Domains\Financial\Models\RecurringInvoice;
 use App\Domains\Core\Models\User;
 use App\Traits\BelongsToCompany;
+use App\Traits\HasAIAnalysis;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -78,7 +79,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class Contract extends Model
 {
-    use BelongsToCompany, HasCompanyConfiguration, HasFactory, HasStatusWorkflow, SoftDeletes;
+    use BelongsToCompany, HasCompanyConfiguration, HasFactory, HasStatusWorkflow, SoftDeletes, HasAIAnalysis;
 
     /**
      * The table associated with the model.
@@ -135,6 +136,13 @@ class Contract extends Model
         'content',
         'variables',
         'is_programmable',
+        'ai_summary',
+        'ai_key_terms',
+        'ai_risk_factors',
+        'ai_compliance_status',
+        'ai_renewal_recommendation',
+        'ai_important_dates',
+        'ai_analyzed_at',
     ];
 
     /**

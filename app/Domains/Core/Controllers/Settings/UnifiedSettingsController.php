@@ -90,6 +90,11 @@ class UnifiedSettingsController extends Controller
             return redirect()->route('settings.email');
         }
         
+        // Redirect ticket billing to Livewire component
+        if ($domain === 'financial' && $category === 'billing') {
+            return redirect()->route('settings.ticket-billing');
+        }
+        
         // Redirect permissions to Livewire component
         if ($domain === 'security' && $category === 'permissions') {
             return redirect()->route('settings.permissions.manage');

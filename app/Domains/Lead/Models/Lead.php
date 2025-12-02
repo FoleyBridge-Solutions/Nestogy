@@ -6,6 +6,7 @@ use App\Domains\Client\Models\Client;
 use App\Domains\Client\Models\Contact;
 use App\Domains\Core\Models\User;
 use App\Traits\BelongsToCompany;
+use App\Traits\HasAIAnalysis;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,7 +15,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Lead extends Model
 {
-    use BelongsToCompany, HasFactory, SoftDeletes;
+    use BelongsToCompany, HasFactory, SoftDeletes, HasAIAnalysis;
 
     protected $fillable = [
         'company_id',
@@ -55,6 +56,12 @@ class Lead extends Model
         'utm_campaign',
         'utm_content',
         'utm_term',
+        'ai_summary',
+        'ai_quality_score',
+        'ai_conversion_likelihood',
+        'ai_suggested_approach',
+        'ai_key_insights',
+        'ai_analyzed_at',
     ];
 
     protected $casts = [
@@ -75,6 +82,8 @@ class Lead extends Model
         'last_contact_date' => 'datetime',
         'qualified_at' => 'datetime',
         'converted_at' => 'datetime',
+        'ai_key_insights' => 'array',
+        'ai_analyzed_at' => 'datetime',
     ];
 
     // Status constants

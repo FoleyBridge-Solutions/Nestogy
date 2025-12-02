@@ -79,9 +79,10 @@ class LeadSeeder extends Seeder
 
                 Lead::create([
                     'company_id' => $company->id,
-                    'assigned_to' => $users->random()->id,
+                    'assigned_user_id' => $users->random()->id,
+                    'first_name' => fake()->firstName(),
+                    'last_name' => fake()->lastName(),
                     'company_name' => fake()->company(),
-                    'contact_name' => fake()->name(),
                     'email' => fake()->companyEmail(),
                     'phone' => fake()->phoneNumber(),
                     'website' => fake()->optional(0.7)->url(),

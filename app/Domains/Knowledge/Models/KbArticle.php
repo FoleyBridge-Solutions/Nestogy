@@ -5,6 +5,7 @@ namespace App\Domains\Knowledge\Models;
 use Illuminate\Database\Eloquent\Model;
 use App\Domains\Client\Models\Client;
 use App\Domains\Core\Models\User;
+use App\Traits\HasAIAnalysis;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -37,7 +38,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class KbArticle extends Model
 {
-    use SoftDeletes; // TODO: Add Searchable trait when Scout is installed
+    use SoftDeletes, HasAIAnalysis; // TODO: Add Searchable trait when Scout is installed
 
     protected $fillable = [
         'company_id',
@@ -57,6 +58,13 @@ class KbArticle extends Model
         'deflection_rate',
         'version',
         'published_at',
+        'ai_summary',
+        'ai_suggested_title',
+        'ai_suggested_tags',
+        'ai_related_topics',
+        'ai_improvements',
+        'ai_reading_time',
+        'ai_analyzed_at',
     ];
 
     protected $casts = [
@@ -67,6 +75,10 @@ class KbArticle extends Model
         'helpful_count' => 'integer',
         'not_helpful_count' => 'integer',
         'deflection_rate' => 'float',
+        'ai_suggested_tags' => 'array',
+        'ai_related_topics' => 'array',
+        'ai_improvements' => 'array',
+        'ai_analyzed_at' => 'datetime',
     ];
 
     const STATUS_DRAFT = 'draft';

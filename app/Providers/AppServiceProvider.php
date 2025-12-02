@@ -322,6 +322,26 @@ class AppServiceProvider extends ServiceProvider
             \App\Domains\Client\Events\ServiceHealthDegraded::class,
             \App\Domains\Client\Listeners\RecalculateServiceHealth::class
         );
+
+        // Ticket Billing Event Listeners
+
+        // Ticket Created - Record usage on contract
+        Event::listen(
+            \App\Events\TicketCreated::class,
+            \App\Listeners\RecordContractTicketUsage::class
+        );
+
+        // Ticket Closed - Queue billing job (if auto-billing enabled)
+        Event::listen(
+            \App\Events\TicketClosed::class,
+            [\App\Listeners\QueueTicketBillingJob::class, 'handleClosed']
+        );
+
+        // Ticket Resolved - Queue billing job (if auto-billing enabled)
+        Event::listen(
+            \App\Events\TicketResolved::class,
+            [\App\Listeners\QueueTicketBillingJob::class, 'handleResolved']
+        );
     }
 
     /**

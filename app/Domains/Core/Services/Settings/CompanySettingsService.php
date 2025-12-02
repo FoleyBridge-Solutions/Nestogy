@@ -53,6 +53,19 @@ class CompanySettingsService extends BaseSettingsService
             ];
         }
         
+        // For AI settings, pull from ai_settings JSON column
+        if ($category === 'ai') {
+            $aiSettings = $company->ai_settings ?? [];
+            
+            return [
+                'enabled' => $aiSettings['enabled'] ?? false,
+                'openrouter_api_key' => $aiSettings['openrouter_api_key'] ?? '',
+                'default_model' => $aiSettings['default_model'] ?? 'openai/gpt-3.5-turbo',
+                'temperature' => $aiSettings['temperature'] ?? 0.7,
+                'max_tokens' => $aiSettings['max_tokens'] ?? 1000,
+            ];
+        }
+        
         // Fall back to parent implementation
         return parent::getSettings($category);
     }
@@ -103,8 +116,21 @@ class CompanySettingsService extends BaseSettingsService
             $company->update(['branding' => $branding]);
         }
         
+        // For AI settings, save to ai_settings JSON column
+        elseif ($category === 'ai') {
+            $aiSettings = $company->ai_settings ?? [];
+            
+            $aiSettings['enabled'] = $data['enabled'] ?? false;
+            $aiSettings['openrouter_api_key'] = $data['openrouter_api_key'] ?? null;
+            $aiSettings['default_model'] = $data['default_model'] ?? 'openai/gpt-3.5-turbo';
+            $aiSettings['temperature'] = $data['temperature'] ?? 0.7;
+            $aiSettings['max_tokens'] = $data['max_tokens'] ?? 1000;
+            
+            $company->update(['ai_settings' => $aiSettings]);
+        }
+        
         // Return a dummy SettingsConfiguration since we saved to Company model
-        if ($category === 'general' || $category === 'branding') {
+        if ($category === 'general' || $category === 'branding' || $category === 'ai') {
             return SettingsConfiguration::firstOrCreate([
                 'company_id' => $company->id,
                 'domain' => $this->domain,
@@ -146,6 +172,15 @@ class CompanySettingsService extends BaseSettingsService
                     'base_color_scheme' => 'nullable|in:zinc,slate,gray,neutral,stone',
                 ];
 
+            case 'ai':
+                return [
+                    'enabled' => 'boolean',
+                    'openrouter_api_key' => 'nullable|string|max:255',
+                    'default_model' => 'nullable|string|max:100',
+                    'temperature' => 'nullable|numeric|between:0,2',
+                    'max_tokens' => 'nullable|integer|min:1|max:32000',
+                ];
+
             case 'localization':
                 return [
                     'timezone' => 'required|timezone',
@@ -182,6 +217,15 @@ class CompanySettingsService extends BaseSettingsService
                     'primary_color' => '#3B82F6',
                     'secondary_color' => '#1E40AF',
                     'portal_theme' => 'light',
+                ];
+
+            case 'ai':
+                return [
+                    'enabled' => false,
+                    'openrouter_api_key' => '',
+                    'default_model' => 'openai/gpt-3.5-turbo',
+                    'temperature' => 0.7,
+                    'max_tokens' => 1000,
                 ];
 
             case 'localization':
@@ -221,6 +265,13 @@ class CompanySettingsService extends BaseSettingsService
                     'name' => 'Branding',
                     'description' => 'Customize colors, logos, and themes',
                     'icon' => 'paint-brush',
+                ];
+
+            case 'ai':
+                return [
+                    'name' => 'AI Integration',
+                    'description' => 'Configure AI features powered by OpenRouter',
+                    'icon' => 'sparkles',
                 ];
 
             case 'users':

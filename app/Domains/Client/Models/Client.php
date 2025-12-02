@@ -26,10 +26,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Log;
 use App\Domains\Financial\Models\Payment;
 use App\Domains\Financial\Models\PaymentMethod;
+use App\Traits\HasAIAnalysis;
 
 class Client extends Model
 {
-    use BelongsToCompany, HasFactory, SoftDeletes;
+    use BelongsToCompany, HasFactory, SoftDeletes, HasAIAnalysis;
 
     private const DECIMAL_CAST = 'decimal:2';
 
@@ -88,6 +89,14 @@ class Client extends Model
         'subscription_started_at',
         'subscription_canceled_at',
         'current_user_count',
+        // AI fields
+        'ai_summary',
+        'ai_health_score',
+        'ai_risk_level',
+        'ai_risk_confidence',
+        'ai_client_type',
+        'ai_insights',
+        'ai_analyzed_at',
     ];
 
     protected $casts = [
@@ -119,6 +128,10 @@ class Client extends Model
         'subscription_started_at' => 'datetime',
         'subscription_canceled_at' => 'datetime',
         'current_user_count' => 'integer',
+        // AI field casts
+        'ai_insights' => 'array',
+        'ai_analyzed_at' => 'datetime',
+        'ai_risk_confidence' => 'decimal:2',
     ];
 
     protected $dates = [

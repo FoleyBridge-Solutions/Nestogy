@@ -4,6 +4,7 @@ namespace App\Domains\Email\Models;
 
 use App\Domains\Client\Models\CommunicationLog;
 use App\Domains\Ticket\Models\Ticket;
+use App\Traits\HasAIAnalysis;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,7 +13,7 @@ use Illuminate\Support\Str;
 
 class EmailMessage extends Model
 {
-    use HasFactory;
+    use HasFactory, HasAIAnalysis;
 
     protected $fillable = [
         'email_account_id',
@@ -48,6 +49,12 @@ class EmailMessage extends Model
         'communication_log_id',
         'headers',
         'flags',
+        'ai_summary',
+        'ai_sentiment',
+        'ai_priority',
+        'ai_suggested_reply',
+        'ai_action_items',
+        'ai_analyzed_at',
     ];
 
     protected $casts = [
@@ -67,6 +74,8 @@ class EmailMessage extends Model
         'is_communication_logged' => 'boolean',
         'headers' => 'array',
         'flags' => 'array',
+        'ai_action_items' => 'array',
+        'ai_analyzed_at' => 'datetime',
     ];
 
     public function emailAccount(): BelongsTo
