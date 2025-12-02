@@ -73,9 +73,9 @@
             </div>
 
             @if($pendingTicketsCount > 0)
-                <flux:banner variant="info" class="mt-4">
+                <flux:callout variant="info" class="mt-4">
                     {{ number_format($pendingTicketsCount) }} ticket(s) are ready to be billed. Click "Process Pending Tickets" to queue them for billing.
-                </flux:banner>
+                </flux:callout>
             @endif
         </flux:card>
 
@@ -92,9 +92,9 @@
                 </flux:field>
 
                 @if(!$enabled)
-                    <flux:banner variant="warning" class="mt-4">
+                    <flux:callout variant="warning" class="mt-4">
                         The billing system is currently disabled. No automatic billing will occur.
-                    </flux:banner>
+                    </flux:callout>
                 @endif
             </flux:card>
 
@@ -102,9 +102,9 @@
             <flux:card class="mb-6">
                 <flux:heading size="lg" class="mb-4">Auto-Billing Triggers</flux:heading>
                 
-                <flux:banner variant="warning" class="mb-4">
+                <flux:callout variant="warning" class="mb-4">
                     <strong>Recommended:</strong> Keep these disabled initially and use manual processing to test the system.
-                </flux:banner>
+                </flux:callout>
 
                 <div class="space-y-4">
                     <flux:field>
@@ -230,9 +230,9 @@
                     </flux:button>
                 </div>
             @else
-                <flux:banner variant="info" class="mt-4">
+                <flux:callout variant="info" class="mt-4">
                     You have view-only access to billing settings. Contact an administrator to make changes.
-                </flux:banner>
+                </flux:callout>
             @endcan
         </form>
     </div>
