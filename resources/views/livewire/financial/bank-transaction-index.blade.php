@@ -21,15 +21,15 @@
         </div>
 
         @if (session()->has('success'))
-            <flux:alert variant="success" class="mb-4">
+            <flux:callout variant="success" class="mb-4">
                 {{ session('success') }}
-            </flux:alert>
+            </flux:callout>
         @endif
 
         @if (session()->has('error'))
-            <flux:alert variant="danger" class="mb-4">
+            <flux:callout variant="danger" class="mb-4">
                 {{ session('error') }}
-            </flux:alert>
+            </flux:callout>
         @endif
 
         <!-- Summary Cards -->
