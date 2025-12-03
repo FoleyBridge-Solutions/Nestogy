@@ -445,24 +445,26 @@ class Contact extends Authenticatable
 
     /**
      * Set password for contact.
+     * Note: Uses direct assignment because password_hash is in $guarded array.
      */
     public function setPassword(string $password): void
     {
-        $this->update([
-            'password_hash' => Hash::make($password),
-            'auth_method' => self::AUTH_PASSWORD,
-        ]);
+        $this->password_hash = Hash::make($password);
+        $this->auth_method = self::AUTH_PASSWORD;
+        $this->password_changed_at = now();
+        $this->save();
     }
 
     /**
      * Set PIN for contact.
+     * Note: Uses direct assignment because pin is in $guarded array.
      */
     public function setPin(string $pin): void
     {
-        $this->update([
-            'pin' => Hash::make($pin),
-            'auth_method' => self::AUTH_PIN,
-        ]);
+        $this->pin = Hash::make($pin);
+        $this->auth_method = self::AUTH_PIN;
+        $this->password_changed_at = now();
+        $this->save();
     }
 
     /**

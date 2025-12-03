@@ -254,6 +254,12 @@ class EditContact extends Component
 
         $this->contact->update($contactData);
 
+        // Handle password separately using the fixed setPassword() method
+        // This is necessary because password_hash is in the $guarded array
+        if ($this->has_portal_access && $this->password) {
+            $this->contact->setPassword($this->password);
+        }
+
         $this->ensureSinglePrimaryContact();
 
         session()->flash('success', 'Contact updated successfully.');
@@ -308,10 +314,8 @@ class EditContact extends Component
 
     private function addPasswordDataIfNeeded(array &$contactData): void
     {
-        if ($this->has_portal_access && $this->password) {
-            $contactData['password_hash'] = bcrypt($this->password);
-            $contactData['password_changed_at'] = now();
-        }
+        // Don't add password to mass assignment array - password_hash is in $guarded
+        // Password will be set separately in the update() method using setPassword()
     }
 
     private function ensureSinglePrimaryContact(): void

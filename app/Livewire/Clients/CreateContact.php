@@ -194,6 +194,13 @@ class CreateContact extends Component
         $contactData = $this->buildContactData($client);
         $contact = Contact::create($contactData);
 
+        // Set password separately if needed (password_hash is in $guarded array)
+        if ($this->has_portal_access && 
+            $this->portal_access_method === 'manual_password' && 
+            $this->password) {
+            $contact->setPassword($this->password);
+        }
+
         $this->handlePortalInvitation($contact);
         $this->updatePrimaryContact($contact, $client);
         $this->setSuccessMessage();
@@ -255,10 +262,10 @@ class CreateContact extends Component
             return $contactData;
         }
 
-        if ($this->portal_access_method === 'manual_password' && $this->password) {
-            $contactData['password_hash'] = bcrypt($this->password);
-            $contactData['password_changed_at'] = now();
-        } elseif ($this->portal_access_method === 'send_invitation') {
+        // Don't add password to mass assignment array - password_hash is in $guarded
+        // Password will be set separately in save() method after contact creation
+
+        if ($this->portal_access_method === 'send_invitation') {
             $this->send_invitation = true;
         }
 

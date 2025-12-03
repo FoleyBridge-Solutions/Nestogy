@@ -238,6 +238,11 @@
                     <flux:navmenu.item href="{{ route('settings.index') }}" icon="cog-6-tooth" class="text-zinc-800 dark:text-white">Settings</flux:navmenu.item>
                     <flux:navmenu.item href="{{ route('docs.index') }}" icon="question-mark-circle" class="text-zinc-800 dark:text-white">Help & Documentation</flux:navmenu.item>
                     
+                    @if(auth()->user()->canAccessCrossTenant())
+                        <flux:navmenu.separator />
+                        <flux:navmenu.item href="{{ route('admin.dashboard') }}" icon="shield-check" class="text-zinc-800 dark:text-white">Platform Admin</flux:navmenu.item>
+                    @endif
+                    
                     <flux:navmenu.separator />
                     
                     <div class="px-2 py-1.5">
