@@ -1,8 +1,8 @@
 <?php
 
-namespace Tests\Feature\Livewire\.;
+namespace Tests\Feature\Livewire;
 
-use App\Livewire\.\NavbarTimer;
+use App\Livewire\NavbarTimer;
 use App\Domains\Company\Models\Company;
 use App\Domains\Core\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
