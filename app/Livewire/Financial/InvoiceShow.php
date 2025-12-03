@@ -2,9 +2,9 @@
 
 namespace App\Livewire\Financial;
 
-use App\Domains\Financial\Services\InvoiceService;
 use App\Domains\Financial\Models\Invoice;
 use App\Domains\Financial\Models\Payment;
+use App\Domains\Financial\Services\InvoiceService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Computed;
@@ -77,8 +77,12 @@ class InvoiceShow extends Component
                 'items' => function ($query) {
                     $query->orderBy('order');
                 },
-                'payments' => function ($query) {
-                    $query->orderBy('payment_date', 'desc');
+                'paymentApplications' => function ($query) {
+                    $query->where('is_active', true)
+                        ->with(['payment' => function ($q) {
+                            $q->orderBy('payment_date', 'desc');
+                        }])
+                        ->orderBy('applied_date', 'desc');
                 },
             ]);
 
@@ -90,8 +94,8 @@ class InvoiceShow extends Component
             $this->totals = [
                 'subtotal' => round($this->invoice->items->sum('amount'), 2),
                 'total' => round($this->invoice->amount, 2),
-                'paid' => round($this->invoice->payments->sum('amount'), 2),
-                'balance' => round($this->invoice->amount - $this->invoice->payments->sum('amount'), 2),
+                'paid' => round($this->invoice->activePaymentApplications->sum('amount'), 2),
+                'balance' => round($this->invoice->amount - $this->invoice->activePaymentApplications->sum('amount'), 2),
             ];
         }
     }

@@ -281,11 +281,11 @@
             </flux:card>
 
             <!-- Payment History -->
-            @if($invoice->payments->count() > 0)
+            @if($invoice->paymentApplications->where('is_active', true)->count() > 0)
                 <flux:card>
                     <div class="flex items-center justify-between mb-4">
                         <flux:heading size="lg">Payment History</flux:heading>
-                        <flux:badge color="green">{{ $invoice->payments->count() }} {{ Str::plural('Payment', $invoice->payments->count()) }}</flux:badge>
+                        <flux:badge color="green">{{ $invoice->paymentApplications->where('is_active', true)->count() }} {{ Str::plural('Payment', $invoice->paymentApplications->where('is_active', true)->count()) }}</flux:badge>
                     </div>
                     
                     <div class="overflow-x-auto">
@@ -298,55 +298,57 @@
                                 <flux:table.column>Status</flux:table.column>
                             </flux:table.columns>
                             <flux:table.rows>
-                                @foreach($invoice->payments as $payment)
-                                    <flux:table.row wire:key="payment-{{ $payment->id }}">
-                                        <flux:table.cell>
-                                            <flux:text class="text-zinc-900 dark:text-white">
-                                                {{ $payment->payment_date->format('M d, Y') }}
-                                            </flux:text>
-                                            <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">
-                                                {{ $payment->payment_date->format('g:i A') }}
-                                            </flux:text>
-                                        </flux:table.cell>
-                                        <flux:table.cell>
-                                            <div class="flex items-center gap-2">
-                                                @switch($payment->payment_method)
-                                                    @case('credit_card')
-                                                        <flux:icon.credit-card class="w-4 h-4 text-zinc-400" />
-                                                        @break
-                                                    @case('bank_transfer')
-                                                        <flux:icon.building-library class="w-4 h-4 text-zinc-400" />
-                                                        @break
-                                                    @case('check')
-                                                        <flux:icon.document-check class="w-4 h-4 text-zinc-400" />
-                                                        @break
-                                                    @case('cash')
-                                                        <flux:icon.banknotes class="w-4 h-4 text-zinc-400" />
-                                                        @break
-                                                    @default
-                                                        <flux:icon.currency-dollar class="w-4 h-4 text-zinc-400" />
-                                                @endswitch
-                                                <flux:text class="text-zinc-700 dark:text-zinc-300">
-                                                    {{ ucfirst(str_replace('_', ' ', $payment->payment_method)) }}
+                                @foreach($invoice->paymentApplications->where('is_active', true) as $application)
+                                    @if($application->payment)
+                                        <flux:table.row wire:key="payment-app-{{ $application->id }}">
+                                            <flux:table.cell>
+                                                <flux:text class="text-zinc-900 dark:text-white">
+                                                    {{ $application->payment->payment_date->format('M d, Y') }}
                                                 </flux:text>
-                                            </div>
-                                        </flux:table.cell>
-                                        <flux:table.cell>
-                                            <flux:text size="sm" class="text-zinc-600 dark:text-zinc-400">
-                                                {{ $payment->reference_number ?? '—' }}
-                                            </flux:text>
-                                        </flux:table.cell>
-                                        <flux:table.cell class="text-right">
-                                            <flux:text class="font-medium text-zinc-900 dark:text-white">
-                                                ${{ number_format($payment->amount, 2) }}
-                                            </flux:text>
-                                        </flux:table.cell>
-                                        <flux:table.cell>
-                                            <flux:badge size="sm" :color="$payment->status === 'completed' ? 'green' : 'yellow'" inset="top bottom">
-                                                {{ ucfirst($payment->status) }}
-                                            </flux:badge>
-                                        </flux:table.cell>
-                                    </flux:table.row>
+                                                <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400">
+                                                    {{ $application->payment->payment_date->format('g:i A') }}
+                                                </flux:text>
+                                            </flux:table.cell>
+                                            <flux:table.cell>
+                                                <div class="flex items-center gap-2">
+                                                    @switch($application->payment->payment_method)
+                                                        @case('credit_card')
+                                                            <flux:icon.credit-card class="w-4 h-4 text-zinc-400" />
+                                                            @break
+                                                        @case('bank_transfer')
+                                                            <flux:icon.building-library class="w-4 h-4 text-zinc-400" />
+                                                            @break
+                                                        @case('check')
+                                                            <flux:icon.document-check class="w-4 h-4 text-zinc-400" />
+                                                            @break
+                                                        @case('cash')
+                                                            <flux:icon.banknotes class="w-4 h-4 text-zinc-400" />
+                                                            @break
+                                                        @default
+                                                            <flux:icon.currency-dollar class="w-4 h-4 text-zinc-400" />
+                                                    @endswitch
+                                                    <flux:text class="text-zinc-700 dark:text-zinc-300">
+                                                        {{ ucfirst(str_replace('_', ' ', $application->payment->payment_method)) }}
+                                                    </flux:text>
+                                                </div>
+                                            </flux:table.cell>
+                                            <flux:table.cell>
+                                                <flux:text size="sm" class="text-zinc-600 dark:text-zinc-400">
+                                                    {{ $application->payment->reference_number ?? '—' }}
+                                                </flux:text>
+                                            </flux:table.cell>
+                                            <flux:table.cell class="text-right">
+                                                <flux:text class="font-medium text-zinc-900 dark:text-white">
+                                                    ${{ number_format($application->amount, 2) }}
+                                                </flux:text>
+                                            </flux:table.cell>
+                                            <flux:table.cell>
+                                                <flux:badge size="sm" :color="$application->payment->status === 'completed' ? 'green' : 'yellow'" inset="top bottom">
+                                                    {{ ucfirst($application->payment->status) }}
+                                                </flux:badge>
+                                            </flux:table.cell>
+                                        </flux:table.row>
+                                    @endif
                                 @endforeach
                             </flux:table.rows>
                         </flux:table>
