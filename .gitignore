@@ -41,3 +41,5 @@ coverage.xml
 /AGENTS.md
 server.key
 server.pem
+start-dev.sh
+stop-dev.sh
