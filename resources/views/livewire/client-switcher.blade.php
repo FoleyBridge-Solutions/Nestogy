@@ -350,7 +350,7 @@
                         <div class="flex items-center justify-center gap-2 text-xs text-zinc-500">
                             <span class="px-1 py-0.5 bg-zinc-100 dark:bg-zinc-800 rounded text-xs">⌘K</span>
                             <span>to search</span>
-                            <span class="px-1 py-0.5 bg-zinc-100 dark:bg-zinc-800 rounded text-xs">1-5</span>
+                            <span class="px-1 py-0.5 bg-zinc-100 dark:bg-zinc-800 rounded text-xs">⌘1-5</span>
                             <span>for favorites</span>
                         </div>
                     </div>
@@ -368,6 +368,15 @@
     <script>
         // Simple keyboard shortcuts for the client switcher
         document.addEventListener('keydown', (e) => {
+            // Check if user is typing in a form field
+            const activeElement = document.activeElement;
+            const isTypingInField = activeElement && (
+                activeElement.tagName === 'INPUT' || 
+                activeElement.tagName === 'TEXTAREA' || 
+                activeElement.tagName === 'SELECT' ||
+                activeElement.isContentEditable
+            );
+            
             // Cmd/Ctrl + K to focus search (if visible)
             if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
                 e.preventDefault();
@@ -377,8 +386,10 @@
                 }
             }
             
-            // Number keys (1-5) to select favorite clients
-            if (['1', '2', '3', '4', '5'].includes(e.key)) {
+            // Cmd/Ctrl + Number keys (1-5) to select favorite clients
+            // Don't activate when user is typing in a form field
+            if (!isTypingInField && (e.metaKey || e.ctrlKey) && ['1', '2', '3', '4', '5'].includes(e.key)) {
+                e.preventDefault();
                 const number = parseInt(e.key);
                 $wire.selectFavoriteByNumber(number);
             }
