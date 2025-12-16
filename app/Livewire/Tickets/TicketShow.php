@@ -85,15 +85,18 @@ class TicketShow extends Component
         'confirmed-start-timer' => 'handleConfirmedStart',
     ];
 
-    protected $rules = [
-        'comment' => 'required|min:5|max:5000',
-        'attachments.*' => 'file|max:10240|mimes:pdf,doc,docx,xls,xlsx,txt,jpg,jpeg,png,gif',
-        'status' => 'required|in:Open,In Progress,On Hold,Resolved,Closed',
-        'priority' => 'required|in:Low,Medium,High,Critical',
-        'assignedTo' => 'nullable|exists:users,id',
-        'timeSpent' => 'nullable|numeric|min:0.1|max:999',
-        'timeDescription' => 'required_with:timeSpent|string|max:500',
-    ];
+    protected function rules()
+    {
+        return [
+            'comment' => 'required|min:5|max:5000',
+            'attachments.*' => 'file|max:10240|mimes:pdf,doc,docx,xls,xlsx,txt,jpg,jpeg,png,gif',
+            'status' => 'required|'.Ticket::getStatusValidationRule(),
+            'priority' => 'required|'.Ticket::getPriorityValidationRule(),
+            'assignedTo' => 'nullable|exists:users,id',
+            'timeSpent' => 'nullable|numeric|min:0.1|max:999',
+            'timeDescription' => 'required_with:timeSpent|string|max:500',
+        ];
+    }
 
     protected $messages = [
         'comment.required' => 'Please enter a comment.',
@@ -219,7 +222,7 @@ class TicketShow extends Component
     {
         try {
             $this->validate([
-                'newStatus' => 'required|in:Open,In Progress,On Hold,Resolved,Closed',
+                'newStatus' => 'required|'.Ticket::getStatusValidationRule(),
                 'statusChangeReason' => 'required|min:10|max:500',
             ]);
 
@@ -261,7 +264,7 @@ class TicketShow extends Component
 
     public function updatePriority()
     {
-        $this->validate(['priority' => 'required|in:low,medium,high,urgent,critical']);
+        $this->validate(['priority' => 'required|'.Ticket::getPriorityValidationRule()]);
 
         $oldPriority = $this->ticket->priority;
         $this->ticket->priority = $this->priority;
@@ -321,7 +324,7 @@ class TicketShow extends Component
         if ($watcher) {
             $watcher->delete();
             $this->ticket->load('watchers.user');
-            
+
             Flux::toast(
                 text: 'You are no longer watching this ticket',
                 variant: 'info'
@@ -329,7 +332,7 @@ class TicketShow extends Component
         } else {
             $this->ticket->watchers()->create(['user_id' => Auth::id()]);
             $this->ticket->load('watchers.user');
-            
+
             Flux::toast(
                 text: 'You are now watching this ticket',
                 variant: 'success'
@@ -347,7 +350,7 @@ class TicketShow extends Component
         if ($comment && $comment->created_at->diffInMinutes(now()) < 30) {
             $comment->delete();
             $this->ticket->load('comments.author', 'comments.attachments');
-            
+
             Flux::toast(
                 text: 'Comment deleted successfully',
                 variant: 'success'
@@ -392,7 +395,7 @@ class TicketShow extends Component
             $comment->update(['content' => $this->editingCommentText]);
             $this->reset(['editingCommentId', 'editingCommentText']);
             $this->ticket->load('comments.author', 'comments.attachments');
-            
+
             Flux::toast(
                 text: 'Comment updated successfully',
                 variant: 'success'
@@ -426,7 +429,7 @@ class TicketShow extends Component
     public function archiveTicket()
     {
         $this->ticket->update(['archived_at' => now()]);
-        
+
         Flux::toast(
             text: 'Ticket archived successfully',
             variant: 'success'
@@ -444,7 +447,7 @@ class TicketShow extends Component
         if ($entry) {
             $entry->delete();
             $this->ticket->load('timeLogs.user');
-            
+
             Flux::toast(
                 text: 'Time entry deleted successfully',
                 variant: 'success'
@@ -590,7 +593,7 @@ class TicketShow extends Component
                 now()->addDays(1)
             );
             $this->draftSaved = true;
-            
+
             // Reset the draft saved indicator after 2 seconds
             $this->dispatch('draftSavedIndicator');
         }
@@ -641,8 +644,8 @@ class TicketShow extends Component
         return view('livewire.tickets.ticket-show', [
             'technicians' => $technicians,
             'isWatching' => $isWatching,
-            'statuses' => ['open', 'in_progress', 'pending', 'resolved', 'closed'],
-            'priorities' => ['low', 'medium', 'high', 'urgent', 'critical'],
+            'statuses' => Ticket::ALL_STATUSES,
+            'priorities' => Ticket::ALL_PRIORITIES,
         ]);
     }
 }
