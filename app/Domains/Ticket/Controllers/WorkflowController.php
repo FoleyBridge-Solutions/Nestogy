@@ -2,11 +2,11 @@
 
 namespace App\Domains\Ticket\Controllers;
 
+use App\Domains\Core\Models\User;
 use App\Domains\Ticket\Models\Ticket;
 use App\Domains\Ticket\Models\TicketStatusTransition;
 use App\Domains\Ticket\Models\TicketWorkflow;
 use App\Http\Controllers\Controller;
-use App\Domains\Core\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -629,19 +629,12 @@ class WorkflowController extends Controller
      */
     private function getAvailableStatuses(): array
     {
-        return [
-            'new',
-            'open',
-            'in_progress',
-            'pending',
+        // Include standard statuses plus workflow-specific ones
+        return array_merge(Ticket::ALL_STATUSES, [
             'waiting_for_customer',
             'waiting_for_vendor',
-            'resolved',
-            'closed',
-            'cancelled',
-            'on_hold',
             'escalated',
-        ];
+        ]);
     }
 
     /**

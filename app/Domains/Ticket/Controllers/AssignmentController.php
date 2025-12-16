@@ -2,10 +2,10 @@
 
 namespace App\Domains\Ticket\Controllers;
 
+use App\Domains\Core\Models\User;
 use App\Domains\Ticket\Models\Ticket;
 use App\Domains\Ticket\Models\TicketWatcher;
 use App\Http\Controllers\Controller;
-use App\Domains\Core\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -82,8 +82,8 @@ class AssignmentController extends Controller
             ->orderBy('name')
             ->get();
 
-        $statuses = ['new', 'open', 'in_progress', 'pending', 'resolved', 'closed'];
-        $priorities = ['Low', 'Medium', 'High', 'Critical'];
+        $statuses = Ticket::getAvailableStatuses();
+        $priorities = Ticket::getAvailablePriorities();
 
         // Get assignment statistics
         $stats = $this->getAssignmentStats();
@@ -477,8 +477,8 @@ class AssignmentController extends Controller
             return [
                 'assignee' => $assignee ? $assignee->name : 'Unassigned',
                 'total_tickets' => $tickets->count(),
-                'open_tickets' => $tickets->whereIn('status', ['new', 'open', 'in_progress'])->count(),
-                'closed_tickets' => $tickets->where('status', 'closed')->count(),
+                'open_tickets' => $tickets->whereIn('status', [Ticket::STATUS_NEW, Ticket::STATUS_OPEN, Ticket::STATUS_IN_PROGRESS])->count(),
+                'closed_tickets' => $tickets->where('status', Ticket::STATUS_CLOSED)->count(),
                 'avg_resolution_time' => $this->calculateAvgResolutionTime($tickets),
                 'priority_breakdown' => $tickets->groupBy('priority')->map->count(),
                 'status_breakdown' => $tickets->groupBy('status')->map->count(),
@@ -508,11 +508,11 @@ class AssignmentController extends Controller
             ->withCount([
                 'assignedTickets',
                 'assignedTickets as open_tickets_count' => function ($q) {
-                    $q->whereIn('status', ['new', 'open', 'in_progress']);
+                    $q->whereIn('status', [Ticket::STATUS_NEW, Ticket::STATUS_OPEN, Ticket::STATUS_IN_PROGRESS]);
                 },
                 'assignedTickets as overdue_tickets_count' => function ($q) {
                     $q->where('due_date', '<', now())
-                        ->whereNotIn('status', ['closed', 'resolved']);
+                        ->whereNotIn('status', [Ticket::STATUS_CLOSED, Ticket::STATUS_RESOLVED]);
                 },
             ])
             ->get();
@@ -720,7 +720,7 @@ class AssignmentController extends Controller
      */
     private function calculateAvgResolutionTime($tickets)
     {
-        $resolvedTickets = $tickets->whereIn('status', ['resolved', 'closed'])
+        $resolvedTickets = $tickets->whereIn('status', [Ticket::STATUS_RESOLVED, Ticket::STATUS_CLOSED])
             ->filter(function ($ticket) {
                 return $ticket->resolved_at;
             });

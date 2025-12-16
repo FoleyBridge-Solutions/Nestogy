@@ -2,13 +2,13 @@
 
 namespace App\Domains\Ticket\Controllers;
 
+use App\Domains\Core\Models\User;
 use App\Domains\Ticket\Models\Ticket;
 use App\Domains\Ticket\Models\TicketAssignment;
 use App\Domains\Ticket\Models\TicketComment;
 use App\Domains\Ticket\Models\TicketWatcher;
 use App\Domains\Ticket\Requests\AssignTicketRequest;
 use App\Http\Controllers\Controller;
-use App\Domains\Core\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;

@@ -3,10 +3,8 @@
 namespace App\Domains\Ticket\Services;
 
 use App\Domains\Ticket\Models\Ticket;
-use App\Domains\Ticket\Models\TicketTimeEntry;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 
 class ResolutionEstimateService
 {

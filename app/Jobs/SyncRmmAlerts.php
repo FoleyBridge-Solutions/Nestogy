@@ -2,11 +2,11 @@
 
 namespace App\Jobs;
 
+use App\Domains\Client\Models\Client;
 use App\Domains\Integration\Models\RMMAlert;
 use App\Domains\Integration\Models\RmmIntegration;
 use App\Domains\Integration\Services\RmmServiceFactory;
 use App\Domains\Ticket\Models\Ticket;
-use App\Domains\Client\Models\Client;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
@@ -227,7 +227,7 @@ class SyncRmmAlerts implements ShouldQueue
                 'subject' => $this->generateTicketSubject($alertData),
                 'description' => $this->generateTicketDescription($alertData),
                 'priority' => $this->mapSeverityToPriority($alertData['severity']),
-                'status' => 'new',
+                'status' => Ticket::STATUS_NEW,
                 'created_by' => 1, // System user
                 'source' => 'RMM Integration',
                 'category' => 'Infrastructure',

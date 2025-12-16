@@ -5,11 +5,10 @@ namespace App\Domains\Ticket\Models;
 use App\Domains\Asset\Models\Asset;
 use App\Domains\Client\Models\Client;
 use App\Domains\Client\Models\Contact;
-use App\Domains\Financial\Models\Invoice;
 use App\Domains\Client\Models\Location;
-use App\Domains\Project\Models\Project;
-
 use App\Domains\Core\Models\User;
+use App\Domains\Financial\Models\Invoice;
+use App\Domains\Project\Models\Project;
 use App\Domains\Project\Models\Vendor;
 use App\Traits\BelongsToCompany;
 use App\Traits\HasAIAnalysis;
@@ -147,41 +146,80 @@ class Ticket extends Model
 
     const PRIORITY_CRITICAL = 'Critical';
 
+    const ALL_PRIORITIES = [
+        self::PRIORITY_LOW,
+        self::PRIORITY_MEDIUM,
+        self::PRIORITY_HIGH,
+        self::PRIORITY_CRITICAL,
+    ];
+
     /**
-     * Status constants
+     * Status constants (normalized to lowercase with underscores)
      */
-    const STATUS_OPEN = 'Open';
+    const STATUS_NEW = 'new';
 
-    const STATUS_IN_PROGRESS = 'In Progress';
+    const STATUS_OPEN = 'open';
 
-    const STATUS_CLOSED = 'Closed';
+    const STATUS_IN_PROGRESS = 'in_progress';
 
-    const STATUS_ON_HOLD = 'On Hold';
+    const STATUS_PENDING = 'pending';
 
-    const STATUS_WAITING = 'Waiting';
+    const STATUS_ON_HOLD = 'on_hold';
 
-    const STATUS_RESOLVED = 'Resolved';
+    const STATUS_WAITING = 'waiting';
 
-    const STATUS_CANCELLED = 'Cancelled';
+    const STATUS_RESOLVED = 'resolved';
 
-    const STATUS_CANCELED = 'Canceled'; // Alternate spelling
+    const STATUS_CLOSED = 'closed';
+
+    const STATUS_CANCELLED = 'cancelled';
+
+    /**
+     * All valid statuses for validation
+     */
+    const ALL_STATUSES = [
+        self::STATUS_NEW,
+        self::STATUS_OPEN,
+        self::STATUS_IN_PROGRESS,
+        self::STATUS_PENDING,
+        self::STATUS_ON_HOLD,
+        self::STATUS_WAITING,
+        self::STATUS_RESOLVED,
+        self::STATUS_CLOSED,
+        self::STATUS_CANCELLED,
+    ];
 
     /**
      * Status groupings for filtering
      */
     const ACTIVE_STATUSES = [
-        'open', 'Open',
-        'in-progress', 'In-Progress', 'In Progress',
-        'in_progress', 'In_progress',
-        'waiting', 'Waiting',
-        'on-hold', 'On-Hold', 'On Hold',
+        self::STATUS_NEW,
+        self::STATUS_OPEN,
+        self::STATUS_IN_PROGRESS,
+        self::STATUS_PENDING,
+        self::STATUS_ON_HOLD,
+        self::STATUS_WAITING,
     ];
 
     const HISTORICAL_STATUSES = [
-        'resolved', 'Resolved',
-        'closed', 'Closed',
-        'cancelled', 'Cancelled',
-        'canceled', 'Canceled',
+        self::STATUS_RESOLVED,
+        self::STATUS_CLOSED,
+        self::STATUS_CANCELLED,
+    ];
+
+    /**
+     * Human-readable status labels
+     */
+    const STATUS_LABELS = [
+        self::STATUS_NEW => 'New',
+        self::STATUS_OPEN => 'Open',
+        self::STATUS_IN_PROGRESS => 'In Progress',
+        self::STATUS_PENDING => 'Pending',
+        self::STATUS_ON_HOLD => 'On Hold',
+        self::STATUS_WAITING => 'Waiting',
+        self::STATUS_RESOLVED => 'Resolved',
+        self::STATUS_CLOSED => 'Closed',
+        self::STATUS_CANCELLED => 'Cancelled',
     ];
 
     /**
@@ -275,8 +313,6 @@ class Ticket extends Model
     {
         return $this->belongsTo(Invoice::class);
     }
-
-
 
     public function comments(): HasMany
     {
@@ -888,7 +924,7 @@ class Ticket extends Model
         }
 
         // Not billable
-        if (!$this->billable) {
+        if (! $this->billable) {
             return [
                 'status' => 'not_billable',
                 'label' => 'Non-Billable',
@@ -1047,23 +1083,44 @@ class Ticket extends Model
 
     public static function getAvailablePriorities(): array
     {
-        return [
-            self::PRIORITY_LOW,
-            self::PRIORITY_MEDIUM,
-            self::PRIORITY_HIGH,
-            self::PRIORITY_CRITICAL,
-        ];
+        return self::ALL_PRIORITIES;
     }
 
     public static function getAvailableStatuses(): array
     {
-        return [
-            self::STATUS_OPEN,
-            self::STATUS_IN_PROGRESS,
-            self::STATUS_ON_HOLD,
-            self::STATUS_WAITING,
-            self::STATUS_CLOSED,
-        ];
+        return self::ALL_STATUSES;
+    }
+
+    /**
+     * Get status label for display
+     */
+    public static function getStatusLabel(string $status): string
+    {
+        return self::STATUS_LABELS[$status] ?? ucfirst(str_replace('_', ' ', $status));
+    }
+
+    /**
+     * Get all statuses with their labels for dropdowns
+     */
+    public static function getStatusOptions(): array
+    {
+        return self::STATUS_LABELS;
+    }
+
+    /**
+     * Get validation rule string for status field
+     */
+    public static function getStatusValidationRule(): string
+    {
+        return 'in:'.implode(',', self::ALL_STATUSES);
+    }
+
+    /**
+     * Get validation rule string for priority field
+     */
+    public static function getPriorityValidationRule(): string
+    {
+        return 'in:'.implode(',', self::ALL_PRIORITIES);
     }
 
     public static function getAvailableSources(): array
@@ -1168,7 +1225,7 @@ class Ticket extends Model
 
             // Fire event when ticket is resolved
             if ($ticket->wasChanged('is_resolved')) {
-                if ($ticket->is_resolved && !$ticket->getOriginal('is_resolved')) {
+                if ($ticket->is_resolved && ! $ticket->getOriginal('is_resolved')) {
                     event(new \App\Events\TicketResolved($ticket));
                 }
             }

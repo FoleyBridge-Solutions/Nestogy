@@ -2,9 +2,9 @@
 
 namespace App\Domains\Ticket\Controllers;
 
+use App\Domains\Core\Models\User;
 use App\Domains\Ticket\Models\Ticket;
 use App\Http\Controllers\Controller;
-use App\Domains\Core\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
@@ -28,13 +28,13 @@ class TicketSearchController extends Controller
             $ticketsQuery->where('id', '!=', $exclude);
         }
 
-         $ticketsQuery->where(function ($q) use ($query) {
-             $q->whereRaw('CAST(number AS TEXT) LIKE ?', ["%{$query}%"])
-                 ->orWhere('subject', 'like', "%{$query}%")
-                 ->orWhereHas('client', function ($cq) use ($query) {
-                     $cq->where('name', 'like', "%{$query}%");
-                 });
-         });
+        $ticketsQuery->where(function ($q) use ($query) {
+            $q->whereRaw('CAST(number AS TEXT) LIKE ?', ["%{$query}%"])
+                ->orWhere('subject', 'like', "%{$query}%")
+                ->orWhereHas('client', function ($cq) use ($query) {
+                    $cq->where('name', 'like', "%{$query}%");
+                });
+        });
 
         $tickets = $ticketsQuery->orderBy('number', 'desc')
             ->limit(10)

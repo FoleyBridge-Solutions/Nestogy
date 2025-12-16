@@ -119,6 +119,7 @@ class TicketComment extends Model
     {
         if ($this->author_type === self::AUTHOR_CUSTOMER) {
             $contact = \App\Domains\Client\Models\ClientContact::find($this->author_id);
+
             return $contact ? $contact->name : 'Customer';
         }
 

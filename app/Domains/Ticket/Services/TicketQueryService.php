@@ -4,6 +4,7 @@ namespace App\Domains\Ticket\Services;
 
 use App\Domains\Client\Models\Client;
 use App\Domains\Core\Models\User;
+use App\Domains\Ticket\Models\Ticket;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
@@ -63,9 +64,9 @@ class TicketQueryService
     {
         if ($request->boolean('overdue')) {
             $query->where('scheduled_at', '<', now())
-                  ->where('status', '!=', 'closed')
-                  ->where('status', '!=', 'resolved')
-                  ->whereNotNull('scheduled_at');
+                ->where('status', '!=', 'closed')
+                ->where('status', '!=', 'resolved')
+                ->whereNotNull('scheduled_at');
         }
 
         if ($request->boolean('unassigned')) {
@@ -136,8 +137,8 @@ class TicketQueryService
     public function getFilterOptions(int $companyId): array
     {
         return [
-            'statuses' => ['new', 'open', 'in_progress', 'pending', 'resolved', 'closed'],
-            'priorities' => ['Low', 'Medium', 'High', 'Critical'],
+            'statuses' => Ticket::getAvailableStatuses(),
+            'priorities' => Ticket::getAvailablePriorities(),
             'clients' => Client::where('company_id', $companyId)
                 ->where('status', 'active')
                 ->orderBy('name')

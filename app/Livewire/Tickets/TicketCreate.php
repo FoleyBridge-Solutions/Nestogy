@@ -2,10 +2,12 @@
 
 namespace App\Livewire\Tickets;
 
-use App\Domains\Client\Models\Client;
 use App\Domains\Asset\Models\Asset;
+use App\Domains\Client\Models\Client;
 use App\Domains\Client\Models\Contact;
 use App\Domains\Core\Models\User;
+use App\Domains\Ticket\Models\Ticket;
+use App\Domains\Ticket\Repositories\TicketRepository;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
@@ -25,7 +27,19 @@ class TicketCreate extends Component
 
     public $details = '';
 
-    public $status = 'new';
+    public $status;
+
+    protected TicketRepository $ticketRepository;
+
+    public function __construct()
+    {
+        $this->status = Ticket::STATUS_NEW;
+    }
+
+    public function boot(TicketRepository $ticketRepository)
+    {
+        $this->ticketRepository = $ticketRepository;
+    }
 
     public function mount()
     {
@@ -47,11 +61,11 @@ class TicketCreate extends Component
             'contact_ids' => 'nullable|array',
             'contact_ids.*' => 'exists:contacts,id',
             'subject' => 'required|string|min:5|max:255',
-            'priority' => 'required|in:Low,Medium,High,Critical',
+            'priority' => 'required|'.Ticket::getPriorityValidationRule(),
             'assigned_to' => 'nullable|exists:users,id',
             'asset_id' => 'nullable|exists:assets,id',
             'details' => 'required|string|min:10',
-            'status' => 'required|string|in:Open,In Progress,On Hold,Resolved,Closed',
+            'status' => 'required|string|'.Ticket::getStatusValidationRule(),
         ];
     }
 
@@ -72,7 +86,11 @@ class TicketCreate extends Component
         try {
             $this->validate();
 
+            $ticketNumber = $this->ticketRepository->getNextTicketNumber(Auth::user()->company_id);
+
             $ticket = \App\Domains\Ticket\Models\Ticket::create([
+                'company_id' => Auth::user()->company_id,
+                'number' => $ticketNumber,
                 'client_id' => $this->client_id,
                 'contact_id' => ! empty($this->contact_ids) ? $this->contact_ids[0] : null,
                 'subject' => $this->subject,
@@ -81,7 +99,6 @@ class TicketCreate extends Component
                 'asset_id' => $this->asset_id,
                 'details' => $this->details,
                 'status' => $this->status,
-                'company_id' => Auth::user()->company_id,
                 'created_by' => Auth::id(),
             ]);
 

@@ -91,7 +91,7 @@ class RecurringTicketService
             'subject' => $processedTemplate['subject'],
             'description' => $processedTemplate['description'],
             'priority' => $recurringTicket->template->priority ?? 'Medium',
-            'status' => 'new',
+            'status' => Ticket::STATUS_NEW,
             'assigned_to' => $recurringTicket->assigned_to,
             'created_by' => 1, // System user
             'recurring_ticket_id' => $recurringTicket->id,

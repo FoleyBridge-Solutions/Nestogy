@@ -26,7 +26,7 @@
                     
                     <!-- Status, Priority & Category Badges -->
                     <div class="flex items-center gap-3">
-                        <x-status-badge :model="$ticket" :status="$ticket->status ?? 'Open'">
+                        <x-status-badge :model="$ticket" :status="$ticket->status ?? Ticket::STATUS_OPEN">
                             <i class="fas fa-circle text-xs mr-1"></i>
                         </x-status-badge>
                         
@@ -46,7 +46,9 @@
                 <!-- Progress Indicator -->
                 <div class="hidden lg:block">
                     @php
-                        $statuses = ['Open', 'In Progress', 'Resolved', 'Closed'];
+                        use App\Domains\Ticket\Models\Ticket;
+                        $statuses = [Ticket::STATUS_OPEN, Ticket::STATUS_IN_PROGRESS, Ticket::STATUS_RESOLVED, Ticket::STATUS_CLOSED];
+                        $statusLabels = [Ticket::STATUS_OPEN => 'Open', Ticket::STATUS_IN_PROGRESS => 'In Progress', Ticket::STATUS_RESOLVED => 'Resolved', Ticket::STATUS_CLOSED => 'Closed'];
                         $currentIndex = array_search($ticket->status, $statuses);
                         $currentIndex = $currentIndex !== false ? $currentIndex : 0;
                     @endphp
@@ -107,7 +109,7 @@
                 }
             @endphp
             
-            @if(in_array($ticket->status, ['Open', 'In Progress', 'Waiting']))
+            @if(in_array($ticket->status, [Ticket::STATUS_OPEN, Ticket::STATUS_IN_PROGRESS, Ticket::STATUS_WAITING]))
                 <div class="mt-6 flex items-center {{ $now > $slaDeadline ? 'text-red-600 dark:text-red-400' : 'text-gray-600 dark:text-gray-400' }}">
                     @if($now > $slaDeadline)
                         <i class="fas fa-exclamation-triangle mr-2"></i>
@@ -197,7 +199,7 @@
             </flux:card>
 
             <!-- Reply Form -->
-            @if(!in_array($ticket->status, ['Closed', 'Resolved']))
+            @if(!in_array($ticket->status, [Ticket::STATUS_CLOSED, Ticket::STATUS_RESOLVED]))
                 <flux:card id="reply">
                     <flux:heading size="lg" class="mb-4">
                         <i class="fas fa-reply mr-2"></i>

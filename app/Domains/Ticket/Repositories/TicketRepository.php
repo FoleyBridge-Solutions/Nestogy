@@ -212,12 +212,12 @@ class TicketRepository
 
         return [
             'total' => $baseQuery->count(),
-            'open' => (clone $baseQuery)->whereIn('status', ['new', 'open', 'in_progress'])->count(),
-            'pending' => (clone $baseQuery)->where('status', 'pending')->count(),
-            'resolved' => (clone $baseQuery)->where('status', 'resolved')->count(),
-            'closed' => (clone $baseQuery)->where('status', 'closed')->count(),
+            'open' => (clone $baseQuery)->whereIn('status', [Ticket::STATUS_NEW, Ticket::STATUS_OPEN, Ticket::STATUS_IN_PROGRESS])->count(),
+            'pending' => (clone $baseQuery)->where('status', Ticket::STATUS_PENDING)->count(),
+            'resolved' => (clone $baseQuery)->where('status', Ticket::STATUS_RESOLVED)->count(),
+            'closed' => (clone $baseQuery)->where('status', Ticket::STATUS_CLOSED)->count(),
             'unassigned' => (clone $baseQuery)->whereNull('assigned_to')
-                ->whereNotIn('status', ['closed', 'resolved'])->count(),
+                ->whereNotIn('status', [Ticket::STATUS_CLOSED, Ticket::STATUS_RESOLVED])->count(),
             'overdue_sla' => $this->getOverdueBySla($companyId)->count(),
         ];
     }

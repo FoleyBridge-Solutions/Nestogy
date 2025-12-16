@@ -229,7 +229,7 @@
                         <flux:table.cell>
                             <div class="flex gap-2">
                                 <flux:button size="sm" variant="ghost" href="{{ route('client.tickets.show', $ticket->id) }}" icon="eye" />
-                                @if(in_array($ticket->status, ['Open', 'Awaiting Customer', 'In Progress']))
+                                @if(in_array($ticket->status, [\App\Domains\Ticket\Models\Ticket::STATUS_OPEN, \App\Domains\Ticket\Models\Ticket::STATUS_IN_PROGRESS, \App\Domains\Ticket\Models\Ticket::STATUS_PENDING]))
                                     <flux:button size="sm" variant="ghost" href="{{ route('client.tickets.show', $ticket->id) }}#reply" icon="arrow-uturn-left" />
                                 @endif
                             </div>

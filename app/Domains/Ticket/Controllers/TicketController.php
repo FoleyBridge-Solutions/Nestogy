@@ -2,7 +2,9 @@
 
 namespace App\Domains\Ticket\Controllers;
 
+use App\Domains\Client\Models\Client;
 use App\Domains\Core\Controllers\Traits\UsesSelectedClient;
+use App\Domains\Core\Models\User;
 use App\Domains\Ticket\Models\Ticket;
 use App\Domains\Ticket\Models\TicketWatcher;
 use App\Domains\Ticket\Repositories\TicketRepository;
@@ -10,8 +12,6 @@ use App\Domains\Ticket\Requests\UpdateTicketRequest;
 use App\Domains\Ticket\Services\TicketQueryService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreTicketRequest;
-use App\Domains\Client\Models\Client;
-use App\Domains\Core\Models\User;
 use App\Traits\FiltersClientsByAssignment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -83,8 +83,8 @@ class TicketController extends Controller
             $selectedClient = null;
         }
 
-        $priorities = ['Low', 'Medium', 'High', 'Critical'];
-        $statuses = ['new', 'open', 'in_progress', 'pending', 'resolved', 'closed'];
+        $priorities = Ticket::getAvailablePriorities();
+        $statuses = Ticket::getAvailableStatuses();
 
         return view('tickets.create', compact(
             'clients', 'assignees', 'selectedClient', 'priorities', 'statuses'
@@ -108,7 +108,7 @@ class TicketController extends Controller
                     'subject' => $request->subject,
                     'details' => $request->details,
                     'priority' => $request->priority,
-                    'status' => $request->status ?? 'new',
+                    'status' => $request->status ?? Ticket::STATUS_NEW,
                     'assigned_to' => $request->assigned_to,
                     'created_by' => $user->id,
                     'scheduled_at' => $request->scheduled_at,
@@ -246,8 +246,8 @@ class TicketController extends Controller
             ->orderBy('name')
             ->get();
 
-        $priorities = ['Low', 'Medium', 'High', 'Critical'];
-        $statuses = ['new', 'open', 'in_progress', 'pending', 'resolved', 'closed'];
+        $priorities = Ticket::getAvailablePriorities();
+        $statuses = Ticket::getAvailableStatuses();
 
         return view('tickets.edit', compact('ticket', 'clients', 'assignees', 'priorities', 'statuses'));
     }

@@ -1,11 +1,9 @@
 <?php
 
 namespace App\Domains\Ticket\Models;
-use App\Domains\Core\Models\User;
 
 use App\Domains\Client\Models\Client;
-
-use App\Domains\Ticket\Models\Ticket;
+use App\Domains\Core\Models\User;
 use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;

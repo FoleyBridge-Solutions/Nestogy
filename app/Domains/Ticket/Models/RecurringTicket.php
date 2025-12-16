@@ -20,7 +20,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class RecurringTicket extends Model
 {
-    use BelongsToCompany, HasFactory, SoftDeletes, HasStatusColors;
+    use BelongsToCompany, HasFactory, HasStatusColors, SoftDeletes;
 
     protected $fillable = [
         'company_id',

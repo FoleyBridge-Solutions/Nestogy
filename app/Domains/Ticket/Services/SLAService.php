@@ -2,9 +2,9 @@
 
 namespace App\Domains\Ticket\Services;
 
-use App\Domains\Ticket\Models\SLA;
 use App\Domains\Client\Models\Client;
 use App\Domains\Company\Models\Company;
+use App\Domains\Ticket\Models\SLA;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 

@@ -3,12 +3,12 @@
 namespace App\Domains\Ticket\Services;
 
 use App\Domains\Contract\Models\Contract;
+use App\Domains\Core\Models\User;
+use App\Domains\Financial\Models\Invoice;
+use App\Domains\Financial\Models\InvoiceItem;
 use App\Domains\Product\Services\RateConfigurationService;
 use App\Domains\Ticket\Models\Ticket;
 use App\Domains\Ticket\Models\TicketTimeEntry;
-use App\Domains\Financial\Models\Invoice;
-use App\Domains\Financial\Models\InvoiceItem;
-use App\Domains\Core\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -67,10 +67,10 @@ class TimeTrackingService
     public function startTracking(Ticket $ticket, User $technician, array $options = []): TicketTimeEntry
     {
         // Ensure ticket has client relationship loaded
-        if (!$ticket->relationLoaded('client')) {
+        if (! $ticket->relationLoaded('client')) {
             $ticket->load('client');
         }
-        
+
         // Check if there's already an active timer FOR THIS SPECIFIC TICKET
         $activeEntry = $this->getActiveTimerForTicket($technician, $ticket);
         if ($activeEntry) {

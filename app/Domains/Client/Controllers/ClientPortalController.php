@@ -10,6 +10,8 @@ use App\Domains\Contract\Models\ContractSignature;
 use App\Domains\Financial\Models\Invoice;
 use App\Domains\Financial\Models\Payment;
 use App\Domains\Security\Services\DigitalSignatureService;
+use App\Domains\Ticket\Models\Ticket;
+use App\Domains\Ticket\Repositories\TicketRepository;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -26,9 +28,14 @@ class ClientPortalController extends Controller
 
     protected DigitalSignatureService $signatureService;
 
-    public function __construct(DigitalSignatureService $signatureService)
-    {
+    protected TicketRepository $ticketRepository;
+
+    public function __construct(
+        DigitalSignatureService $signatureService,
+        TicketRepository $ticketRepository
+    ) {
         $this->signatureService = $signatureService;
+        $this->ticketRepository = $ticketRepository;
         $this->middleware('guest:client')->only(['showLogin', 'login']);
         $this->middleware('auth:client')->except(['showLogin', 'login']);
     }
@@ -983,16 +990,19 @@ class ClientPortalController extends Controller
                 'has_client' => $contact->client ? true : false,
             ]);
 
+            $ticketNumber = $this->ticketRepository->getNextTicketNumber($contact->company_id);
+
             $ticket = $contact->client->tickets()->create([
+                'number' => $ticketNumber,
                 'subject' => $request->subject,
                 'details' => $request->details,
                 'priority' => $request->priority,
                 'category' => $request->category,
-                'status' => 'Open',
+                'status' => Ticket::STATUS_OPEN,
                 'contact_id' => $contact->id,
                 'company_id' => $contact->company_id,
-                'source' => 'Portal',
-                'created_by' => $contact->id, // Use the contact ID who created the ticket
+                'source' => Ticket::SOURCE_PORTAL,
+                'created_by' => null, // Portal tickets don't have a user creator
             ]);
 
             \Log::info('Ticket created successfully', ['ticket_id' => $ticket->id]);

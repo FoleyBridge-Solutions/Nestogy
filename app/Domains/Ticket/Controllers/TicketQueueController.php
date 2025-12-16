@@ -138,7 +138,7 @@ class TicketQueueController extends Controller
         $metrics = [
             'total_tickets' => Ticket::where('company_id', $companyId)->count(),
             'open_tickets' => Ticket::where('company_id', $companyId)
-                ->whereIn('status', ['open', 'in_progress'])->count(),
+                ->whereIn('status', [Ticket::STATUS_OPEN, Ticket::STATUS_IN_PROGRESS])->count(),
             'avg_resolution_time' => Ticket::where('company_id', $companyId)
                 ->whereNotNull('resolved_at')
                 ->selectRaw('AVG(EXTRACT(EPOCH FROM (resolved_at - created_at)) / 3600) as avg_hours')

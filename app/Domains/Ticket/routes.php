@@ -87,7 +87,6 @@ Route::middleware(['web', 'auth', 'verified'])->group(function () {
         Route::get('api/current-rate-info', [\App\Domains\Ticket\Controllers\TicketTimeTrackingController::class, 'getCurrentRateInfo'])->name('api.current-rate-info');
         Route::get('api/time-templates', [\App\Domains\Ticket\Controllers\TicketTimeTrackingController::class, 'getTimeTemplates'])->name('api.time-templates');
 
-
     });
 
     // Main tickets resource routes (must come after specific prefixed routes)

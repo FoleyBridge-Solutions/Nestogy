@@ -2,10 +2,10 @@
 
 namespace App\Domains\Ticket\Services;
 
+use App\Domains\Core\Models\User;
 use App\Domains\Ticket\Models\Ticket;
 use App\Domains\Ticket\Models\TicketStatusTransition;
 use App\Domains\Ticket\Models\TicketWorkflow;
-use App\Domains\Core\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 
