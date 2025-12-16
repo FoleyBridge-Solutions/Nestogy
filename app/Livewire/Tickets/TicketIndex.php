@@ -3,9 +3,9 @@
 namespace App\Livewire\Tickets;
 
 use App\Domains\Client\Models\Client;
+use App\Domains\Core\Models\User;
 use App\Domains\Ticket\Models\Ticket;
 use App\Livewire\BaseIndexComponent;
-use App\Domains\Core\Models\User;
 use Illuminate\Support\Facades\Auth;
 
 class TicketIndex extends BaseIndexComponent
@@ -46,7 +46,7 @@ class TicketIndex extends BaseIndexComponent
         }
 
         if (! $this->filter) {
-            $this->selectedStatuses = $this->selectedStatuses ?: ['open', 'in_progress', 'waiting', 'on_hold'];
+            $this->selectedStatuses = $this->selectedStatuses ?: Ticket::ACTIVE_STATUSES;
             $this->selectedPriorities = $this->selectedPriorities ?: [];
             $this->selectedAssignees = $this->selectedAssignees ?: [];
             $this->selectedClients = $this->selectedClients ?: [];
@@ -285,16 +285,11 @@ class TicketIndex extends BaseIndexComponent
             ->orderBy('name')
             ->get();
 
-        // All available statuses
-        $statuses = ['open', 'in_progress', 'waiting', 'on_hold', 'resolved', 'closed', 'cancelled'];
+        // All available statuses from model constants
+        $statuses = Ticket::ALL_STATUSES;
 
         // Use model constants for priorities
-        $priorities = [
-            Ticket::PRIORITY_LOW,
-            Ticket::PRIORITY_MEDIUM,
-            Ticket::PRIORITY_HIGH,
-            Ticket::PRIORITY_CRITICAL,
-        ];
+        $priorities = Ticket::ALL_PRIORITIES;
 
         return view('livewire.tickets.ticket-index', [
             'tickets' => $tickets,
@@ -339,7 +334,7 @@ class TicketIndex extends BaseIndexComponent
     public function showAllTickets()
     {
         // Select all statuses to show all tickets
-        $this->selectedStatuses = ['open', 'in_progress', 'waiting', 'on_hold', 'resolved', 'closed', 'cancelled'];
+        $this->selectedStatuses = Ticket::ALL_STATUSES;
         $this->resetPage();
     }
 }
