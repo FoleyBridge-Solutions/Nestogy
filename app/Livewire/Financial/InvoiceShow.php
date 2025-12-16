@@ -305,14 +305,7 @@ class InvoiceShow extends Component
     #[Computed]
     public function statusColor()
     {
-        return match ($this->invoice->status) {
-            'Draft' => 'zinc',
-            'Sent' => 'blue',
-            'Paid' => 'green',
-            'Overdue' => 'red',
-            'Cancelled' => 'gray',
-            default => 'zinc'
-        };
+        return $this->invoice->status_color;
     }
 
     #[Computed]

@@ -802,17 +802,11 @@ class TaskController extends Controller
     protected function getTaskColor(Task $task): string
     {
         if ($task->isOverdue()) {
-            return '#dc3545'; // Red
+            return \App\Helpers\StatusColorHelper::conditional('overdue');
         }
 
-        return match ($task->priority) {
-            Task::PRIORITY_CRITICAL => '#dc3545',
-            Task::PRIORITY_URGENT => '#fd7e14',
-            Task::PRIORITY_HIGH => '#ffc107',
-            Task::PRIORITY_NORMAL => '#28a745',
-            Task::PRIORITY_LOW => '#6c757d',
-            default => '#007bff',
-        };
+        $fluxColor = \App\Helpers\StatusColorHelper::priority($task->priority ?? 'normal');
+        return \App\Helpers\StatusColorHelper::toHex($fluxColor);
     }
 
     /**

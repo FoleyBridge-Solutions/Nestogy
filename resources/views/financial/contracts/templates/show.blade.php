@@ -82,7 +82,7 @@ $pageActions = [
             <!-- Status Badge -->
             <div class="flex items-center gap-3">
                 <span class="inline-flex items-center px-6 py-1 rounded-full text-sm font-medium
-                    @if($template->status === 'active') bg-green-100 text-green-800
+                    @if($template->status === 'active') bg-green-100 text-green-600
                     @elseif($template->status === 'draft') bg-yellow-100 text-yellow-800
                     @else bg-gray-100 text-gray-800 @endif">
                     {{ ucfirst($template->status) }}
@@ -385,9 +385,9 @@ $pageActions = [
                                         <svg class="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                                         </svg>
-                                        <span class="text-green-800 font-medium text-sm">Asset Auto-Assignment</span>
+                                        <span class="text-green-600 font-medium text-sm">Asset Auto-Assignment</span>
                                     </div>
-                                    <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Active</span>
+                                    <span class="bg-green-100 text-green-600 text-xs px-2 py-1 rounded-full">Active</span>
                                 </div>
                                 <p class="text-sm text-green-700">Automatically assigns new client assets to contracts using this template</p>
                             </div>

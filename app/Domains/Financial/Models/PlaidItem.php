@@ -4,6 +4,7 @@ namespace App\Domains\Financial\Models;
 
 use App\Domains\Company\Models\Account;
 use App\Traits\BelongsToCompany;
+use App\Traits\HasStatusColors;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -19,7 +20,7 @@ use Illuminate\Support\Facades\Crypt;
  */
 class PlaidItem extends Model
 {
-    use BelongsToCompany, HasFactory, SoftDeletes;
+    use BelongsToCompany, HasFactory, SoftDeletes, HasStatusColors;
 
     protected $fillable = [
         'company_id',
@@ -220,7 +221,7 @@ class PlaidItem extends Model
      */
     public function scopeNeedingSync($query)
     {
-        return $query->where('status', self::STATUS_ACTIVE')
+        return $query->where('status', self::STATUS_ACTIVE)
             ->where(function ($q) {
                 $q->whereNull('last_synced_at')
                     ->orWhere('last_synced_at', '<', now()->subHour());

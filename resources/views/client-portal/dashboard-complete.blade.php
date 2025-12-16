@@ -252,7 +252,7 @@
                                         <td class="px-6 py-6 portal-text-sm">{{ ucwords(str_replace('_', ' ', $contract->contract_type)) }}</td>
                                         <td class="px-6 py-6">
                                             <span class="inline-flex px-2 py-1 portal-text-xs portal-font-medium rounded-full 
-                                                @if($contract->status === 'active') bg-green-100 text-green-800
+                                                @if($contract->status === 'active') bg-green-100 text-green-600
                                                 @elseif($contract->status === 'pending') bg-yellow-100 text-yellow-800
                                                @else bg-gray-100 text-gray-800 @endif">
                                                 {{ ucfirst($contract->status) }}
@@ -302,7 +302,7 @@
                                         <td class="px-6 py-6 portal-text-sm">{{ Str::limit($ticket->subject, 40) }}</td>
                                         <td class="px-6 py-6">
                                             <span class="inline-flex px-2 py-1 portal-text-xs portal-font-medium rounded-full
-                                                @if($ticket->priority === 'critical') bg-red-100 text-red-800
+                                                @if($ticket->priority === 'critical') bg-red-100 text-red-600
                                                 @elseif($ticket->priority === 'high') bg-orange-100 text-orange-800
                                                 @elseif($ticket->priority === 'normal') bg-blue-100 text-blue-800
                                                @else bg-gray-100 text-gray-800 @endif">
@@ -311,9 +311,9 @@
                                         </td>
                                         <td class="px-6 py-6">
                                             <span class="inline-flex px-2 py-1 portal-text-xs portal-font-medium rounded-full
-                                                @if($ticket->status === 'open') bg-red-100 text-red-800
+                                                @if($ticket->status === 'open') bg-red-100 text-red-600
                                                 @elseif($ticket->status === 'in_progress') bg-yellow-100 text-yellow-800
-                                                @elseif($ticket->status === 'resolved') bg-green-100 text-green-800
+                                                @elseif($ticket->status === 'resolved') bg-green-100 text-green-600
                                                @else bg-gray-100 text-gray-800 @endif">
                                                 {{ ucwords(str_replace('_', ' ', $ticket->status)) }}
                                             </span>
@@ -361,7 +361,7 @@
                                         <td class="px-6 py-6 portal-text-sm">{{ $asset->type }}</td>
                                         <td class="px-6 py-6">
                                             <span class="inline-flex px-2 py-1 portal-text-xs portal-font-medium rounded-full
-                                                @if($asset->status === 'active') bg-green-100 text-green-800
+                                                @if($asset->status === 'active') bg-green-100 text-green-600
                                                 @elseif($asset->status === 'maintenance') bg-yellow-100 text-yellow-800
                                                @else bg-gray-100 text-gray-800 @endif">
                                                 {{ ucfirst($asset->status ?? 'unknown') }}
@@ -443,9 +443,9 @@
                         <div class="portal-flex portal-justify-between portal-items-center">
                             <span class="portal-text-sm text-gray-600">Open Tickets</span>
                             <span class="inline-flex px-2 py-1 portal-text-xs portal-font-medium rounded-full 
-                                @if(($ticketStats['open_tickets'] ?? 0) > 5) bg-red-100 text-red-800 
+                                @if(($ticketStats['open_tickets'] ?? 0) > 5) bg-red-100 text-red-600 
                                 @elseif(($ticketStats['open_tickets'] ?? 0) > 0) bg-yellow-100 text-yellow-800 
-                               @else bg-green-100 text-green-800 @endif">
+                               @else bg-green-100 text-green-600 @endif">
                                 {{ $ticketStats['open_tickets'] ?? 0 }} Tickets
                             </span>
                         </div>
@@ -517,11 +517,11 @@
 
 /* Badge colors for status indicators */
 .bg-green-100 { background-color: #dcfce7; }
-.text-green-800 { color: #166534; }
+.text-green-600 { color: #166534; }
 .bg-yellow-100 { background-color: #fef3c7; }
 .text-yellow-800 { color: #92400e; }
 .bg-red-100 { background-color: #fee2e2; }
-.text-red-800 { color: #991b1b; }
+.text-red-600 { color: #991b1b; }
 .bg-blue-100 { background-color: #dbeafe; }
 .text-blue-800 { color: #1e40af; }
 .bg-orange-100 { background-color: #fed7aa; }

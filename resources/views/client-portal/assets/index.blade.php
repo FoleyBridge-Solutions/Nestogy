@@ -139,16 +139,7 @@
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                @php
-                                    $statusVariant = match($asset->status) {
-                                        'active', 'deployed' => 'success',
-                                        'in_stock' => 'secondary',
-                                        'maintenance', 'repair' => 'warning',
-                                        'retired', 'disposed' => 'danger',
-                                        default => 'secondary'
-                                    };
-                                @endphp
-                                <flux:badge variant="{{ $statusVariant }}">
+                                <flux:badge size="sm" :color="$asset->status === 'active' ? 'green' : ($asset->status === 'inactive' ? 'gray' : 'amber')">
                                     {{ ucfirst($asset->status ?? 'unknown') }}
                                 </flux:badge>
                             </td>

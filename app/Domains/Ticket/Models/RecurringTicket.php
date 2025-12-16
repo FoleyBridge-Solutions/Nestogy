@@ -4,6 +4,7 @@ namespace App\Domains\Ticket\Models;
 
 use App\Domains\Client\Models\Client;
 use App\Traits\BelongsToCompany;
+use App\Traits\HasStatusColors;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -19,7 +20,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class RecurringTicket extends Model
 {
-    use BelongsToCompany, HasFactory, SoftDeletes;
+    use BelongsToCompany, HasFactory, SoftDeletes, HasStatusColors;
 
     protected $fillable = [
         'company_id',

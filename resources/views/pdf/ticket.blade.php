@@ -46,14 +46,15 @@
             font-weight: bold;
             text-transform: uppercase;
         }
-        .status-open { background-color: #dc3545; color: white; }
-        .status-in-progress { background-color: #ffc107; color: black; }
-        .status-resolved { background-color: #28a745; color: white; }
-        .status-closed { background-color: #6c757d; color: white; }
-        .priority-low { color: #28a745; }
-        .priority-medium { color: #ffc107; }
-        .priority-high { color: #fd7e14; }
-        .priority-critical { color: #dc3545; }
+        .status-open { background-color: #eab308; color: black; }
+        .status-in-progress { background-color: #3b82f6; color: white; }
+        .status-resolved { background-color: #10b981; color: white; }
+        .status-closed { background-color: #71717a; color: white; }
+        .status-pending { background-color: #f59e0b; color: black; }
+        .priority-low { color: #6b7280; }
+        .priority-medium { color: #eab308; }
+        .priority-high { color: #f97316; }
+        .priority-critical { color: #ef4444; }
         .ticket-details {
             display: flex;
             justify-content: space-between;

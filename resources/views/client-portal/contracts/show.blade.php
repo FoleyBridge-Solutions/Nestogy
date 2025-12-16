@@ -25,18 +25,7 @@
     <flux:card>
         <div class="text-center">
             <div class="text-sm text-gray-600 dark:text-gray-400 mb-2">Status</div>
-            @php
-                $statusVariant = match($contract->status) {
-                    'active' => 'success',
-                    'pending' => 'warning',
-                    'expired', 'terminated' => 'danger',
-                    'draft' => 'secondary',
-                    default => 'secondary'
-                };
-            @endphp
-            <flux:badge variant="{{ $statusVariant }}" size="lg">
-                {{ ucfirst($contract->status ?? 'pending') }}
-            </flux:badge>
+            <x-status-badge type="contract" :status="$contract->status ?? 'pending'" size="lg" />
         </div>
     </flux:card>
 
@@ -59,23 +48,8 @@
     </flux:card>
 </div>
 
-<!-- Pending Signatures Alert -->
-@if($pendingSignatures->count() > 0)
-    <flux:card class="mb-6 border-yellow-500">
-        <div class="flex items-center gap-4">
-            <i class="fas fa-signature fa-2x text-yellow-600"></i>
-            <div class="flex-1">
-                <flux:heading size="lg">Signature Required</flux:heading>
-                <p class="text-gray-600 dark:text-gray-400">This contract requires {{ $pendingSignatures->count() }} signature(s) to be completed.</p>
-            </div>
-            @if(Route::has('client.contracts.sign'))
-                <flux:button href="{{ route('client.contracts.sign', $contract->id) }}" variant="primary" icon="pencil">
-                    Sign Now
-                </flux:button>
-            @endif
-        </div>
-    </flux:card>
-@endif
+<!-- Contract Signature Component -->
+@livewire('portal.contract-signature', ['contract' => $contract])
 
 <!-- Contract Details -->
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -197,17 +171,7 @@
                                 <div class="font-semibold">{{ $signature->signer_name ?? 'Unknown' }}</div>
                                 <div class="text-gray-600 dark:text-gray-400">{{ $signature->signer_role ?? 'Signer' }}</div>
                             </div>
-                            @php
-                                $sigVariant = match($signature->status) {
-                                    'signed' => 'success',
-                                    'pending' => 'warning',
-                                    'declined' => 'danger',
-                                    default => 'secondary'
-                                };
-                            @endphp
-                            <flux:badge variant="{{ $sigVariant }}" size="sm">
-                                {{ ucfirst($signature->status ?? 'pending') }}
-                            </flux:badge>
+                            <x-status-badge type="contract" :status="$signature->status ?? 'pending'" size="sm" />
                         </div>
                     @endforeach
                 </div>

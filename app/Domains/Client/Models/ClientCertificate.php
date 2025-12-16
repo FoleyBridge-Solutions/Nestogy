@@ -3,13 +3,14 @@
 namespace App\Domains\Client\Models;
 
 use App\Traits\BelongsToCompany;
+use App\Traits\HasStatusColors;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ClientCertificate extends Model
 {
-    use BelongsToCompany, HasFactory, SoftDeletes;
+    use BelongsToCompany, HasFactory, SoftDeletes, HasStatusColors;
 
     protected $fillable = [
         'company_id',

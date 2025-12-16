@@ -238,7 +238,7 @@ $pageSubtitle = 'Get started by creating your first recurring billing service.';
                                             $billingTypeClasses = [
                                                 'flat' => 'bg-gray-100 text-gray-800',
                                                 'usage_based' => 'bg-blue-100 text-blue-800',
-                                                'tiered' => 'bg-green-100 text-green-800',
+                                                'tiered' => 'bg-green-100 text-green-600',
                                                 'hybrid' => 'bg-purple-100 text-purple-800',
                                                 'volume_discount' => 'bg-indigo-100 text-indigo-800',
                                             ];
@@ -267,11 +267,11 @@ $pageSubtitle = 'Get started by creating your first recurring billing service.';
                                     </td>
                                     <td class="px-6 py-6 whitespace-nowrap">
                                         @if($record->status)
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-600">
                                                 Active
                                             </span>
                                         @else
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-600">
                                                 Inactive
                                             </span>
                                         @endif

@@ -17,7 +17,7 @@ $pageTitle = 'Invoice #' . $invoice->getFullNumber();
                     <span>•</span>
                     <span>{{ $invoice->date->format('M d, Y') }}</span>
                     <span>•</span>
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @if($invoice->status === 'Draft') bg-gray-100 text-gray-800 @elseif($invoice->status === 'Sent') bg-blue-100 text-blue-800 @elseif($invoice->status === 'Paid') bg-green-100 text-green-800 @elseif($invoice->status === 'Overdue') bg-red-100 text-red-800 @else bg-gray-100 text-gray-800 @endif">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @if($invoice->status === 'Draft') bg-gray-100 text-gray-800 @elseif($invoice->status === 'Sent') bg-blue-100 text-blue-800 @elseif($invoice->status === 'Paid') bg-green-100 text-green-600 @elseif($invoice->status === 'Overdue') bg-red-100 text-red-600 @else bg-gray-100 text-gray-800 @endif">
                         {{ $invoice->status }}
                     </span>
                 </div>
@@ -49,7 +49,7 @@ $pageTitle = 'Invoice #' . $invoice->getFullNumber();
                         </svg>
                     </div>
                     <div class="ml-3">
-                        <h3 class="text-sm font-medium text-red-800">There were some errors</h3>
+                        <h3 class="text-sm font-medium text-red-600">There were some errors</h3>
                         <div class="mt-2 text-sm text-red-700">
                             <ul class="list-disc pl-5 space-y-1">
                                 @foreach ($errors->all() as $error)
@@ -112,7 +112,7 @@ $pageTitle = 'Invoice #' . $invoice->getFullNumber();
                                     </div>
                                 </div>
                                 <div class="md:flex-1 px-6-span-1 flex items-end justify-center">
-                                    <button type="button" class="remove-item p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md">
+                                    <button type="button" class="remove-item p-2 text-red-600 hover:text-red-600 hover:bg-red-50 rounded-md">
                                         <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                         </svg>
@@ -374,7 +374,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                     </div>
                     <div class="md:flex-1 px-6-span-1 flex items-end justify-center">
-                        <button type="button" class="remove-item p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md">
+                        <button type="button" class="remove-item p-2 text-red-600 hover:text-red-600 hover:bg-red-50 rounded-md">
                             <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                             </svg>
@@ -471,7 +471,7 @@ const itemHtml = `
                         </div>
                     </div>
                     <div class="md:flex-1 px-6-span-1 flex items-end justify-center">
-                        <button type="button" class="remove-item p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md">
+                        <button type="button" class="remove-item p-2 text-red-600 hover:text-red-600 hover:bg-red-50 rounded-md">
                             <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                             </svg>

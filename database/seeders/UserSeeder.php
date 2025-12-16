@@ -7,6 +7,7 @@ use App\Domains\Core\Models\User;
 use App\Domains\Core\Models\UserSetting;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Silber\Bouncer\BouncerFacade as Bouncer;
 
 class UserSeeder extends Seeder
 {
@@ -48,7 +49,9 @@ class UserSeeder extends Seeder
                 'email_verified_at' => now(),
             ]
         );
-        $superAdmin->assign('super-admin');
+        \Bouncer::scope()->to($company->id);
+        \Bouncer::assign('super-admin')->to($superAdmin);
+        \Bouncer::refreshFor($superAdmin);
         $this->createUserSettings($superAdmin, User::ROLE_SUPER_ADMIN);
         $this->command->info('    ✓ Created super admin: super@nestogy.com');
 
@@ -63,7 +66,9 @@ class UserSeeder extends Seeder
                 'email_verified_at' => now(),
             ]
         );
-        $admin->assign('admin');
+        \Bouncer::scope()->to($company->id);
+        \Bouncer::assign('admin')->to($admin);
+        \Bouncer::refreshFor($admin);
         $this->createUserSettings($admin, User::ROLE_ADMIN);
         $this->command->info('    ✓ Created admin: admin@nestogy.com');
     }
@@ -161,7 +166,9 @@ class UserSeeder extends Seeder
                     'updated_at' => fake()->dateTimeBetween('-1 month', 'now'),
                 ]
             );
-            $user->assign('admin');
+            \Bouncer::scope()->to($company->id);
+            \Bouncer::assign('admin')->to($user);
+            \Bouncer::refreshFor($user);
             $this->createUserSettings($user, User::ROLE_ADMIN);
             $userCount++;
         }
@@ -190,7 +197,9 @@ class UserSeeder extends Seeder
                         'updated_at' => fake()->dateTimeBetween('-1 week', 'now'),
                     ]
                 );
-                $user->assign('tech');
+                \Bouncer::scope()->to($company->id);
+                \Bouncer::assign('tech')->to($user);
+                \Bouncer::refreshFor($user);
                 $this->createUserSettings($user, User::ROLE_TECH);
                 $userCount++;
             }
@@ -218,7 +227,9 @@ class UserSeeder extends Seeder
                         'updated_at' => fake()->dateTimeBetween('-1 month', 'now'),
                     ]
                 );
-                $user->assign('accountant');
+                \Bouncer::scope()->to($company->id);
+                \Bouncer::assign('accountant')->to($user);
+                \Bouncer::refreshFor($user);
                 $this->createUserSettings($user, User::ROLE_ACCOUNTANT);
                 $userCount++;
             }
@@ -246,7 +257,9 @@ class UserSeeder extends Seeder
                         'updated_at' => fake()->dateTimeBetween('-1 month', 'now'),
                     ]
                 );
-                $user->assign('sales');
+                \Bouncer::scope()->to($company->id);
+                \Bouncer::assign('sales')->to($user);
+                \Bouncer::refreshFor($user);
                 $this->createUserSettings($user, User::ROLE_TECH);
                 $userCount++;
             }
@@ -274,7 +287,9 @@ class UserSeeder extends Seeder
                         'updated_at' => fake()->dateTimeBetween('-1 month', 'now'),
                     ]
                 );
-                $user->assign('marketing');
+                \Bouncer::scope()->to($company->id);
+                \Bouncer::assign('marketing')->to($user);
+                \Bouncer::refreshFor($user);
                 $this->createUserSettings($user, User::ROLE_TECH);
                 $userCount++;
             }
@@ -300,7 +315,9 @@ class UserSeeder extends Seeder
                         'updated_at' => fake()->dateTimeBetween('-1 month', 'now'),
                     ]
                 );
-                $user->assign('tech');
+                \Bouncer::scope()->to($company->id);
+                \Bouncer::assign('tech')->to($user);
+                \Bouncer::refreshFor($user);
                 $this->createUserSettings($user, User::ROLE_TECH);
                 $userCount++;
             }

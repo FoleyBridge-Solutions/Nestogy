@@ -236,15 +236,19 @@
                     </flux:heading>
                 </div>
                 
-                <div class="text-center p-3 @if($view === 'top') bg-green-50 dark:bg-green-900/30 @else bg-orange-50 dark:bg-orange-900/30 @endif rounded-lg">
-                    <flux:text size="sm" class="@if($view === 'top') text-green-600 dark:text-green-400 @else text-orange-600 dark:text-orange-400 @endif">
+                <div @class([
+                    'text-center p-3 rounded-lg',
+                    'bg-green-50 dark:bg-green-900/30' => $view === 'top',
+                    'bg-orange-50 dark:bg-orange-900/30' => $view !== 'top',
+                ])>
+                    <flux:text size="sm" :class="$view === 'top' ? 'text-green-600 dark:text-green-400' : 'text-orange-600 dark:text-orange-400'">
                         @if($view === 'top')
                             Best Score
                         @else
                             Lowest Score
                         @endif
                     </flux:text>
-                    <flux:heading size="lg" class="@if($view === 'top') text-green-600 dark:text-green-400 @else text-orange-600 dark:text-orange-400 @endif">
+                    <flux:heading size="lg" :class="$view === 'top' ? 'text-green-600 dark:text-green-400' : 'text-orange-600 dark:text-orange-400'">
                         {{ $allTeamMembers->first()['performance_score'] ?? 0 }}
                     </flux:heading>
                 </div>
@@ -314,13 +318,15 @@
                         <div>
                             <flux:text size="sm" class="text-gray-500">Current Performance Score</flux:text>
                             <div class="flex items-center gap-3 mt-1">
-                                <flux:heading size="xl" class="
-                                    @if($selectedMemberDetails['total_score'] >= 85) text-green-600
-                                    @elseif($selectedMemberDetails['total_score'] >= 70) text-blue-600
-                                    @elseif($selectedMemberDetails['total_score'] >= 55) text-yellow-600
-                                    @else text-red-600
-                                    @endif
-                                ">
+                                @php
+                                    $scoreClass = match(true) {
+                                        $selectedMemberDetails['total_score'] >= 85 => 'text-green-600',
+                                        $selectedMemberDetails['total_score'] >= 70 => 'text-blue-600',
+                                        $selectedMemberDetails['total_score'] >= 55 => 'text-yellow-600',
+                                        default => 'text-red-600',
+                                    };
+                                @endphp
+                                <flux:heading size="xl" :class="$scoreClass">
                                     {{ $selectedMemberDetails['total_score'] }}/100
                                 </flux:heading>
                                 <flux:badge size="sm" color="{{ match($selectedMemberDetails['performance_level']) {
@@ -435,12 +441,15 @@
                                     </div>
                                     <div class="text-right ml-4">
                                         <flux:text size="xs" class="text-gray-500">Weighted</flux:text>
-                                        <flux:text class="font-bold text-lg
-                                            @if($scoreComponent['color'] === 'green') text-green-600
-                                            @elseif($scoreComponent['color'] === 'yellow') text-yellow-600
-                                            @elseif($scoreComponent['color'] === 'red') text-red-600
-                                            @else text-gray-600
-                                            @endif">
+                                        @php
+                                            $weightedScoreClass = match($scoreComponent['color']) {
+                                                'green' => 'text-green-600',
+                                                'yellow' => 'text-yellow-600',
+                                                'red' => 'text-red-600',
+                                                default => 'text-gray-600',
+                                            };
+                                        @endphp
+                                        <flux:text :class="'font-bold text-lg ' . $weightedScoreClass">
                                             +{{ $scoreComponent['weighted_score'] }}
                                         </flux:text>
                                     </div>
@@ -453,13 +462,15 @@
                     <div class="mt-4 pt-3 border-t dark:border-gray-700">
                         <div class="flex items-center justify-between">
                             <flux:text class="font-semibold">Total Calculated Score</flux:text>
-                            <flux:heading size="lg" class="
-                                @if($selectedMemberDetails['total_calculated'] >= 85) text-green-600
-                                @elseif($selectedMemberDetails['total_calculated'] >= 70) text-blue-600
-                                @elseif($selectedMemberDetails['total_calculated'] >= 55) text-yellow-600
-                                @else text-red-600
-                                @endif
-                            ">
+                            @php
+                                $totalCalcClass = match(true) {
+                                    $selectedMemberDetails['total_calculated'] >= 85 => 'text-green-600',
+                                    $selectedMemberDetails['total_calculated'] >= 70 => 'text-blue-600',
+                                    $selectedMemberDetails['total_calculated'] >= 55 => 'text-yellow-600',
+                                    default => 'text-red-600',
+                                };
+                            @endphp
+                            <flux:heading size="lg" :class="$totalCalcClass">
                                 {{ $selectedMemberDetails['total_calculated'] }}/100
                             </flux:heading>
                         </div>

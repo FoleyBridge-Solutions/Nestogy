@@ -24,7 +24,7 @@ class AssetTest extends TestCase
         $model = Asset::factory()->create(['company_id' => $this->company->id]);
         
         $this->assertInstanceOf(Asset::class, $model);
-        $this->assertDatabaseHas('asset_s', ['id' => $model->id]);
+        $this->assertDatabaseHas('assets', ['id' => $model->id]);
     }
 
     public function test_belongs_to_company(): void

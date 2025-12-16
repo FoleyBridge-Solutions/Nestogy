@@ -66,10 +66,10 @@ $performanceTargets = $schedule->performance_targets ?? [];
                             <div class="flex items-center space-x-4">
                                 <!-- Priority Badge -->
                                 <span class="inline-flex items-center px-6 py-1 rounded-full text-sm font-medium
-                                    @if($priority === 'critical') bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-200
+                                    @if($priority === 'critical') bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-200
                                     @elseif($priority === 'high') bg-orange-100 dark:bg-orange-900/20 text-orange-800 dark:text-orange-200
                                     @elseif($priority === 'medium') bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-200
-                                    @else bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-200 @endif">
+                                    @else bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-200 @endif">
                                     {{ ucfirst($priority) }} Priority
                                 </span>
                                 
@@ -116,7 +116,7 @@ $performanceTargets = $schedule->performance_targets ?? [];
                             <div class="text-xl font-bold text-green-600 dark:text-green-400">
                                 {{ $requirement['target'] ?? 'N/A' }}
                             </div>
-                            <div class="text-sm font-medium text-green-800 dark:text-green-200">
+                            <div class="text-sm font-medium text-green-600 dark:text-green-200">
                                 {{ ucwords(str_replace('_', ' ', $service)) }}
                             </div>
                             @if(isset($requirement['measured_period']))
@@ -240,14 +240,14 @@ $performanceTargets = $schedule->performance_targets ?? [];
                                 </div>
                                 <div class="mt-1">
                                     @if($data['compliant'])
-                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-200">
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-200">
                                             <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                                             </svg>
                                             Compliant
                                         </span>
                                     @else
-                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-200">
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-200">
                                             <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
                                             </svg>

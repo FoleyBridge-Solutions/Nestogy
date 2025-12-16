@@ -5,6 +5,7 @@ namespace App\Domains\Core\Models;
 use App\Domains\Client\Models\Client;
 
 use App\Traits\BelongsToCompany;
+use App\Traits\HasStatusColors;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,7 +13,7 @@ use Illuminate\Support\Str;
 
 class MailQueue extends Model
 {
-    use BelongsToCompany, HasFactory;
+    use BelongsToCompany, HasFactory, HasStatusColors;
 
     protected $table = 'mail_queue';
 

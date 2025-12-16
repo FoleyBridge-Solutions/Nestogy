@@ -124,7 +124,7 @@
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-6">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-lg font-semibold text-slate-800 dark:text-white">Overdue Invoices</h3>
-                <span class="px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded-full">
+                <span class="px-2 py-1 bg-red-100 text-red-600 text-xs font-medium rounded-full">
                     {{ $data['counts']['overdue_invoices'] ?? 0 }}
                 </span>
             </div>
@@ -156,7 +156,7 @@
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-6">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-lg font-semibold text-slate-800 dark:text-white">Recent Payments</h3>
-                <span class="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
+                <span class="px-2 py-1 bg-green-100 text-green-600 text-xs font-medium rounded-full">
                     {{ $data['counts']['recent_payments'] ?? 0 }}
                 </span>
             </div>

@@ -233,13 +233,9 @@
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         @forelse($tickets as $ticket)
             @php
-                $priorityColor = match(strtolower($ticket->priority)) {
-                    'critical' => '#dc2626', // red-600
-                    'high' => '#f97316', // orange-500
-                    'medium' => '#eab308', // yellow-500
-                    'low' => '#9ca3af', // gray-400
-                    default => '#71717a' // zinc-500
-                };
+                $priorityColor = \App\Helpers\StatusColorHelper::toHex(
+                    \App\Helpers\StatusColorHelper::priority($ticket->priority)
+                );
             @endphp
             <div 
                 wire:key="ticket-{{ $ticket->id }}"
@@ -309,13 +305,8 @@
                     
                     {{-- Badges Row --}}
                     <div class="flex flex-wrap gap-2 mb-3">
-                        <flux:badge color="@if($ticket->status === 'open') green @elseif($ticket->status === 'in_progress') blue @elseif($ticket->status === 'pending') amber @elseif($ticket->status === 'resolved') purple @elseif($ticket->status === 'closed') zinc @else red @endif">
-                            {{ ucfirst(str_replace('_', ' ', $ticket->status)) }}
-                        </flux:badge>
-                        
-                        <flux:badge color="@if($ticket->priority === 'critical') red @elseif($ticket->priority === 'urgent') red @elseif($ticket->priority === 'high') orange @elseif($ticket->priority === 'medium') yellow @elseif($ticket->priority === 'low') gray @else zinc @endif">
-                            {{ ucfirst($ticket->priority) }}
-                        </flux:badge>
+                        <x-status-badge :model="$ticket" :status="$ticket->status" />
+                        <x-priority-badge :model="$ticket" :priority="$ticket->priority" />
                     </div>
                     
                     {{-- Meta Information --}}
@@ -479,14 +470,10 @@
                                 {{ $ticket->client?->name ?? '-' }}
                             </flux:table.cell>
                             <flux:table.cell>
-                                <flux:badge color="@if($ticket->status === 'open') green @elseif($ticket->status === 'in_progress') blue @elseif($ticket->status === 'pending') amber @elseif($ticket->status === 'resolved') purple @elseif($ticket->status === 'closed') zinc @else red @endif">
-                                    {{ ucfirst(str_replace('_', ' ', $ticket->status)) }}
-                                </flux:badge>
+                                <x-status-badge :model="$ticket" :status="$ticket->status" />
                             </flux:table.cell>
                             <flux:table.cell>
-                                <flux:badge color="@if($ticket->priority === 'critical') red @elseif($ticket->priority === 'urgent') red @elseif($ticket->priority === 'high') orange @elseif($ticket->priority === 'medium') yellow @elseif($ticket->priority === 'low') gray @else zinc @endif">
-                                    {{ ucfirst($ticket->priority) }}
-                                </flux:badge>
+                                <x-priority-badge :model="$ticket" :priority="$ticket->priority" />
                             </flux:table.cell>
                             <flux:table.cell>
                                 {{ $ticket->assignedTo?->name ?? 'Unassigned' }}

@@ -262,7 +262,7 @@
                                             <div>
                                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
                                                     @if($workflow->trigger_type === 'status_change') bg-blue-100 text-blue-800
-                                                    @elseif($workflow->trigger_type === 'time_based') bg-green-100 text-green-800
+                                                    @elseif($workflow->trigger_type === 'time_based') bg-green-100 text-green-600
                                                     @elseif($workflow->trigger_type === 'field_update') bg-yellow-100 text-yellow-800
                                                     @elseif($workflow->trigger_type === 'manual') bg-gray-100 text-gray-800
                                                     @else bg-purple-100 text-purple-800
@@ -279,10 +279,10 @@
                                         <td class="px-6 py-6 whitespace-nowrap">
                                             <div class="flex items-center">
                                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
-                                                    @if($workflow->status === 'active') bg-green-100 text-green-800
+                                                    @if($workflow->status === 'active') bg-green-100 text-green-600
                                                     @elseif($workflow->status === 'draft') bg-yellow-100 text-yellow-800
                                                     @elseif($workflow->status === 'inactive') bg-gray-100 text-gray-800
-                                                    @else bg-red-100 text-red-800
+                                                    @else bg-red-100 text-red-600
                                                     @endif">
                                                     {{ ucfirst($workflow->status) }}
                                                 </span>

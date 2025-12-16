@@ -66,7 +66,7 @@
                 <div class="text-sm text-gray-500">Total Calculations</div>
                 <div class="mt-1">
                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
-                        {{ $successRate >= 95 ? 'bg-green-100 text-green-800' : ($successRate >= 90 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800') }}">
+                        {{ $successRate >= 95 ? 'bg-green-100 text-green-600' : ($successRate >= 90 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-600') }}">
                         {{ number_format($successRate, 1) }}% success
                     </span>
                 </div>

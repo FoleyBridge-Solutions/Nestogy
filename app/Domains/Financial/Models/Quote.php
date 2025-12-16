@@ -10,6 +10,7 @@ use App\Domains\Tax\Models\TaxExemption;
 use App\Domains\Tax\Models\TaxExemptionUsage;
 use App\Traits\BelongsToCompany;
 use App\Traits\QuotePricingCalculations;
+use App\Traits\HasStatusColors;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -61,7 +62,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class Quote extends Model
 {
-    use BelongsToCompany, HasFactory, QuotePricingCalculations, SoftDeletes;
+    use BelongsToCompany, HasFactory, QuotePricingCalculations, SoftDeletes, HasStatusColors;
 
     /**
      * The table associated with the model.

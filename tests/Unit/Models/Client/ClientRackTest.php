@@ -24,7 +24,7 @@ class ClientRackTest extends TestCase
         $model = ClientRack::factory()->create(['company_id' => $this->company->id]);
         
         $this->assertInstanceOf(ClientRack::class, $model);
-        $this->assertDatabaseHas('client_rack_s', ['id' => $model->id]);
+        $this->assertDatabaseHas('client_racks', ['id' => $model->id]);
     }
 
     public function test_belongs_to_company(): void

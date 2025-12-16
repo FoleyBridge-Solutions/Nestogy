@@ -166,7 +166,7 @@ $pageActions = [
                                                 {{ $accessLevels[$doc->access_level] }}
                                             </span>
                                             @if($doc->needsReview())
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-600">
                                                     Review Due
                                                 </span>
                                             @endif

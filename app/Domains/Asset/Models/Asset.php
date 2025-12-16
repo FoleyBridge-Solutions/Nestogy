@@ -15,12 +15,13 @@ use App\Domains\Project\Models\Vendor;
 use App\Domains\Ticket\Models\Ticket;
 use App\Traits\BelongsToCompany;
 use App\Traits\HasArchive;
+use App\Traits\HasStatusColors;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Asset extends Model
 {
-    use BelongsToCompany, HasArchive, HasFactory;
+    use BelongsToCompany, HasArchive, HasFactory, HasStatusColors;
 
     protected $fillable = [
         'company_id',

@@ -35,9 +35,9 @@ $responsibilities = $schedule->responsibilities ?? [];
                             
                             @if(isset($procedure['criticality']))
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                    @if($procedure['criticality'] === 'high') bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-200
+                                    @if($procedure['criticality'] === 'high') bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-200
                                     @elseif($procedure['criticality'] === 'medium') bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-200
-                                    @else bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-200 @endif">
+                                    @else bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-200 @endif">
                                     {{ ucfirst($procedure['criticality']) }} Priority
                                 </span>
                             @endif
@@ -300,7 +300,7 @@ $responsibilities = $schedule->responsibilities ?? [];
                                     <td class="px-6 py-6 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                                         @if(is_array($responsibility) && isset($responsibility['client']))
                                             <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
-                                                @if($responsibility['client'] === 'responsible') bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-200
+                                                @if($responsibility['client'] === 'responsible') bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-200
                                                 @elseif($responsibility['client'] === 'accountable') bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200
                                                 @elseif($responsibility['client'] === 'consulted') bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-200
                                                 @elseif($responsibility['client'] === 'informed') bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200
@@ -314,7 +314,7 @@ $responsibilities = $schedule->responsibilities ?? [];
                                     <td class="px-6 py-6 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                                         @if(is_array($responsibility) && isset($responsibility['provider']))
                                             <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
-                                                @if($responsibility['provider'] === 'responsible') bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-200
+                                                @if($responsibility['provider'] === 'responsible') bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-200
                                                 @elseif($responsibility['provider'] === 'accountable') bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200
                                                 @elseif($responsibility['provider'] === 'consulted') bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-200
                                                 @elseif($responsibility['provider'] === 'informed') bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200

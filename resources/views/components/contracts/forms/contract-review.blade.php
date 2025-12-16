@@ -76,7 +76,7 @@
                             'No auto-assignment configured'"></div>
                 <div class="mt-6">
                     <span x-show="slaTerms.auto_assign_new_assets" 
-                          class="inline-flex items-center px-6 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400">
+                          class="inline-flex items-center px-6 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-400">
                         Auto-assignment enabled
                     </span>
                     <span x-show="!slaTerms.auto_assign_new_assets" 

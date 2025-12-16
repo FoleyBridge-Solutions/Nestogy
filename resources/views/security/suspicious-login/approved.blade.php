@@ -29,7 +29,7 @@
                             </svg>
                         </div>
                         <div class="ml-3">
-                            <h3 class="text-sm font-medium text-green-800">
+                            <h3 class="text-sm font-medium text-green-600">
                                 Access Granted
                             </h3>
                             <div class="mt-2 text-sm text-green-700">
@@ -58,7 +58,7 @@
                         <div>
                             <dt class="text-sm font-medium text-gray-500">Trust Setting</dt>
                             <dd class="text-sm text-green-700">
-                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-600">
                                     ✓ Location marked as trusted
                                 </span>
                             </dd>

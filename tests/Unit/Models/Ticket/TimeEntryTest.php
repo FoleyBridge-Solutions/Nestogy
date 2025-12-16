@@ -24,7 +24,7 @@ class TimeEntryTest extends TestCase
         $model = TimeEntry::factory()->create(['company_id' => $this->company->id]);
         
         $this->assertInstanceOf(TimeEntry::class, $model);
-        $this->assertDatabaseHas('time_entry_s', ['id' => $model->id]);
+        $this->assertDatabaseHas('time_entries', ['id' => $model->id]);
     }
 
     public function test_belongs_to_company(): void

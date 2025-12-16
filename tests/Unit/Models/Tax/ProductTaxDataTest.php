@@ -24,7 +24,7 @@ class ProductTaxDataTest extends TestCase
         $model = ProductTaxData::factory()->create(['company_id' => $this->company->id]);
         
         $this->assertInstanceOf(ProductTaxData::class, $model);
-        $this->assertDatabaseHas('product_tax_data_s', ['id' => $model->id]);
+        $this->assertDatabaseHas('product_tax_data', ['id' => $model->id]);
     }
 
     public function test_belongs_to_company(): void

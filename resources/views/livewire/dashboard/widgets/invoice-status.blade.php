@@ -92,16 +92,15 @@
                                 </flux:text>
                                 
                                 <div class="mt-1">
-                                    <flux:heading size="lg" class="font-semibold 
-                                        @if($period === '90+' && $balance > 0)
-                                            text-red-600 dark:text-red-400
-                                        @elseif($period === '61-90' && $balance > 0)
-                                            text-orange-600 dark:text-orange-400
-                                        @elseif($period === '31-60' && $balance > 0)
-                                            text-yellow-600 dark:text-yellow-400
-                                        @else
-                                            text-zinc-900 dark:text-zinc-100
-                                        @endif">
+                                    @php
+                                        $balanceColorClass = match(true) {
+                                            $period === '90+' && $balance > 0 => 'text-red-600 dark:text-red-400',
+                                            $period === '61-90' && $balance > 0 => 'text-orange-600 dark:text-orange-400',
+                                            $period === '31-60' && $balance > 0 => 'text-yellow-600 dark:text-yellow-400',
+                                            default => 'text-zinc-900 dark:text-zinc-100',
+                                        };
+                                    @endphp
+                                    <flux:heading size="lg" :class="'font-semibold ' . $balanceColorClass">
                                         ${{ number_format($balance, 2) }}
                                     </flux:heading>
                                 </div>

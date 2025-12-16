@@ -197,7 +197,7 @@ $pageTitle = 'Asset Assignments';
                             <div class="flex items-center justify-between">
                                 <span class="text-gray-600">Status:</span>
                                 <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
-                                      :class="asset.is_online ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
+                                      :class="asset.is_online ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'"
                                       x-text="asset.is_online ? 'Online' : 'Offline'"></span>
                             </div>
                             <div x-show="asset.current_contract && asset.current_contract.id !== contract.id" 

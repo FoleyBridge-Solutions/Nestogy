@@ -2,15 +2,15 @@
 
 namespace App\Domains\Client\Controllers;
 
+use App\Domains\Client\Models\Client;
+use App\Domains\Client\Models\Contact;
 use App\Domains\Contract\Models\Contract;
 use App\Domains\Contract\Models\ContractMilestone;
 use App\Domains\Contract\Models\ContractSignature;
-use App\Domains\Security\Services\DigitalSignatureService;
-use App\Http\Controllers\Controller;
-use App\Domains\Client\Models\Client;
-use App\Domains\Client\Models\Contact;
 use App\Domains\Financial\Models\Invoice;
 use App\Domains\Financial\Models\Payment;
+use App\Domains\Security\Services\DigitalSignatureService;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -38,6 +38,11 @@ class ClientPortalController extends Controller
      */
     public function showLogin()
     {
+        // If already authenticated as client, redirect to client dashboard
+        if (auth('client')->check()) {
+            return redirect()->route('client.dashboard');
+        }
+
         return view('client-portal.auth.login');
     }
 
@@ -113,6 +118,11 @@ class ClientPortalController extends Controller
         // Update login info and authenticate
         $contact->updateLoginInfo($request->ip());
         auth('client')->login($contact, $request->boolean('remember', false));
+
+        // Set company_id in session for global scopes
+        // SECURITY: This restricts client portal queries to ONLY their company's data
+        // The company scope on models will filter all queries by this company_id
+        session(['company_id' => $contact->client->company_id]);
 
         // Clear any intended URL to prevent redirect to wrong dashboard
         session()->forget('url.intended');
@@ -575,59 +585,42 @@ class ClientPortalController extends Controller
      */
     protected function canViewContracts(Contact $contact): bool
     {
-        // Primary contacts can always view contracts
-        // Others need explicit permission
-        return $contact->isPrimary() ||
-               in_array('can_view_contracts', $contact->portal_permissions ?? []);
+        return in_array('can_view_contracts', $contact->portal_permissions ?? []);
     }
 
     protected function canViewInvoices(Contact $contact): bool
     {
-        // Billing contacts and primary can view invoices
-        return $contact->isBilling() ||
-               $contact->isPrimary() ||
-               in_array('can_view_invoices', $contact->portal_permissions ?? []);
+        return in_array('can_view_invoices', $contact->portal_permissions ?? []);
     }
 
     protected function canViewTickets(Contact $contact): bool
     {
-        // Technical contacts can view tickets, others need permission
-        return $contact->isTechnical() ||
-               $contact->isPrimary() ||
-               in_array('can_view_tickets', $contact->portal_permissions ?? []);
+        return in_array('can_view_tickets', $contact->portal_permissions ?? []);
     }
 
     protected function canCreateTickets(Contact $contact): bool
     {
-        return $contact->isTechnical() ||
-               $contact->isPrimary() ||
-               in_array('can_create_tickets', $contact->portal_permissions ?? []);
+        return in_array('can_create_tickets', $contact->portal_permissions ?? []);
     }
 
     protected function canViewAssets(Contact $contact): bool
     {
-        return $contact->isTechnical() ||
-               $contact->isPrimary() ||
-               in_array('can_view_assets', $contact->portal_permissions ?? []);
+        return in_array('can_view_assets', $contact->portal_permissions ?? []);
     }
 
     protected function canViewProjects(Contact $contact): bool
     {
-        return $contact->isPrimary() ||
-               in_array('can_view_projects', $contact->portal_permissions ?? []);
+        return in_array('can_view_projects', $contact->portal_permissions ?? []);
     }
 
     protected function canViewReports(Contact $contact): bool
     {
-        return $contact->isPrimary() ||
-               in_array('can_view_reports', $contact->portal_permissions ?? []);
+        return in_array('can_view_reports', $contact->portal_permissions ?? []);
     }
 
     protected function canApproveQuotes(Contact $contact): bool
     {
-        return $contact->isPrimary() ||
-               $contact->isBilling() ||
-               in_array('can_approve_quotes', $contact->portal_permissions ?? []);
+        return in_array('can_approve_quotes', $contact->portal_permissions ?? []);
     }
 
     /**
@@ -651,47 +644,23 @@ class ClientPortalController extends Controller
             return [];
         }
 
-        $invoices = $contact->client->invoices();
+        $invoices = $contact->client->invoices;
 
         return [
             'total_invoices' => $invoices->count(),
-            'total_outstanding' => $invoices->where('status', 'sent')->sum('amount'),
-            'overdue_amount' => $invoices->where('due_date', '<', now())->where('status', 'sent')->sum('amount'),
-            'overdue_count' => $invoices->where('due_date', '<', now())->where('status', 'sent')->count(),
+            'total_outstanding' => $invoices->whereIn('status', ['sent', 'viewed'])->sum('amount'),
+            'overdue_amount' => $invoices->where('due_date', '<', now())->whereIn('status', ['sent', 'viewed'])->sum('amount'),
+            'overdue_count' => $invoices->where('due_date', '<', now())->whereIn('status', ['sent', 'viewed'])->count(),
             'paid_this_month' => $invoices->where('status', 'paid')
-                ->whereMonth('updated_at', now()->month)
+                ->filter(function ($invoice) {
+                    return $invoice->updated_at && $invoice->updated_at->month == now()->month;
+                })
                 ->sum('amount'),
         ];
     }
 
-    protected function getTicketsForContact(Contact $contact)
-    {
-        if (! $contact->client) {
-            return new \Illuminate\Pagination\LengthAwarePaginator([], 0, 10);
-        }
-
-        return $contact->client->tickets()
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
-    }
-
-    protected function getTicketStatsForContact(Contact $contact): array
-    {
-        if (! $contact->client) {
-            return [];
-        }
-
-        $tickets = $contact->client->tickets();
-
-        return [
-            'total_tickets' => $tickets->count(),
-            'open_tickets' => $tickets->whereIn('status', ['Open', 'In Progress', 'Waiting', 'On Hold'])->count(),
-            'resolved_this_month' => $tickets->whereIn('status', ['Resolved', 'Closed'])
-                ->whereMonth('updated_at', now()->month)
-                ->count(),
-            'avg_response_time' => '< 1h', // Placeholder - calculate from ticket history
-        ];
-    }
+    // getTicketsForContact and getTicketStatsForContact methods removed
+    // This logic has been moved to App\Livewire\Portal\TicketIndex component
 
     protected function getAssetsForContact(Contact $contact)
     {
@@ -905,7 +874,7 @@ class ClientPortalController extends Controller
         if ($request->wantsJson()) {
             $invoiceData = $invoice->toArray();
             $invoiceData['can_be_paid'] = $invoice->canBePaid();
-            
+
             return response()->json([
                 'invoice' => $invoiceData,
                 'items' => $invoice->items,
@@ -953,21 +922,31 @@ class ClientPortalController extends Controller
         }
     }
 
-    // Ticket methods
-    public function tickets(Request $request)
+    public function viewClientInvoicePdf(Request $request, Invoice $invoice)
     {
         $contact = auth('client')->user();
 
-        if (! $this->canViewTickets($contact)) {
-            abort(403, 'You do not have permission to view tickets.');
+        if (! $this->canViewInvoices($contact)) {
+            abort(403, 'You do not have permission to view invoices.');
         }
 
-        $tickets = $this->getTicketsForContact($contact);
-        $stats = $this->getTicketStatsForContact($contact);
-        $notifications = $this->getNotificationsForContact($contact);
+        if ($invoice->client_id !== $contact->client_id) {
+            abort(404);
+        }
 
-        return view('client-portal.tickets.index', compact('tickets', 'stats', 'contact', 'notifications'));
+        try {
+            $pdf = $invoice->generatePdf();
+
+            return response($pdf, 200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="invoice-'.$invoice->invoice_number.'.pdf"',
+            ]);
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Unable to view invoice PDF.');
+        }
     }
+
+    // Ticket methods (tickets list has been moved to Livewire component: App\Livewire\Portal\TicketIndex)
 
     public function createTicket()
     {
@@ -1192,9 +1171,9 @@ class ClientPortalController extends Controller
                 'network',
                 'supportingContract',
                 'supportingSchedule',
-                'tickets' => function($query) {
+                'tickets' => function ($query) {
                     $query->latest()->limit(10);
-                }
+                },
             ])
             ->findOrFail($asset);
 
@@ -1350,9 +1329,7 @@ class ClientPortalController extends Controller
      */
     protected function canViewQuotes(Contact $contact): bool
     {
-        return $contact->isPrimary() ||
-               $contact->isBilling() ||
-               in_array('can_view_quotes', $contact->portal_permissions ?? []);
+        return in_array('can_view_quotes', $contact->portal_permissions ?? []);
     }
 
     /**
@@ -1413,7 +1390,7 @@ class ClientPortalController extends Controller
         $thisYear = $contact->client->invoices()
             ->whereYear('date', now()->year)
             ->sum('amount');
-        
+
         $thisMonth = $contact->client->invoices()
             ->whereYear('date', now()->year)
             ->whereMonth('date', now()->month)
@@ -1483,31 +1460,57 @@ class ClientPortalController extends Controller
         $invoice = \App\Domains\Financial\Models\Invoice::findOrFail($invoiceId);
 
         if ($invoice->client_id !== $contact->client_id || ! $this->canViewInvoices($contact)) {
-            return response()->json(['error' => 'Unauthorized'], 403);
+            abort(403, 'Unauthorized');
         }
 
         if (! $invoice->canBePaid()) {
-            return response()->json(['error' => 'Invoice cannot be paid'], 400);
+            return redirect()->route('client.invoices.show', $invoice->id)
+                ->with('error', 'This invoice cannot be paid at this time.');
         }
 
         $balance = $invoice->getBalance();
 
-        return response()->json([
-            'invoice' => [
-                'id' => $invoice->id,
-                'number' => $invoice->number,
-                'amount' => $invoice->amount,
-                'balance' => $balance,
+        $paymentData = [
+            'suggested_amounts' => [
+                'minimum' => max(50, $balance * 0.25),
+                'partial' => $balance * 0.5,
+                'full' => $balance,
             ],
-            'payment_methods' => ['credit_card', 'bank_transfer', 'ach'],
-            'payment_amounts' => [
-                'suggested_amounts' => [
-                    'minimum' => max(50, $balance * 0.25),
-                    'partial' => $balance * 0.5,
-                    'full' => $balance,
-                ],
-            ],
-            'payment_terms' => $invoice->payment_terms ?? 'Net 30',
-        ]);
+        ];
+
+        $paymentMethods = ['credit_card', 'bank_transfer', 'ach'];
+
+        return view('client-portal.invoices.payment', compact('invoice', 'contact', 'balance', 'paymentData', 'paymentMethods'));
+    }
+
+    /**
+     * Show payment confirmation page
+     */
+    public function paymentConfirmation(\App\Domains\Financial\Models\Payment $payment)
+    {
+        $contact = auth('client')->user();
+
+        // Verify payment belongs to contact's client
+        if ($payment->client_id !== $contact->client_id) {
+            abort(403, 'Unauthorized access to payment');
+        }
+
+        return view('client-portal.payments.confirmation', compact('payment', 'contact'));
+    }
+
+    /**
+     * Download payment receipt
+     */
+    public function paymentReceipt(\App\Domains\Financial\Models\Payment $payment)
+    {
+        $contact = auth('client')->user();
+
+        // Verify payment belongs to contact's client
+        if ($payment->client_id !== $contact->client_id) {
+            abort(403, 'Unauthorized access to payment');
+        }
+
+        // Show receipt view (PDF generation can be added later)
+        return view('client-portal.payments.receipt', compact('payment', 'contact'));
     }
 }

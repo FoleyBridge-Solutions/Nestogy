@@ -7,6 +7,7 @@ use App\Domains\Client\Models\Contact;
 use App\Domains\Core\Models\User;
 use App\Traits\BelongsToCompany;
 use App\Traits\HasAIAnalysis;
+use App\Traits\HasStatusColors;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -15,7 +16,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Lead extends Model
 {
-    use BelongsToCompany, HasFactory, SoftDeletes, HasAIAnalysis;
+    use BelongsToCompany, HasFactory, SoftDeletes, HasAIAnalysis, HasStatusColors;
 
     protected $fillable = [
         'company_id',

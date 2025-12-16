@@ -98,7 +98,7 @@ if ($errors->has($name)) {
                 <div class="flex items-center">
                     <span class="font-medium block truncate" x-text="contact.name"></span>
                     <span x-show="contact.primary" 
-                          class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                          class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-200">
                         Primary
                     </span>
                 </div>

@@ -2,6 +2,8 @@
 
 namespace App\Livewire\Dashboard\Widgets;
 
+use App\Helpers\StatusColorHelper;
+
 use App\Domains\Client\Models\Client;
 use App\Domains\Core\Services\DashboardCacheService;
 use App\Domains\Ticket\Models\Ticket;

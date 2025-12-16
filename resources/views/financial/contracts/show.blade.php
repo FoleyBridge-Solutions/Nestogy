@@ -400,9 +400,9 @@
                                             </td>
                                             <td class="px-6 py-6 whitespace-nowrap">
                                                 <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full 
-                                                    @if($invoice->status === 'paid') bg-green-100 text-green-800 
+                                                    @if($invoice->status === 'paid') bg-green-100 text-green-600 
                                                     @elseif($invoice->status === 'pending') bg-yellow-100 text-yellow-800 
-                                                    @else bg-red-100 text-red-800 @endif">
+                                                    @else bg-red-100 text-red-600 @endif">
                                                     {{ ucfirst($invoice->status) }}
                                                 </span>
                                             </td>

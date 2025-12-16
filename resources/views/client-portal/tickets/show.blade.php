@@ -26,34 +26,13 @@
                     
                     <!-- Status, Priority & Category Badges -->
                     <div class="flex items-center gap-3">
-                        @php
-                            $statusColors = [
-                                'Open' => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
-                                'Awaiting Customer' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-                                'In Progress' => 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-                                'Resolved' => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-                                'Closed' => 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
-                            ];
-                            $statusColor = $statusColors[$ticket->status] ?? 'bg-gray-100 text-gray-800';
-                            
-                            $priorityColors = [
-                                'Critical' => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
-                                'High' => 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
-                                'Medium' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-                                'Low' => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                            ];
-                            $priorityColor = $priorityColors[$ticket->priority] ?? 'bg-gray-100 text-gray-800';
-                        @endphp
-                        
-                        <flux:badge class="{{ $statusColor }}">
+                        <x-status-badge :model="$ticket" :status="$ticket->status ?? 'Open'">
                             <i class="fas fa-circle text-xs mr-1"></i>
-                            {{ $ticket->status ?? 'Open' }}
-                        </flux:badge>
+                        </x-status-badge>
                         
-                        <flux:badge class="{{ $priorityColor }}">
-                            <i class="fas fa-flag mr-1"></i>
-                            {{ $ticket->priority ?? 'Medium' }}
-                        </flux:badge>
+                        <x-priority-badge :model="$ticket" :priority="$ticket->priority">
+                            <i class="fas fa-flag text-xs mr-1"></i>
+                        </x-priority-badge>
                         
                         @if($ticket->category)
                             <flux:badge>
@@ -220,41 +199,54 @@
             <!-- Reply Form -->
             @if(!in_array($ticket->status, ['Closed', 'Resolved']))
                 <flux:card id="reply">
-                    <flux:heading size="lg">
+                    <flux:heading size="lg" class="mb-4">
                         <i class="fas fa-reply mr-2"></i>
                         Add Reply
                     </flux:heading>
                     
-                    <form action="{{ route('client.tickets.comment', $ticket->id) }}" method="POST" enctype="multipart/form-data" class="space-y-4">
+                    <form action="{{ route('client.tickets.comment', $ticket->id) }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         
-                        <flux:field>
-                            <flux:label for="comment" required>Your Message</flux:label>
-                            <flux:textarea 
-                                id="comment" 
-                                name="comment" 
-                                rows="5"
-                                placeholder="Type your reply here..."
-                                required>{{ old('comment') }}</flux:textarea>
-                            <flux:error for="comment" />
-                        </flux:field>
+                        <input type="file" id="attachments" name="attachments[]" multiple class="hidden" />
                         
-                        <flux:field>
-                            <flux:label for="attachments">Attachments</flux:label>
-                            <flux:input 
-                                type="file" 
-                                id="attachments" 
-                                name="attachments[]" 
-                                multiple />
-                        </flux:field>
+                        <flux:editor name="comment" placeholder="Type your reply here..." class="**:data-[slot=content]:min-h-[150px]!">
+                            <flux:editor.toolbar>
+                                <flux:editor.bold />
+                                <flux:editor.italic />
+                                <flux:editor.underline />
+                                <flux:editor.separator />
+                                <flux:editor.bullet />
+                                <flux:editor.ordered />
+                                <flux:editor.separator />
+                                <flux:editor.link />
+                                
+                                <flux:editor.spacer />
+                                
+                                <flux:editor.button 
+                                    icon="paper-clip" 
+                                    tooltip="Attach files"
+                                    x-on:click="document.getElementById('attachments').click()" />
+                                
+                                <flux:button 
+                                    type="submit" 
+                                    size="sm" 
+                                    variant="primary" 
+                                    icon="paper-airplane"
+                                    class="ml-1">
+                                    Send
+                                </flux:button>
+                            </flux:editor.toolbar>
+                            <flux:editor.content />
+                        </flux:editor>
                         
-                        <div class="flex justify-between">
-                            <flux:button type="button" variant="ghost" onclick="window.location.reload()">
-                                <i class="fas fa-sync mr-2"></i>Refresh
-                            </flux:button>
-                            <flux:button type="submit" variant="primary">
-                                <i class="fas fa-paper-plane mr-2"></i>Send Reply
-                            </flux:button>
+                        <flux:error name="comment" />
+                        
+                        <div id="file-preview" class="mt-3 hidden">
+                            <div id="file-list" class="flex flex-wrap gap-2"></div>
+                        </div>
+                        
+                        <div class="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
+                            Press <kbd class="px-1.5 py-0.5 bg-zinc-100 dark:bg-zinc-800 rounded text-xs font-mono">Ctrl</kbd> + <kbd class="px-1.5 py-0.5 bg-zinc-100 dark:bg-zinc-800 rounded text-xs font-mono">Enter</kbd> to send
                         </div>
                     </form>
                 </flux:card>
@@ -372,4 +364,59 @@
     margin: 0.5rem 0;
 }
 </style>
+
+<script>
+// Handle file attachment preview
+document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.getElementById('attachments');
+    const filePreview = document.getElementById('file-preview');
+    const fileList = document.getElementById('file-list');
+    
+    if (fileInput) {
+        fileInput.addEventListener('change', function() {
+            if (this.files.length > 0) {
+                filePreview.classList.remove('hidden');
+                fileList.innerHTML = '';
+                
+                Array.from(this.files).forEach((file, index) => {
+                    const fileTag = document.createElement('div');
+                    fileTag.className = 'flex items-center gap-2 px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-lg text-sm';
+                    fileTag.innerHTML = `
+                        <svg class="w-4 h-4 text-zinc-600 dark:text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
+                        </svg>
+                        <span class="text-zinc-700 dark:text-zinc-300">${file.name}</span>
+                        <span class="text-xs text-zinc-500">(${formatFileSize(file.size)})</span>
+                        <button type="button" onclick="removeFile(${index})" class="ml-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    `;
+                    fileList.appendChild(fileTag);
+                });
+            } else {
+                filePreview.classList.add('hidden');
+            }
+        });
+    }
+    
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    }
+    
+    window.removeFile = function(index) {
+        const dt = new DataTransfer();
+        const files = Array.from(fileInput.files);
+        files.splice(index, 1);
+        files.forEach(file => dt.items.add(file));
+        fileInput.files = dt.files;
+        fileInput.dispatchEvent(new Event('change'));
+    };
+});
+</script>
 @endsection

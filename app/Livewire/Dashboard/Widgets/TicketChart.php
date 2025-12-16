@@ -2,6 +2,8 @@
 
 namespace App\Livewire\Dashboard\Widgets;
 
+use App\Helpers\StatusColorHelper;
+
 use App\Domains\Ticket\Models\Ticket;
 use App\Traits\LazyLoadable;
 use Carbon\Carbon;
@@ -86,15 +88,15 @@ class TicketChart extends Component
 
         $data = [];
         $statusConfig = [
-            'open' => ['label' => 'Open', 'color' => 'blue', 'order' => 1],
-            'in-progress' => ['label' => self::LABEL_IN_PROGRESS, 'color' => 'yellow', 'order' => 2],
-            'in_progress' => ['label' => 'In_progress', 'color' => 'yellow', 'order' => 2], // Handle underscore variant
-            'waiting' => ['label' => 'Waiting', 'color' => 'orange', 'order' => 3],
-            'on-hold' => ['label' => 'On Hold', 'color' => 'purple', 'order' => 4],
-            'resolved' => ['label' => 'Resolved', 'color' => 'green', 'order' => 5],
-            'closed' => ['label' => 'Closed', 'color' => 'gray', 'order' => 6],
-            'cancelled' => ['label' => 'Cancelled', 'color' => 'red', 'order' => 7],
-            'canceled' => ['label' => 'Cancelled', 'color' => 'red', 'order' => 7], // Handle alternate spelling
+            'open' => ['label' => 'Open', 'color' => StatusColorHelper::ticket('open'), 'order' => 1],
+            'in-progress' => ['label' => self::LABEL_IN_PROGRESS, 'color' => StatusColorHelper::ticket('in_progress'), 'order' => 2],
+            'in_progress' => ['label' => 'In_progress', 'color' => StatusColorHelper::ticket('in_progress'), 'order' => 2],
+            'waiting' => ['label' => 'Waiting', 'color' => StatusColorHelper::ticket('waiting'), 'order' => 3],
+            'on-hold' => ['label' => 'On Hold', 'color' => StatusColorHelper::ticket('on_hold'), 'order' => 4],
+            'resolved' => ['label' => 'Resolved', 'color' => StatusColorHelper::ticket('resolved'), 'order' => 5],
+            'closed' => ['label' => 'Closed', 'color' => StatusColorHelper::ticket('closed'), 'order' => 6],
+            'cancelled' => ['label' => 'Cancelled', 'color' => StatusColorHelper::ticket('cancelled'), 'order' => 7],
+            'canceled' => ['label' => 'Cancelled', 'color' => StatusColorHelper::ticket('cancelled'), 'order' => 7],
         ];
 
         foreach ($statusCounts as $status) {
@@ -130,10 +132,10 @@ class TicketChart extends Component
 
         $data = [];
         $priorityConfig = [
-            'critical' => ['label' => 'Critical', 'color' => 'red', 'order' => 1],
-            'high' => ['label' => 'High', 'color' => 'orange', 'order' => 2],
-            'medium' => ['label' => 'Medium', 'color' => 'yellow', 'order' => 3],
-            'low' => ['label' => 'Low', 'color' => 'green', 'order' => 4],
+            'critical' => ['label' => 'Critical', 'color' => StatusColorHelper::priority('critical'), 'order' => 1],
+            'high' => ['label' => 'High', 'color' => StatusColorHelper::priority('high'), 'order' => 2],
+            'medium' => ['label' => 'Medium', 'color' => StatusColorHelper::priority('medium'), 'order' => 3],
+            'low' => ['label' => 'Low', 'color' => StatusColorHelper::priority('low'), 'order' => 4],
         ];
 
         foreach ($priorityCounts as $priority) {

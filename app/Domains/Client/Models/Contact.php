@@ -848,4 +848,13 @@ class Contact extends Authenticatable
     {
         return false;
     }
+
+    /**
+     * Check if contact can access cross-tenant features.
+     * Contacts are always limited to their own client and cannot access cross-tenant features.
+     */
+    public function canAccessCrossTenant(): bool
+    {
+        return false;
+    }
 }

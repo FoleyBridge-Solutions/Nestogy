@@ -1155,20 +1155,7 @@ class DashboardDataService
      */
     private function getSentimentColor(float $score): string
     {
-        if ($score > 0.5) {
-            return '#10b981';
-        } // emerald-500
-        if ($score > 0.1) {
-            return '#84cc16';
-        } // lime-500
-        if ($score > -0.1) {
-            return '#64748b';
-        } // slate-500
-        if ($score > -0.5) {
-            return '#f97316';
-        } // orange-500
-
-        return '#ef4444'; // red-500
+        return \App\Helpers\StatusColorHelper::sentimentColor($score);
     }
 
     protected function getRevenueRecognitionMethod(): string

@@ -38,7 +38,7 @@
                     Outstanding
                 </div>
                 <div class="text-2xl font-bold text-gray-800 dark:text-gray-200">
-                    ${{ number_format($stats['outstanding_amount'] ?? 0, 2) }}
+                    ${{ number_format($stats['total_outstanding'] ?? 0, 2) }}
                 </div>
             </div>
             <div class="flex-shrink-0">
@@ -51,10 +51,10 @@
         <div class="flex items-center">
             <div class="flex-1 mr-2">
                 <div class="text-xs font-bold text-green-600 dark:text-green-400 uppercase mb-1">
-                    Paid This Year
+                    Paid This Month
                 </div>
                 <div class="text-2xl font-bold text-gray-800 dark:text-gray-200">
-                    ${{ number_format($stats['paid_this_year'] ?? 0, 2) }}
+                    ${{ number_format($stats['paid_this_month'] ?? 0, 2) }}
                 </div>
             </div>
             <div class="flex-shrink-0">
@@ -116,12 +116,12 @@
                         <tr class="hover:bg-gray-50 dark:hover:bg-gray-800">
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                    {{ $invoice->invoice_number }}
+                                    {{ $invoice->number }}
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm text-gray-600 dark:text-gray-400">
-                                    {{ $invoice->invoice_date ? $invoice->invoice_date->format('M j, Y') : 'N/A' }}
+                                    {{ $invoice->date ? \Carbon\Carbon::parse($invoice->date)->format('M j, Y') : 'N/A' }}
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
@@ -131,22 +131,11 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                    ${{ number_format($invoice->total ?? 0, 2) }}
+                                    ${{ number_format($invoice->amount ?? 0, 2) }}
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                @php
-                                    $statusVariant = match($invoice->status) {
-                                        'paid' => 'success',
-                                        'sent', 'pending' => 'warning',
-                                        'overdue' => 'danger',
-                                        'draft' => 'secondary',
-                                        default => 'secondary'
-                                    };
-                                @endphp
-                                <flux:badge variant="{{ $statusVariant }}">
-                                    {{ ucfirst($invoice->status ?? 'pending') }}
-                                </flux:badge>
+                                <x-status-badge :model="$invoice" :status="$invoice->status ?? 'pending'" />
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm">
                                 <div class="flex gap-2">
@@ -156,7 +145,7 @@
                                         </flux:button>
                                     @endif
                                     
-                                    @if($invoice->status !== 'paid' && Route::has('client.invoices.pay'))
+                                    @if($invoice->status !== 'paid' && !in_array($invoice->status, ['cancelled', 'canceled']) && Route::has('client.invoices.pay'))
                                         <flux:button href="{{ route('client.invoices.pay', $invoice->id) }}" variant="primary" size="sm" icon="credit-card">
                                             Pay Now
                                         </flux:button>

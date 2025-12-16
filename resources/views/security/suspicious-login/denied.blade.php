@@ -29,7 +29,7 @@
                             </svg>
                         </div>
                         <div class="ml-3">
-                            <h3 class="text-sm font-medium text-red-800">
+                            <h3 class="text-sm font-medium text-red-600">
                                 Access Denied
                             </h3>
                             <div class="mt-2 text-sm text-red-700">
@@ -57,7 +57,7 @@
                         <div>
                             <dt class="text-sm font-medium text-gray-500">Status</dt>
                             <dd class="text-sm">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-600">
                                     ⛔ Blocked
                                 </span>
                             </dd>
@@ -76,11 +76,11 @@
                 </div>
 
                 <div class="bg-red-50 border border-red-200 rounded-md p-6">
-                    <h4 class="text-sm font-medium text-red-800 mb-6">🛡️ Immediate Security Steps</h4>
+                    <h4 class="text-sm font-medium text-red-600 mb-6">🛡️ Immediate Security Steps</h4>
                     <div class="space-y-2">
                         @foreach($securityRecommendations as $index => $recommendation)
                         <div class="flex items-start">
-                            <span class="inline-flex items-center justify-center h-5 w-5 rounded-full bg-red-100 text-red-800 text-xs font-medium mr-2 mt-0.5">{{ $index + 1 }}</span>
+                            <span class="inline-flex items-center justify-center h-5 w-5 rounded-full bg-red-100 text-red-600 text-xs font-medium mr-2 mt-0.5">{{ $index + 1 }}</span>
                             <span class="text-sm text-red-700">{{ $recommendation }}</span>
                         </div>
                         @endforeach

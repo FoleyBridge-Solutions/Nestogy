@@ -170,7 +170,7 @@
                                         @endif
                                     </td>
                                     <td class="px-6 py-6 whitespace-nowrap">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @if($warranty->status_color === 'success') bg-green-100 text-green-800 @elseif($warranty->status_color === 'danger') bg-red-100 text-red-800 @elseif($warranty->status_color === 'warning') bg-yellow-100 text-yellow-800 @elseif($warranty->status_color === 'info') bg-blue-100 text-blue-800 @else bg-gray-100 text-gray-800 @endif">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @if($warranty->status_color === 'success') bg-green-100 text-green-600 @elseif($warranty->status_color === 'danger') bg-red-100 text-red-600 @elseif($warranty->status_color === 'warning') bg-yellow-100 text-yellow-800 @elseif($warranty->status_color === 'info') bg-blue-100 text-blue-800 @else bg-gray-100 text-gray-800 @endif">
                                             {{ $warranty->status_label }}
                                         </span>
                                         @if($warranty->auto_renewal)

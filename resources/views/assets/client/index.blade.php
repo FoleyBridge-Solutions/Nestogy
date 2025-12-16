@@ -122,14 +122,14 @@ $pageActions = [
                         <flux:table.cell>
                             @php
                                 $statusColors = [
-                                    'Ready To Deploy' => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+                                    'Ready To Deploy' => 'bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-200',
                                     'Deployed' => 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
                                     'Pending' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-                                    'Broken' => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+                                    'Broken' => 'bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-200',
                                     'Archived' => 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
                                     'Out for Repair' => 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
                                 ];
-                                $statusColor = $statusColors[$asset->status] ?? 'bg-gray-100 text-gray-800';
+                                // Color handled by component
                             @endphp
                             <flux:badge class="{{ $statusColor }}">{{ $asset->status }}</flux:badge>
                         </flux:table.cell>

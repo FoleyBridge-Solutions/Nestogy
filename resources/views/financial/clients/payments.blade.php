@@ -233,16 +233,7 @@ $pageActions = [
                             @endif
                         </flux:table.cell>
                         <flux:table.cell>
-                            @php
-                                $statusColors = [
-                                    'completed' => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-                                    'pending' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-                                    'failed' => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
-                                    'refunded' => 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
-                                ];
-                                $statusColor = $statusColors[$payment->status] ?? 'bg-gray-100 text-gray-800';
-                            @endphp
-                            <flux:badge class="{{ $statusColor }}">{{ ucfirst($payment->status) }}</flux:badge>
+                            <x-status-badge :model="$item" :status="$item->status" />
                         </flux:table.cell>
                         <flux:table.cell>
                             {{ $payment->payment_date->format('M j, Y') }}

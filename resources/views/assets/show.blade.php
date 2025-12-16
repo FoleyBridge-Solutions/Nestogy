@@ -104,26 +104,7 @@
                 </div>
             </div>
             <div>
-                @php
-                    $statusColors = [
-                        'active' => 'green',
-                        'inactive' => 'zinc',
-                        'maintenance' => 'yellow',
-                        'retired' => 'red',
-                        'Ready To Deploy' => 'emerald',
-                        'Deployed' => 'blue',
-                        'Archived' => 'zinc',
-                        'Broken - Pending Repair' => 'amber',
-                        'Broken - Not Repairable' => 'red',
-                        'Out for Repair' => 'amber',
-                        'Lost/Stolen' => 'red',
-                        'Unknown' => 'zinc',
-                    ];
-                    $statusColor = $statusColors[$asset->status] ?? 'zinc';
-                @endphp
-                <flux:badge color="{{ $statusColor }}" size="lg">
-                    {{ ucfirst($asset->status) }}
-                </flux:badge>
+                <x-status-badge :model="$item" :status="$item->status" />
             </div>
         </div>
 
@@ -472,10 +453,10 @@
                                                 'closed' => 'zinc'
                                             ];
                                             $priorityColor = $priorityColors[$ticket->priority] ?? 'zinc';
-                                            $statusColor = $statusColors[$ticket->status] ?? 'zinc';
+                                            // Color handled by component
                                         @endphp
                                         <flux:badge size="sm" color="{{ $priorityColor }}">
-                                            {{ ucfirst($ticket->priority) }}
+                                            {{ ucfirst(ticket->priority ?? "N/A") }}
                                         </flux:badge>
                                         <flux:badge size="sm" color="{{ $statusColor }}">
                                             {{ ucfirst(str_replace('_', ' ', $ticket->status)) }}

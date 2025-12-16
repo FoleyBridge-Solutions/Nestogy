@@ -58,6 +58,7 @@ $app = Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             \App\Http\Middleware\CleanupCloudflareCookies::class, // Fix Cloudflare cookie domain issues
             \App\Http\Middleware\LogSignupRequests::class, // Log all signup requests
+            \App\Http\Middleware\ClientPortalGuard::class, // Separate client and admin guards
             \App\Http\Middleware\RememberTokenMiddleware::class,
             // SessionSecurityMiddleware moved to auth group to avoid running on unauthenticated routes
             \App\Http\Middleware\SetBouncerScope::class, // Ensure Bouncer scope is set

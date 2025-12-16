@@ -24,7 +24,7 @@ class CampaignEnrollmentTest extends TestCase
         $model = CampaignEnrollment::factory()->create(['company_id' => $this->company->id]);
         
         $this->assertInstanceOf(CampaignEnrollment::class, $model);
-        $this->assertDatabaseHas('campaign_enrollment_s', ['id' => $model->id]);
+        $this->assertDatabaseHas('campaign_enrollments', ['id' => $model->id]);
     }
 
     public function test_belongs_to_company(): void

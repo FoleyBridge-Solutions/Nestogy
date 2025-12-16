@@ -3,12 +3,13 @@
 namespace App\Domains\Client\Models;
 
 use App\Traits\BelongsToCompany;
+use App\Traits\HasStatusColors;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class ClientDomain extends Model
 {
-    use BelongsToCompany, HasFactory;
+    use BelongsToCompany, HasFactory, HasStatusColors;
 
     protected $fillable = [
         'company_id',

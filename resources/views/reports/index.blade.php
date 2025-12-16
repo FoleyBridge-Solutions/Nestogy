@@ -593,7 +593,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         alerts.forEach(alert => {
             const alertClass = alert.type === 'warning' ? 'bg-yellow-50 border-yellow-200 text-yellow-800' : 
-                              alert.type === 'error' ? 'bg-red-50 border-red-200 text-red-800' : 
+                              alert.type === 'error' ? 'bg-red-50 border-red-200 text-red-600' : 
                               'bg-blue-50 border-blue-200 text-blue-800';
             
             const item = document.createElement('div');

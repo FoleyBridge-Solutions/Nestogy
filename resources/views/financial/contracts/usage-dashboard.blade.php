@@ -205,7 +205,7 @@ $pageActions = [
                             </td>
                             <td class="px-6 py-6 whitespace-nowrap">
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                                      :class="asset.is_online ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
+                                      :class="asset.is_online ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'"
                                       x-text="asset.is_online ? 'Online' : 'Offline'"></span>
                             </td>
                             <td class="px-6 py-6 whitespace-nowrap text-sm text-gray-900" x-text="formatDate(asset.assigned_date)"></td>
@@ -478,7 +478,7 @@ function usageDashboard(contract, billingData) {
         getAssetTypeClass(assetType) {
             const classes = {
                 'workstation': 'bg-blue-100 text-blue-800',
-                'server': 'bg-green-100 text-green-800',
+                'server': 'bg-green-100 text-green-600',
                 'network_device': 'bg-purple-100 text-purple-800',
                 'mobile_device': 'bg-yellow-100 text-yellow-800'
             };
@@ -488,9 +488,9 @@ function usageDashboard(contract, billingData) {
         getCalculationStatusClass(status) {
             const classes = {
                 'calculated': 'bg-blue-100 text-blue-800',
-                'invoiced': 'bg-green-100 text-green-800',
+                'invoiced': 'bg-green-100 text-green-600',
                 'paid': 'bg-emerald-100 text-emerald-800',
-                'disputed': 'bg-red-100 text-red-800'
+                'disputed': 'bg-red-100 text-red-600'
             };
             return classes[status] || 'bg-gray-100 text-gray-800';
         },

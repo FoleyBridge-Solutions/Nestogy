@@ -24,7 +24,7 @@ class ProjectExpenseTest extends TestCase
         $model = ProjectExpense::factory()->create(['company_id' => $this->company->id]);
         
         $this->assertInstanceOf(ProjectExpense::class, $model);
-        $this->assertDatabaseHas('project_expense_s', ['id' => $model->id]);
+        $this->assertDatabaseHas('project_expenses', ['id' => $model->id]);
     }
 
     public function test_belongs_to_company(): void

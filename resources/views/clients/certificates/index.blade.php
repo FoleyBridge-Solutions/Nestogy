@@ -255,9 +255,9 @@
                                 </div>
                                 <div class="flex flex-flex-1 px-6 space-y-1">
                                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium 
-                                                {{ $certificate->status_color === 'green' ? 'bg-green-100 text-green-800' : '' }}
+                                                {{ $certificate->status_color === 'green' ? 'bg-green-100 text-green-600' : '' }}
                                                 {{ $certificate->status_color === 'yellow' ? 'bg-yellow-100 text-yellow-800' : '' }}
-                                                {{ $certificate->status_color === 'red' ? 'bg-red-100 text-red-800' : '' }}
+                                                {{ $certificate->status_color === 'red' ? 'bg-red-100 text-red-600' : '' }}
                                                 {{ $certificate->status_color === 'blue' ? 'bg-blue-100 text-blue-800' : '' }}
                                                {{ $certificate->status_color === 'gray' ? 'bg-gray-100 text-gray-800' : '' }}">
                                         {{ $statuses[$certificate->status] }}
@@ -268,7 +268,7 @@
                                         </span>
                                     @endif
                                     @if($expiryStatus === 'expired')
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-600">
                                             ❌ Expired
                                         </span>
                                     @elseif($expiryStatus === 'expiring_soon')

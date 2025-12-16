@@ -131,12 +131,15 @@
                                         @elseif($priorityName === 'Medium') bg-yellow-100 dark:bg-yellow-900/30
                                         @else bg-green-100 dark:bg-green-900/30
                                         @endif">
-                                        <flux:icon.building-office class="size-3 
-                                            @if($priorityName === 'Critical') text-red-600
-                                            @elseif($priorityName === 'High') text-orange-600
-                                            @elseif($priorityName === 'Medium') text-yellow-600
-                                            @else text-green-600
-                                            @endif" />
+                                        @php
+                                            $iconColorClass = match($priorityName) {
+                                                'Critical' => 'text-red-600',
+                                                'High' => 'text-orange-600',
+                                                'Medium' => 'text-yellow-600',
+                                                default => 'text-green-600',
+                                            };
+                                        @endphp
+                                        <flux:icon.building-office :class="'size-3 ' . $iconColorClass" />
                                     </div>
                                     <flux:text size="xs" class="text-zinc-600 dark:text-zinc-400 truncate">
                                         {{ $ticket['client'] }}

@@ -14,9 +14,9 @@ composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
 echo "🗄️  Running migrations..."
 php artisan migrate --force
 
-# ✨ NEW: Auto-discover and sync permissions from policies
-echo "🔍 Discovering permissions from code..."
-php artisan permissions:discover --sync
+# ✨ Ensure permissions system is ready
+echo "🔍 Ensuring permissions system integrity..."
+php artisan permissions:ensure --sync
 
 # Clear and cache configuration
 echo "🗂️  Caching configuration..."

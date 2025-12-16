@@ -56,6 +56,7 @@ class InvoiceService
 
                 foreach ($data['items'] as $item) {
                     $invoice->items()->create([
+                        'name' => $item['name'] ?? $item['description'] ?? '',
                         'description' => $item['description'] ?? '',
                         'quantity' => $item['quantity'] ?? 1,
                         'price' => $item['price'] ?? $item['rate'] ?? 0,

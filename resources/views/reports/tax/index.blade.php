@@ -260,7 +260,7 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                   {{ $calc->status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                   {{ $calc->status === 'completed' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600' }}">
                                     {{ ucfirst($calc->status) }}
                                 </span>
                             </td>

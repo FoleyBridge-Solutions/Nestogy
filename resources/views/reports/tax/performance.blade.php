@@ -333,7 +333,7 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                    {{ $engine['success_rate'] >= 95 ? 'bg-green-100 text-green-800' : ($engine['success_rate'] >= 90 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800') }}">
+                                    {{ $engine['success_rate'] >= 95 ? 'bg-green-100 text-green-600' : ($engine['success_rate'] >= 90 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-600') }}">
                                     {{ number_format($engine['success_rate'], 1) }}%
                                 </span>
                             </td>

@@ -39,7 +39,9 @@ class PermissionMiddleware
 
         // Store permission info in request for easy access
         $request->attributes->set('required_permission', $permission);
-        $request->attributes->set('user_permissions', $user->getAllPermissions()->pluck('name')->toArray());
+
+        // Note: User permissions are available via $user->can() which includes wildcard support
+        // Storing all permissions in request attributes is not necessary for authorization
 
         return $next($request);
     }

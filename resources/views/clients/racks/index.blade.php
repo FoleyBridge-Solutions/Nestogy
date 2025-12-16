@@ -229,15 +229,15 @@
                                 </div>
                                 <div class="flex flex-flex-1 px-6 space-y-1">
                                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium 
-                                                {{ $rack->status_color === 'green' ? 'bg-green-100 text-green-800' : '' }}
+                                                {{ $rack->status_color === 'green' ? 'bg-green-100 text-green-600' : '' }}
                                                 {{ $rack->status_color === 'yellow' ? 'bg-yellow-100 text-yellow-800' : '' }}
-                                                {{ $rack->status_color === 'red' ? 'bg-red-100 text-red-800' : '' }}
+                                                {{ $rack->status_color === 'red' ? 'bg-red-100 text-red-600' : '' }}
                                                {{ $rack->status_color === 'gray' ? 'bg-gray-100 text-gray-800' : '' }}">
                                         {{ $statuses[$rack->status] }}
                                     </span>
                                     @if($environmentalStatus !== 'normal')
                                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
-                                                   {{ $environmentalStatus === 'critical' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800' }}">
+                                                   {{ $environmentalStatus === 'critical' ? 'bg-red-100 text-red-600' : 'bg-yellow-100 text-yellow-800' }}">
                                             🌡️ {{ ucfirst($environmentalStatus) }}
                                         </span>
                                     @endif

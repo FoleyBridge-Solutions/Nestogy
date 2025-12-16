@@ -13,6 +13,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 /**
@@ -191,19 +192,37 @@ class PortalPaymentService
     public function addPaymentMethod(Client $client, array $paymentData): array
     {
         try {
-            // Validate payment method data
-            $validation = $this->validatePaymentMethodData($paymentData);
-            if (! $validation['valid']) {
-                return $this->failResponse($validation['message']);
-            }
-
             return DB::transaction(function () use ($client, $paymentData) {
+                $stripeGateway = app(StripeGatewayService::class);
 
-                // Tokenize payment method through gateway
-                $tokenizationResult = $this->tokenizePaymentMethod($paymentData);
+                // Handle Stripe Payment Method ID
+                if (isset($paymentData['stripe_payment_method_id'])) {
+                    $tokenizationResult = $stripeGateway->createPaymentMethod(
+                        $client,
+                        $paymentData['stripe_payment_method_id']
+                    );
+                } else {
+                    // Validate payment method data
+                    $validation = $this->validatePaymentMethodData($paymentData);
+                    if (! $validation['valid']) {
+                        return $this->failResponse($validation['message']);
+                    }
+
+                    // Tokenize payment method through gateway
+                    $tokenizationResult = $this->tokenizePaymentMethod($paymentData);
+                }
 
                 if (! $tokenizationResult['success']) {
-                    return $this->failResponse($tokenizationResult['error_message']);
+                    return $this->failResponse($tokenizationResult['error_message'] ?? 'Failed to process payment method');
+                }
+
+                // Set as default if requested and no other default exists
+                $isDefault = $paymentData['is_default'] ?? false;
+                if ($isDefault) {
+                    // Remove default flag from other payment methods
+                    PaymentMethod::where('client_id', $client->id)
+                        ->where('is_default', true)
+                        ->update(['is_default' => false]);
                 }
 
                 // Create payment method record
@@ -217,6 +236,10 @@ class PortalPaymentService
                     'token' => $tokenizationResult['token'],
                     'name' => $paymentData['name'] ?? null,
                     'description' => $paymentData['description'] ?? null,
+                    'is_default' => $isDefault,
+                    'is_active' => true,
+                    'verified' => true, // Stripe payment methods are pre-verified
+                    'verified_at' => Carbon::now(),
 
                     // Card-specific data
                     'card_brand' => $tokenizationResult['card_brand'] ?? null,
@@ -224,6 +247,8 @@ class PortalPaymentService
                     'card_exp_month' => $tokenizationResult['card_exp_month'] ?? null,
                     'card_exp_year' => $tokenizationResult['card_exp_year'] ?? null,
                     'card_holder_name' => $paymentData['card_holder_name'] ?? null,
+                    'card_country' => $tokenizationResult['card_country'] ?? null,
+                    'card_funding' => $tokenizationResult['card_funding'] ?? null,
 
                     // Bank account data
                     'bank_name' => $paymentData['bank_name'] ?? null,
@@ -251,11 +276,6 @@ class PortalPaymentService
                     'created_by' => Auth::user()?->id ?? 1,
                 ]);
 
-                // Verify payment method if required
-                if ($this->shouldVerifyPaymentMethod($paymentMethod)) {
-                    $this->initiatePaymentMethodVerification($paymentMethod);
-                }
-
                 // Create notification
                 $this->createNotification($client, 'payment_method_added', 'Payment Method Added',
                     "A new {$paymentMethod->getDisplayName()} has been added to your account.");
@@ -269,7 +289,7 @@ class PortalPaymentService
                 return $this->successResponse('Payment method added successfully', [
                     'payment_method_id' => $paymentMethod->id,
                     'display_name' => $paymentMethod->getDisplayName(),
-                    'requires_verification' => ! $paymentMethod->verified,
+                    'requires_verification' => false,
                 ]);
             });
 
@@ -678,9 +698,23 @@ class PortalPaymentService
 
     private function processGatewayPayment(Payment $payment, PaymentMethod $paymentMethod, array $fraudCheck): array
     {
-        $gateway = $this->gateways[$paymentMethod->provider] ?? $this->gateways[$this->config['default_gateway']];
-
         try {
+            if ($paymentMethod->provider === 'stripe') {
+                $stripeGateway = app(StripeGatewayService::class);
+                return $stripeGateway->processPayment(
+                    $payment->client,
+                    $paymentMethod,
+                    $payment->amount,
+                    $payment->currency ?? 'USD',
+                    [
+                        'payment_id' => $payment->id,
+                        'invoice_id' => $payment->invoice_id ?? null,
+                    ]
+                );
+            }
+
+            // Fallback to mock gateway for other providers
+            $gateway = $this->gateways[$paymentMethod->provider] ?? $this->gateways[$this->config['default_gateway']];
             return $gateway->processPayment($payment);
         } catch (Exception $e) {
             return [
@@ -704,12 +738,11 @@ class PortalPaymentService
     {
         // Success notification
         $this->createNotification($client, 'payment_received', 'Payment Received',
-            "Your payment of {$payment->getFormattedAmount()} for invoice #{$invoice->number} has been processed successfully.");
+            "Your payment of \${$payment->amount} for invoice #{$invoice->number} has been processed successfully.");
 
         // Email receipt
         if ($client->portalAccess?->notification_preferences['payment_receipts'] ?? true) {
-            // Queue email sending
-            // Mail::to($client->email)->queue(new PaymentReceiptMail($payment));
+            Mail::to($client->email)->queue(new \App\Mail\PaymentReceiptMail($payment));
         }
     }
 

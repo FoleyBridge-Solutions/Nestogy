@@ -203,10 +203,10 @@
                                             @php
                                                 $statusColors = [
                                                     'trialing' => 'bg-yellow-100 text-yellow-800',
-                                                    'active' => 'bg-green-100 text-green-800',
-                                                    'past_due' => 'bg-red-100 text-red-800',
+                                                    'active' => 'bg-green-100 text-green-600',
+                                                    'past_due' => 'bg-red-100 text-red-600',
                                                     'canceled' => 'bg-gray-100 text-gray-800',
-                                                    'unpaid' => 'bg-red-100 text-red-800',
+                                                    'unpaid' => 'bg-red-100 text-red-600',
                                                 ];
                                             @endphp
                                             <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full {{ $statusColors[$subscription->subscription_status] ?? 'bg-gray-100 text-gray-800' }}">

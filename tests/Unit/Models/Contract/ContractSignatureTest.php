@@ -24,7 +24,7 @@ class ContractSignatureTest extends TestCase
         $model = ContractSignature::factory()->create(['company_id' => $this->company->id]);
         
         $this->assertInstanceOf(ContractSignature::class, $model);
-        $this->assertDatabaseHas('contract_signature_s', ['id' => $model->id]);
+        $this->assertDatabaseHas('contract_signatures', ['id' => $model->id]);
     }
 
     public function test_belongs_to_company(): void

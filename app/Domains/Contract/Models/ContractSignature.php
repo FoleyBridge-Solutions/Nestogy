@@ -328,7 +328,7 @@ class ContractSignature extends Model
      */
     public function sign(array $signatureData = []): bool
     {
-        if (! in_array($this->status, [self::STATUS_SENT, self::STATUS_VIEWED])) {
+        if (! in_array($this->status, [self::STATUS_PENDING, self::STATUS_SENT, self::STATUS_VIEWED])) {
             return false;
         }
 

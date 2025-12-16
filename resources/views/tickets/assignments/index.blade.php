@@ -230,7 +230,7 @@
                                                         #{{ $ticket->ticket_number }}
                                                     </span>
                                                     @if($ticket->due_at && $ticket->due_at->isPast())
-                                                        <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                                                        <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-600">
                                                             Overdue
                                                         </span>
                                                     @endif
@@ -261,12 +261,12 @@
                                             @endif
                                         </td>
                                         <td class="px-6 py-6 whitespace-nowrap">
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @if($ticket->status === 'open') bg-green-100 text-green-800 @elseif($ticket->status === 'in_progress') bg-blue-100 text-blue-800 @elseif($ticket->status === 'pending') bg-yellow-100 text-yellow-800 @elseif($ticket->status === 'resolved') bg-purple-100 text-purple-800 @elseif($ticket->status === 'closed') bg-gray-100 text-gray-800 @else bg-gray-100 text-gray-800 @endif">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @if($ticket->status === 'open') bg-green-100 text-green-600 @elseif($ticket->status === 'in_progress') bg-blue-100 text-blue-800 @elseif($ticket->status === 'pending') bg-yellow-100 text-yellow-800 @elseif($ticket->status === 'resolved') bg-purple-100 text-purple-800 @elseif($ticket->status === 'closed') bg-gray-100 text-gray-800 @else bg-gray-100 text-gray-800 @endif">
                                                 {{ ucfirst(str_replace('_', ' ', $ticket->status)) }}
                                             </span>
                                         </td>
                                         <td class="px-6 py-6 whitespace-nowrap">
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @if($ticket->priority === 'critical') bg-red-100 text-red-800 @elseif($ticket->priority === 'high') bg-orange-100 text-orange-800 @elseif($ticket->priority === 'medium') bg-yellow-100 text-yellow-800 @elseif($ticket->priority === 'low') bg-green-100 text-green-800 @else bg-gray-100 text-gray-800 @endif">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @if($ticket->priority === 'critical') bg-red-100 text-red-600 @elseif($ticket->priority === 'high') bg-orange-100 text-orange-800 @elseif($ticket->priority === 'medium') bg-yellow-100 text-yellow-800 @elseif($ticket->priority === 'low') bg-green-100 text-green-600 @else bg-gray-100 text-gray-800 @endif">
                                                 {{ ucfirst($ticket->priority) }}
                                             </span>
                                         </td>

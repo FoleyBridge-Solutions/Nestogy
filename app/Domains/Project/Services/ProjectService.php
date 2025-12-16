@@ -8,6 +8,7 @@ use App\Domains\Project\Models\Task;
 use App\Domains\Project\Repositories\ProjectRepository;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 class ProjectService
 {
@@ -117,7 +118,7 @@ class ProjectService
             'team' => [
                 'total_members' => $members->count(),
                 'active_members' => $members->count(), // All members without left_at are active
-                'total_hours_logged' => 0, // TODO: Implement when ProjectTimeEntry model is available
+                'total_hours_logged' => $project->timeEntries()->sum('hours') ?? 0,
                 'average_utilization' => $this->calculateTeamUtilization($project),
             ],
             'time' => [
@@ -201,7 +202,7 @@ class ProjectService
         foreach ($members as $member) {
             $userTasks = $project->tasks()->where('assigned_to', $member->user_id)->get();
             $completedTasks = $userTasks->where('status', Task::STATUS_COMPLETED)->count();
-            $totalHours = 0; // TODO: Implement when ProjectTimeEntry model is available
+            $totalHours = $project->timeEntries()->where('user_id', $member->user_id)->sum('hours') ?? 0;
 
             $teamData[] = [
                 'id' => $member->user_id,
@@ -259,7 +260,7 @@ class ProjectService
         $actualCost = $project->actual_cost ?? 0;
         $budget = $project->budget ?? 0;
         $laborCost = $this->calculateLaborCost($project);
-        $expensesCost = 0; // TODO: Implement when ProjectExpense model is available
+        $expensesCost = $project->expenses()->where('status', 'approved')->sum('amount') ?? 0;
 
         return [
             'budget' => $budget,
@@ -484,13 +485,17 @@ class ProjectService
                 'user' => $comment->user?->name ?? 'Unknown',
                 'timestamp' => $comment->created_at,
                 'metadata' => [
-                    'comment_preview' => \Str::limit($comment->content, 100),
+                    'comment_preview' => Str::limit($comment->content, 100),
                 ],
             ];
         }
 
-        // Recent time entries - TODO: Implement when ProjectTimeEntry model is available
-        $recentTimeEntries = collect([]);
+        // Recent time entries
+        $recentTimeEntries = $project->timeEntries()
+            ->with('user')
+            ->latest()
+            ->limit(10)
+            ->get();
 
         foreach ($recentTimeEntries as $entry) {
             $activities[] = [
@@ -575,9 +580,20 @@ class ProjectService
      */
     protected function calculateLaborCost(Project $project): float
     {
-        // TODO: Implement when ProjectTimeEntry model is available
-        // For now, return a placeholder value based on project budget
-        return $project->budget ? $project->budget * 0.6 : 0; // Assume 60% of budget is labor
+        $laborCost = 0;
+
+        // Calculate from time entries with hourly rates
+        $timeEntries = $project->timeEntries()->with('user')->get();
+        
+        foreach ($timeEntries as $entry) {
+            // Try to get member's hourly rate, fallback to a default
+            $member = $project->members()->where('user_id', $entry->user_id)->first();
+            $hourlyRate = $member?->hourly_rate ?? $entry->hourly_rate ?? 50; // Default $50/hr
+            
+            $laborCost += $entry->hours * $hourlyRate;
+        }
+
+        return round($laborCost, 2);
     }
 
     /**
@@ -592,7 +608,7 @@ class ProjectService
             return 0;
         }
 
-        $totalSpent = $this->calculateLaborCost($project) + 0; // TODO: Add expenses when model is available
+        $totalSpent = $this->calculateLaborCost($project) + ($project->expenses()->where('status', 'approved')->sum('amount') ?? 0);
 
         return round($totalSpent / $daysElapsed, 2);
     }
@@ -616,7 +632,7 @@ class ProjectService
     protected function calculateCPI(Project $project): float
     {
         $earnedValue = ($project->getCalculatedProgress() / 100) * ($project->budget ?? 0);
-        $actualCost = $this->calculateLaborCost($project) + 0; // TODO: Add expenses when model is available
+        $actualCost = $this->calculateLaborCost($project) + ($project->expenses()->where('status', 'approved')->sum('amount') ?? 0);
 
         if ($actualCost == 0) {
             return 1;

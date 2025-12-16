@@ -203,36 +203,12 @@ $pageActions = [
 
                             <!-- Status -->
                             <flux:table.cell>
-                                @php
-                                    $statusColors = [
-                                        'new' => 'blue',
-                                        'open' => 'yellow',
-                                        'in_progress' => 'purple',
-                                        'pending' => 'orange',
-                                        'resolved' => 'green',
-                                        'closed' => 'zinc',
-                                    ];
-                                    $statusColor = $statusColors[$ticket->status] ?? 'zinc';
-                                @endphp
-                                <flux:badge color="{{ $statusColor }}">
-                                    {{ ucfirst(str_replace('_', ' ', $ticket->status)) }}
-                                </flux:badge>
+                                <x-status-badge :model="$item" :status="$item->status" />
                             </flux:table.cell>
 
                             <!-- Priority -->
                             <flux:table.cell>
-                                @php
-                                    $priorityColors = [
-                                        'Critical' => 'red',
-                                        'High' => 'orange',
-                                        'Medium' => 'yellow',
-                                        'Low' => 'green',
-                                    ];
-                                    $priorityColor = $priorityColors[$ticket->priority] ?? 'zinc';
-                                @endphp
-                                <flux:badge color="{{ $priorityColor }}" variant="outline">
-                                    {{ $ticket->priority }}
-                                </flux:badge>
+                                <x-priority-badge :model="$ticket" :priority="$ticket->priority" variant="outline" />
                             </flux:table.cell>
 
                             <!-- Assignee -->

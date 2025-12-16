@@ -155,7 +155,7 @@
                                     </div>
                                     <div class="flex items-center space-x-2">
                                         @if($template->is_active)
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-600">
                                                 Active
                                             </span>
                                         @else
@@ -168,7 +168,7 @@
 
                                 <!-- Priority & Statistics -->
                                 <div class="flex items-center justify-between mb-6">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @if($template->priority === 'Critical') bg-red-100 text-red-800 @elseif($template->priority === 'High') bg-orange-100 text-orange-800 @elseif($template->priority === 'Medium') bg-yellow-100 text-yellow-800 @elseif($template->priority === 'Low') bg-green-100 text-green-800 @else bg-gray-100 text-gray-800 @endif">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <x-priority-badge :priority="$template->priority" />">
                                         {{ $template->priority ?? 'Medium' }}
                                     </span>
                                     <div class="flex items-center text-sm text-gray-500">

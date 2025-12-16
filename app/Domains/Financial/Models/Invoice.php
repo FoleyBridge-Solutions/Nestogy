@@ -7,6 +7,7 @@ use App\Domains\PhysicalMail\Traits\HasPhysicalMail;
 use App\Domains\Tax\Models\TaxCalculation;
 use App\Domains\Ticket\Models\Ticket;
 use App\Traits\BelongsToCompany;
+use App\Traits\HasStatusColors;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -41,7 +42,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class Invoice extends Model
 {
-    use BelongsToCompany, HasFactory, HasPhysicalMail, SoftDeletes;
+    use BelongsToCompany, HasFactory, HasPhysicalMail, HasStatusColors, SoftDeletes;
 
     /**
      * The table associated with the model.
@@ -161,7 +162,7 @@ class Invoice extends Model
     public function paymentApplications()
     {
         return $this->morphMany(PaymentApplication::class, 'applicable')
-            ->whereHas('payment', function($query) {
+            ->whereHas('payment', function ($query) {
                 $query->whereNull('deleted_at');
             });
     }
@@ -202,10 +203,10 @@ class Invoice extends Model
      */
     public function getPaymentsAttribute()
     {
-        if (!$this->relationLoaded('paymentApplications')) {
+        if (! $this->relationLoaded('paymentApplications')) {
             $this->load('paymentApplications.payment');
         }
-        
+
         return $this->paymentApplications
             ->where('is_active', true)
             ->pluck('payment')
@@ -295,8 +296,6 @@ class Invoice extends Model
         ];
     }
 
-
-
     /**
      * Get service address for tax calculation.
      */
@@ -331,9 +330,7 @@ class Invoice extends Model
         return [];
     }
 
-    public function recalculateVoIPTaxes(): void
-    {
-    }
+    public function recalculateVoIPTaxes(): void {}
 
     public function calculateVoIPTaxes(): array
     {
@@ -423,6 +420,7 @@ class Invoice extends Model
     {
         $paymentApplications = $this->activePaymentApplications()->sum('payment_applications.amount');
         $creditApplications = $this->activeCreditApplications()->sum('client_credit_applications.amount');
+
         return round($paymentApplications + $creditApplications, 2);
     }
 
@@ -455,8 +453,8 @@ class Invoice extends Model
      */
     public function canBePaid(): bool
     {
-        return !$this->isFullyPaid() 
-            && $this->status !== self::STATUS_CANCELLED 
+        return ! $this->isFullyPaid()
+            && $this->status !== self::STATUS_CANCELLED
             && $this->status !== self::STATUS_PAID;
     }
 
@@ -530,7 +528,7 @@ class Invoice extends Model
     public function updatePaymentStatus(): void
     {
         $balance = $this->getBalance();
-        
+
         if ($balance <= 0) {
             $this->update(['status' => self::STATUS_PAID]);
         } elseif ($balance < $this->amount) {
@@ -868,5 +866,39 @@ class Invoice extends Model
         $html .= '</div>';
 
         return $html;
+    }
+
+    /**
+     * Generate PDF for this invoice
+     */
+    public function generatePdf(): string
+    {
+        $this->load(['client', 'items', 'paymentApplications.payment', 'company']);
+
+        $pdfService = app(\App\Contracts\Services\PdfServiceInterface::class);
+
+        $company = $this->company;
+        $companyData = [
+            'name' => $company ? $company->name : config('app.name'),
+            'logo' => $company ? $company->logo : null,
+            'address' => $company ? $company->address : '',
+            'phone' => $company ? $company->phone : '',
+            'email' => $company ? $company->email : '',
+            'website' => $company ? $company->website : '',
+        ];
+
+        return $pdfService->generate(
+            'pdf.invoice',
+            [
+                'invoice' => $this,
+                'client' => $this->client,
+                'items' => $this->items,
+                'company' => $companyData,
+                'generated_at' => now(),
+                'generated_by' => 'Client Portal',
+                'currency' => $this->getCurrencySymbol(),
+            ],
+            ['template' => 'invoice']
+        );
     }
 }

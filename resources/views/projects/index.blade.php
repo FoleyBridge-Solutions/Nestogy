@@ -94,33 +94,10 @@ $pageActions = [
                                 @endif
                             </flux:table.cell>
                             <flux:table.cell>
-                                @php
-                                    $statusColors = [
-                                        'planning' => 'zinc',
-                                        'active' => 'blue',
-                                        'on_hold' => 'yellow',
-                                        'completed' => 'green',
-                                        'cancelled' => 'red',
-                                    ];
-                                    $statusColor = $statusColors[$project->status] ?? 'zinc';
-                                @endphp
-                                <flux:badge color="{{ $statusColor }}" size="sm">
-                                    {{ ucfirst(str_replace('_', ' ', $project->status)) }}
-                                </flux:badge>
+                                <x-status-badge :model="$project" :status="$project->status" size="sm" />
                             </flux:table.cell>
                             <flux:table.cell>
-                                @php
-                                    $priorityColors = [
-                                        'low' => 'green',
-                                        'medium' => 'yellow',
-                                        'high' => 'orange',
-                                        'critical' => 'red',
-                                    ];
-                                    $priorityColor = $priorityColors[$project->priority] ?? 'zinc';
-                                @endphp
-                                <flux:badge color="{{ $priorityColor }}" variant="outline" size="sm">
-                                    {{ ucfirst($project->priority) }}
-                                </flux:badge>
+                                <x-priority-badge :model="$project" :priority="$project->priority" variant="outline" size="sm" />
                             </flux:table.cell>
                             <flux:table.cell>
                                 @if($project->due)

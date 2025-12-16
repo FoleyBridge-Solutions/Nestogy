@@ -37,7 +37,7 @@ $activeItem = 'contracts';
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
                     <div class="flex-1">
-                        <h3 class="text-sm font-medium text-red-800 dark:text-red-300">Error Creating Contract</h3>
+                        <h3 class="text-sm font-medium text-red-600 dark:text-red-300">Error Creating Contract</h3>
                         <p class="mt-1 text-sm text-red-700 dark:text-red-400">{{ session('error') }}</p>
                     </div>
                 </div>
@@ -51,7 +51,7 @@ $activeItem = 'contracts';
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
                     <div class="flex-1">
-                        <h3 class="text-sm font-medium text-red-800 dark:text-red-300">Please correct the following errors:</h3>
+                        <h3 class="text-sm font-medium text-red-600 dark:text-red-300">Please correct the following errors:</h3>
                         <ul class="mt-2 text-sm text-red-700 dark:text-red-400 list-disc list-inside space-y-1">
                             @foreach($errors->all() as $error)
                                 <li>{{ $error }}</li>
@@ -1209,7 +1209,7 @@ function contractWizard() {
         getBillingModelStyle(model) {
             const styles = {
                 'fixed': 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-300',
-                'per_asset': 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-300',
+                'per_asset': 'bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-300',
                 'per_contact': 'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-300',
                 'tiered': 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-300',
                 'hybrid': 'bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-300'

@@ -24,7 +24,7 @@ class SettingTest extends TestCase
         $model = Setting::factory()->create(['company_id' => $this->company->id]);
         
         $this->assertInstanceOf(Setting::class, $model);
-        $this->assertDatabaseHas('setting_s', ['id' => $model->id]);
+        $this->assertDatabaseHas('settings', ['id' => $model->id]);
     }
 
     public function test_belongs_to_company(): void

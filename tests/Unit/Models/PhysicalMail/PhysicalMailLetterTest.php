@@ -24,7 +24,7 @@ class PhysicalMailLetterTest extends TestCase
         $model = PhysicalMailLetter::factory()->create(['company_id' => $this->company->id]);
         
         $this->assertInstanceOf(PhysicalMailLetter::class, $model);
-        $this->assertDatabaseHas('physical_mail_letter_s', ['id' => $model->id]);
+        $this->assertDatabaseHas('physical_mail_letters', ['id' => $model->id]);
     }
 
     public function test_belongs_to_company(): void

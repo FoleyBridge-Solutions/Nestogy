@@ -92,7 +92,7 @@ $pageSubtitle = 'All tickets are within their SLA requirements';
                                 $color = $priorityColors[$ticket->priority] ?? 'gray';
                             @endphp
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-{{ $color }}-100 text-{{ $color }}-800 dark:bg-{{ $color }}-900 dark:text-{{ $color }}-200">
-                                {{ ucfirst($ticket->priority) }}
+                                {{ ucfirst(ticket->priority ?? "N/A") }}
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
@@ -135,7 +135,7 @@ $pageSubtitle = 'All tickets are within their SLA requirements';
                                     'waiting' => 'purple',
                                     'on_hold' => 'gray'
                                 ];
-                                $statusColor = $statusColors[$ticket->status] ?? 'gray';
+                                // Color handled by component
                             @endphp
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-{{ $statusColor }}-100 text-{{ $statusColor }}-800 dark:bg-{{ $statusColor }}-900 dark:text-{{ $statusColor }}-200">
                                 {{ str_replace('_', ' ', ucfirst($ticket->status)) }}

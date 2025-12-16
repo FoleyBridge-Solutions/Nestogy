@@ -131,12 +131,15 @@
                     <div class="flex items-center gap-2 flex-shrink-0">
                         <div class="text-right">
                             <flux:text size="xs" class="text-zinc-500">Capacity</flux:text>
-                            <flux:text class="font-bold text-sm
-                                @if($member['capacity_percentage'] > 80) text-red-600
-                                @elseif($member['capacity_percentage'] > 60) text-amber-600
-                                @elseif($member['capacity_percentage'] > 40) text-blue-600
-                                @else text-green-600
-                                @endif">
+                            @php
+                                $capacityClass = match(true) {
+                                    $member['capacity_percentage'] > 80 => 'text-red-600',
+                                    $member['capacity_percentage'] > 60 => 'text-amber-600',
+                                    $member['capacity_percentage'] > 40 => 'text-blue-600',
+                                    default => 'text-green-600',
+                                };
+                            @endphp
+                            <flux:text :class="'font-bold text-sm ' . $capacityClass">
                                 {{ round($member['capacity_percentage']) }}%
                             </flux:text>
                         </div>

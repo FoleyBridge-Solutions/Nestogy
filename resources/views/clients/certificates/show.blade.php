@@ -30,9 +30,9 @@
                     </div>
                     <div class="flex items-center space-x-3">
                         <span class="inline-flex items-center px-6 py-1 rounded-full text-sm font-medium 
-                                    {{ $certificate->status_color === 'green' ? 'bg-green-100 text-green-800' : '' }}
+                                    {{ $certificate->status_color === 'green' ? 'bg-green-100 text-green-600' : '' }}
                                     {{ $certificate->status_color === 'yellow' ? 'bg-yellow-100 text-yellow-800' : '' }}
-                                    {{ $certificate->status_color === 'red' ? 'bg-red-100 text-red-800' : '' }}
+                                    {{ $certificate->status_color === 'red' ? 'bg-red-100 text-red-600' : '' }}
                                     {{ $certificate->status_color === 'blue' ? 'bg-blue-100 text-blue-800' : '' }}
                                     {{ $certificate->status_color === 'gray' ? 'bg-gray-100 text-gray-800' : '' }}">
                             {{ ucfirst($certificate->status) }}
@@ -43,7 +43,7 @@
                             </span>
                         @endif
                         @if($certificate->expiry_status === 'expired')
-                            <span class="inline-flex items-center px-6 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                            <span class="inline-flex items-center px-6 py-1 rounded-full text-sm font-medium bg-red-100 text-red-600">
                                 ❌ Expired
                             </span>
                         @elseif($certificate->expiry_status === 'expiring_soon')
@@ -94,9 +94,9 @@
                                 <dt class="text-sm font-medium text-gray-500">Status</dt>
                                 <dd class="mt-1">
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
-                                                {{ $certificate->status_color === 'green' ? 'bg-green-100 text-green-800' : '' }}
+                                                {{ $certificate->status_color === 'green' ? 'bg-green-100 text-green-600' : '' }}
                                                 {{ $certificate->status_color === 'yellow' ? 'bg-yellow-100 text-yellow-800' : '' }}
-                                                {{ $certificate->status_color === 'red' ? 'bg-red-100 text-red-800' : '' }}
+                                                {{ $certificate->status_color === 'red' ? 'bg-red-100 text-red-600' : '' }}
                                                 {{ $certificate->status_color === 'blue' ? 'bg-blue-100 text-blue-800' : '' }}
                                                 {{ $certificate->status_color === 'gray' ? 'bg-gray-100 text-gray-800' : '' }}">
                                         {{ ucfirst($certificate->status) }}
@@ -386,10 +386,10 @@
                                     <dd class="text-sm">
                                         @php $urgency = $certificate->renewal_urgency; @endphp
                                         <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
-                                                    {{ $urgency === 'critical' ? 'bg-red-100 text-red-800' : '' }}
+                                                    {{ $urgency === 'critical' ? 'bg-red-100 text-red-600' : '' }}
                                                     {{ $urgency === 'high' ? 'bg-orange-100 text-orange-800' : '' }}
                                                     {{ $urgency === 'medium' ? 'bg-yellow-100 text-yellow-800' : '' }}
-                                                    {{ $urgency === 'low' ? 'bg-green-100 text-green-800' : '' }}
+                                                    {{ $urgency === 'low' ? 'bg-green-100 text-green-600' : '' }}
                                                     {{ $urgency === 'none' ? 'bg-gray-100 text-gray-800' : '' }}">
                                             {{ ucfirst($urgency) }}
                                         </span>
@@ -453,9 +453,9 @@
                                     <dt class="text-sm font-medium text-gray-500">Security</dt>
                                     <dd class="text-sm">
                                         <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
-                                                    {{ $certificate->security_level === 'high' ? 'bg-green-100 text-green-800' : '' }}
+                                                    {{ $certificate->security_level === 'high' ? 'bg-green-100 text-green-600' : '' }}
                                                     {{ $certificate->security_level === 'medium' ? 'bg-yellow-100 text-yellow-800' : '' }}
-                                                    {{ $certificate->security_level === 'low' ? 'bg-red-100 text-red-800' : '' }}">
+                                                    {{ $certificate->security_level === 'low' ? 'bg-red-100 text-red-600' : '' }}">
                                             {{ ucfirst($certificate->security_level) }}
                                         </span>
                                     </dd>
@@ -465,7 +465,7 @@
                                 <dt class="text-sm font-medium text-gray-500">Auto Renewal</dt>
                                 <dd class="text-sm">
                                     <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
-                                                {{ $certificate->auto_renewal ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' }}">
+                                                {{ $certificate->auto_renewal ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-800' }}">
                                         {{ $certificate->auto_renewal ? 'Enabled' : 'Disabled' }}
                                     </span>
                                 </dd>

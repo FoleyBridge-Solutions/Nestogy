@@ -31,21 +31,9 @@
     <div class="bg-white border border-gray-200 rounded-lg p-6">
         <div class="flex items-center justify-between">
             <div class="flex items-center space-x-4">
-                <span class="inline-flex items-center px-6 py-1 rounded-full text-sm font-medium
-                    @if($quote->status === 'Draft') bg-gray-100 text-gray-800
-                    @elseif($quote->status === 'Sent') bg-blue-100 text-blue-800
-                    @elseif($quote->status === 'Viewed') bg-purple-100 text-purple-800
-                    @elseif($quote->status === 'Accepted') bg-green-100 text-green-800
-                    @elseif($quote->status === 'Declined') bg-red-100 text-red-800
-                    @elseif($quote->status === 'Expired') bg-yellow-100 text-yellow-800
-                    @else bg-gray-100 text-gray-800
-                    @endif">
-                    {{ $quote->status }}
-                </span>
+                <x-status-badge type="quote" :status="$quote->status" size="lg" />
                 @if($quote->isExpired())
-                    <span class="inline-flex items-center px-6 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
-                        Expired
-                    </span>
+                    <flux:badge color="red" size="lg">Expired</flux:badge>
                 @endif
             </div>
             <div class="text-sm text-gray-600">

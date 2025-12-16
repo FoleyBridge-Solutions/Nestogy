@@ -211,10 +211,10 @@
                             <td class="px-4 py-3 text-sm">{{ $ticket->client->name ?? 'N/A' }}</td>
                             <td class="px-4 py-3">
                                 <span class="px-2 py-1 text-xs font-semibold rounded-full
-                                    @if($ticket->priority === 'Critical') bg-red-100 text-red-800
+                                    @if($ticket->priority === 'Critical') bg-red-100 text-red-600
                                     @elseif($ticket->priority === 'High') bg-orange-100 text-orange-800
                                     @elseif($ticket->priority === 'Medium') bg-yellow-100 text-yellow-800
-                                    @else bg-green-100 text-green-800
+                                    @else bg-green-100 text-green-600
                                     @endif">
                                     {{ $ticket->priority }}
                                 </span>

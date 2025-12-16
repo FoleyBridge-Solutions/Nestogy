@@ -397,15 +397,99 @@
                                 <flux:separator />
                                 
                                 <flux:checkbox.group wire:model="portal_permissions" label="Portal Permissions">
-                                    <flux:description>Control what this contact can access in the client portal</flux:description>
-                                    <flux:checkbox value="can_view_contracts" label="View Contracts" />
-                                    <flux:checkbox value="can_view_invoices" label="View Invoices" />
-                                    <flux:checkbox value="can_view_tickets" label="View Support Tickets" />
-                                    <flux:checkbox value="can_create_tickets" label="Create Support Tickets" />
-                                    <flux:checkbox value="can_approve_quotes" label="Approve Quotes" />
-                                    <flux:checkbox value="can_view_assets" label="View Assets" />
-                                    <flux:checkbox value="can_view_projects" label="View Projects" />
-                                    <flux:checkbox value="can_view_reports" label="View Reports" />
+                                    @if(!$primary && !$billing && !$technical && !$important)
+                                        <flux:description>Please select a contact type on the Essential Information tab first.</flux:description>
+                                        <div class="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                            <div class="flex items-start">
+                                                <svg class="w-5 h-5 text-yellow-600 mt-0.5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                                </svg>
+                                                <div>
+                                                    <h4 class="text-sm font-semibold text-yellow-800 mb-1">Contact Type Required</h4>
+                                                    <p class="text-sm text-yellow-700">
+                                                        To configure portal permissions, please go to the <strong>Essential Information</strong> tab and select at least one contact type (Primary, Billing, Technical, or Important).
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @else
+                                        <flux:description>Select which features this contact can access in the client portal</flux:description>
+                                        
+                                        {{-- Primary Contact Permissions --}}
+                                        @if($primary)
+                                            <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                                <div class="text-sm text-blue-800">
+                                                    <strong>Primary Contact:</strong> Typically has access to all features. Select the permissions appropriate for this contact.
+                                                </div>
+                                            </div>
+                                        @endif
+                                        
+                                        {{-- Billing Contact Permissions --}}
+                                        @if($billing)
+                                            <div class="mb-3">
+                                                <div class="text-sm font-semibold text-gray-700 mb-2">Financial & Business Permissions (Billing Contact):</div>
+                                                <div class="space-y-2 ml-4">
+                                                    <flux:checkbox value="can_view_contracts" label="View Contracts" />
+                                                    <flux:checkbox value="can_view_invoices" label="View Invoices" />
+                                                    <flux:checkbox value="can_view_quotes" label="View Quotes" />
+                                                    <flux:checkbox value="can_approve_quotes" label="Approve Quotes" />
+                                                </div>
+                                            </div>
+                                        @endif
+                                        
+                                        {{-- Technical Contact Permissions --}}
+                                        @if($technical)
+                                            <div class="mb-3">
+                                                <div class="text-sm font-semibold text-gray-700 mb-2">Technical Support Permissions (Technical Contact):</div>
+                                                <div class="space-y-2 ml-4">
+                                                    <flux:checkbox value="can_view_tickets" label="View Support Tickets" />
+                                                    <flux:checkbox value="can_create_tickets" label="Create Support Tickets" />
+                                                    <flux:checkbox value="can_view_assets" label="View Assets" />
+                                                </div>
+                                            </div>
+                                        @endif
+                                        
+                                        {{-- Important Contact Permissions --}}
+                                        @if($important)
+                                            <div class="mb-3">
+                                                <div class="text-sm font-semibold text-gray-700 mb-2">Executive/Decision Maker Permissions (Important Contact):</div>
+                                                <div class="space-y-2 ml-4">
+                                                    <flux:checkbox value="can_view_contracts" label="View Contracts" />
+                                                    <flux:checkbox value="can_view_invoices" label="View Invoices" />
+                                                    <flux:checkbox value="can_view_quotes" label="View Quotes" />
+                                                    <flux:checkbox value="can_approve_quotes" label="Approve Quotes" />
+                                                    <flux:checkbox value="can_view_projects" label="View Projects" />
+                                                    <flux:checkbox value="can_view_reports" label="View Reports" />
+                                                </div>
+                                            </div>
+                                        @endif
+                                        
+                                        {{-- Show other permissions if they don't fit the selected categories --}}
+                                        @if($billing || $technical || $important || $primary)
+                                            <div class="mb-3">
+                                                <div class="text-sm font-semibold text-gray-700 mb-2">Other Available Permissions:</div>
+                                                <div class="space-y-2 ml-4 text-sm text-gray-600">
+                                                    @if(!$billing && !$important && !$primary)
+                                                        <flux:checkbox value="can_view_contracts" label="View Contracts" />
+                                                        <flux:checkbox value="can_view_invoices" label="View Invoices" />
+                                                        <flux:checkbox value="can_view_quotes" label="View Quotes" />
+                                                        <flux:checkbox value="can_approve_quotes" label="Approve Quotes" />
+                                                    @endif
+                                                    
+                                                    @if(!$technical && !$primary)
+                                                        <flux:checkbox value="can_view_tickets" label="View Support Tickets" />
+                                                        <flux:checkbox value="can_create_tickets" label="Create Support Tickets" />
+                                                        <flux:checkbox value="can_view_assets" label="View Assets" />
+                                                    @endif
+                                                    
+                                                    @if(!$important && !$primary)
+                                                        <flux:checkbox value="can_view_projects" label="View Projects" />
+                                                        <flux:checkbox value="can_view_reports" label="View Reports" />
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        @endif
+                                    @endif
                                 </flux:checkbox.group>
                             @endif
                         </div>

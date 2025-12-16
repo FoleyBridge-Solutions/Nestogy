@@ -101,14 +101,15 @@
     <!-- Filters -->
     <flux:card class="mb-6">
         
-            <form method="GET" action="{{ route('client.tickets') }}" class="flex flex-wrap gap-4">
+            <form method="GET" action="{{ route('client.tickets') }}" class="flex flex-wrap gap-4" id="filterForm">
                 <div class="flex-1 min-w-[200px]">
                     <flux:input 
                         type="text" 
                         name="search" 
                         value="{{ request('search') }}"
                         placeholder="Search tickets..."
-                        icon="magnifying-glass" />
+                        icon="magnifying-glass"
+                        onkeydown="if(event.key === 'Enter') { event.preventDefault(); document.getElementById('filterForm').submit(); }" />
                 </div>
                 <div>
                     <flux:select name="status" onchange="this.form.submit()">
@@ -128,11 +129,6 @@
                         <option value="Medium" {{ request('priority') == 'Medium' ? 'selected' : '' }}>Medium</option>
                         <option value="Low" {{ request('priority') == 'Low' ? 'selected' : '' }}>Low</option>
                     </flux:select>
-                </div>
-                <div>
-                    <flux:button type="submit" variant="primary">
-                        <i class="fas fa-filter mr-2"></i>Filter
-                    </flux:button>
                 </div>
             </form>
         
@@ -180,29 +176,10 @@
                                 </div>
                             </flux:table.cell>
                             <flux:table.cell>
-                                @php
-                                    $statusColors = [
-                                        'Open' => 'red',
-                                        'Awaiting Customer' => 'yellow',
-                                        'In Progress' => 'blue',
-                                        'Resolved' => 'green',
-                                        'Closed' => 'zinc'
-                                    ];
-                                    $statusColor = $statusColors[$ticket->status] ?? 'zinc';
-                                @endphp
-                                <flux:badge color="{{ $statusColor }}" size="sm">{{ $ticket->status }}</flux:badge>
+                                <x-status-badge :model="$ticket" :status="$ticket->status" size="sm" />
                             </flux:table.cell>
                             <flux:table.cell>
-                                @php
-                                    $priorityColors = [
-                                        'Critical' => 'red',
-                                        'High' => 'orange',
-                                        'Medium' => 'yellow',
-                                        'Low' => 'green'
-                                    ];
-                                    $priorityColor = $priorityColors[$ticket->priority] ?? 'zinc';
-                                @endphp
-                                <flux:badge color="{{ $priorityColor }}" size="sm">{{ $ticket->priority }}</flux:badge>
+                                <x-priority-badge :model="$ticket" :priority="$ticket->priority" size="sm" />
                             </flux:table.cell>
                             <flux:table.cell>
                                 <span class="text-sm text-gray-600 dark:text-gray-400">

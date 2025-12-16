@@ -54,8 +54,9 @@ Route::prefix('client-portal')->name('client.')->group(function () {
         Route::get('invoices/statistics', [\App\Domains\Client\Controllers\ClientPortalController::class, 'invoicesStatistics'])->name('invoices.statistics');
         Route::get('invoices/{invoice}', [\App\Domains\Client\Controllers\ClientPortalController::class, 'showInvoice'])->name('invoices.show');
         Route::get('invoices/{invoice}/download', [\App\Domains\Client\Controllers\ClientPortalController::class, 'downloadClientInvoice'])->name('invoices.download');
-        Route::get('invoices/{invoice}/pdf', [\App\Domains\Client\Controllers\ClientPortalController::class, 'downloadClientInvoice'])->name('invoices.pdf');
-        Route::get('invoices/{invoice}/payment-options', [\App\Domains\Client\Controllers\ClientPortalController::class, 'invoicePaymentOptions'])->name('invoices.payment-options');
+        Route::get('invoices/{invoice}/pdf', [\App\Domains\Client\Controllers\ClientPortalController::class, 'viewClientInvoicePdf'])->name('invoices.pdf');
+        Route::get('invoices/{invoice}/print', [\App\Domains\Client\Controllers\ClientPortalController::class, 'viewClientInvoicePdf'])->name('invoices.print');
+        Route::get('invoices/{invoice}/pay', \App\Livewire\Portal\InvoicePayment::class)->name('invoices.pay');
 
         // Quotes
         Route::get('quotes', [\App\Domains\Client\Controllers\ClientPortalController::class, 'quotes'])->name('quotes');
@@ -63,7 +64,7 @@ Route::prefix('client-portal')->name('client.')->group(function () {
         Route::get('quotes/{quote}/pdf', [\App\Domains\Client\Controllers\ClientPortalController::class, 'downloadQuotePdf'])->name('quotes.pdf');
 
         // Tickets
-        Route::get('tickets', [\App\Domains\Client\Controllers\ClientPortalController::class, 'tickets'])->name('tickets');
+        Route::get('tickets', \App\Livewire\Portal\TicketIndex::class)->name('tickets');
         Route::get('tickets/create', [\App\Domains\Client\Controllers\ClientPortalController::class, 'createTicket'])->name('tickets.create');
         Route::post('tickets', [\App\Domains\Client\Controllers\ClientPortalController::class, 'storeTicket'])->name('tickets.store');
         Route::get('tickets/{ticket}', [\App\Domains\Client\Controllers\ClientPortalController::class, 'showTicket'])->name('tickets.show');
@@ -78,11 +79,26 @@ Route::prefix('client-portal')->name('client.')->group(function () {
         Route::get('projects', [\App\Domains\Client\Controllers\ClientPortalController::class, 'projects'])->name('projects');
         Route::get('projects/{project}', [\App\Domains\Client\Controllers\ClientPortalController::class, 'showProject'])->name('projects.show');
 
+        // Reports
+        Route::get('reports', \App\Livewire\Portal\Reports::class)->name('reports');
+
         // Profile
         Route::get('profile', [\App\Domains\Client\Controllers\ClientPortalController::class, 'profile'])->name('profile');
         Route::put('profile', [\App\Domains\Client\Controllers\ClientPortalController::class, 'updateProfile'])->name('profile.update');
 
         // Notifications
         Route::post('notifications/{notification}/read', [\App\Domains\Client\Controllers\ClientPortalController::class, 'markNotificationAsRead'])->name('notifications.read');
+
+        // Payments
+        Route::prefix('payments')->name('payments.')->group(function () {
+            Route::get('/', \App\Livewire\Portal\PaymentHistory::class)->name('index');
+            Route::get('{payment}/confirmation', [\App\Domains\Client\Controllers\ClientPortalController::class, 'paymentConfirmation'])->name('confirmation');
+            Route::get('{payment}/receipt', [\App\Domains\Client\Controllers\ClientPortalController::class, 'paymentReceipt'])->name('receipt');
+        });
+
+        // Payment Methods
+        Route::prefix('payment-methods')->name('payment-methods.')->group(function () {
+            Route::get('/', \App\Livewire\Portal\PaymentMethods::class)->name('index');
+        });
     });
 });

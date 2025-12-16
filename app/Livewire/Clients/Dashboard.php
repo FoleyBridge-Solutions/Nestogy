@@ -2,10 +2,10 @@
 
 namespace App\Livewire\Clients;
 
+use App\Domains\Client\Models\Contact;
 use App\Domains\Contract\Models\Contract;
 use App\Domains\Contract\Models\ContractMilestone;
 use App\Domains\Contract\Models\ContractSignature;
-use App\Domains\Client\Models\Contact;
 use Livewire\Component;
 
 class Dashboard extends Component
@@ -38,6 +38,8 @@ class Dashboard extends Component
             'contracts' => $this->canViewContracts() ? $this->getContracts() : null,
             'invoiceStats' => $this->canViewInvoices() ? $this->getInvoiceStats() : null,
             'invoices' => $this->canViewInvoices() ? $this->getInvoices() : null,
+            'quoteStats' => $this->canViewQuotes() ? $this->getQuoteStats() : null,
+            'quotes' => $this->canViewQuotes() ? $this->getQuotes() : null,
             'ticketStats' => $this->canViewTickets() ? $this->getTicketStats() : null,
             'tickets' => $this->canViewTickets() ? $this->getTickets() : null,
             'assetStats' => $this->canViewAssets() ? $this->getAssetStats() : null,
@@ -49,6 +51,7 @@ class Dashboard extends Component
             'pendingActions' => $this->getPendingActions(),
             'notifications' => $this->getNotifications(),
             'recentTickets' => $this->canViewTickets() ? $this->getRecentTickets() : null,
+            'recentQuotes' => $this->canViewQuotes() ? $this->getRecentQuotes() : null,
             'paymentHistory' => $this->canViewInvoices() ? $this->getPaymentHistory() : null,
             'ticketTrends' => $this->canViewTickets() ? $this->getTicketTrends() : null,
             'spendingTrends' => $this->canViewInvoices() ? $this->getSpendingTrends() : null,
@@ -62,36 +65,42 @@ class Dashboard extends Component
 
     protected function canViewContracts(): bool
     {
-        return $this->contact->isPrimary() ||
-               $this->contact->isBilling() ||
-               in_array('can_view_contracts', $this->contact->portal_permissions ?? []);
+        return in_array('can_view_contracts', $this->permissions);
     }
 
     protected function canViewInvoices(): bool
     {
-        return $this->contact->isPrimary() ||
-               $this->contact->isBilling() ||
-               in_array('can_view_invoices', $this->contact->portal_permissions ?? []);
+        return in_array('can_view_invoices', $this->permissions);
     }
 
     protected function canViewTickets(): bool
     {
-        return $this->contact->isPrimary() ||
-               $this->contact->isTechnical() ||
-               in_array('can_view_tickets', $this->contact->portal_permissions ?? []);
+        return in_array('can_view_tickets', $this->permissions);
+    }
+
+    protected function canCreateTickets(): bool
+    {
+        return in_array('can_create_tickets', $this->permissions);
     }
 
     protected function canViewAssets(): bool
     {
-        return $this->contact->isPrimary() ||
-               $this->contact->isTechnical() ||
-               in_array('can_view_assets', $this->contact->portal_permissions ?? []);
+        return in_array('can_view_assets', $this->permissions);
     }
 
     protected function canViewProjects(): bool
     {
-        return $this->contact->isPrimary() ||
-               in_array('can_view_projects', $this->contact->portal_permissions ?? []);
+        return in_array('can_view_projects', $this->permissions);
+    }
+
+    protected function canViewQuotes(): bool
+    {
+        return in_array('can_view_quotes', $this->permissions);
+    }
+
+    protected function canApproveQuotes(): bool
+    {
+        return in_array('can_approve_quotes', $this->permissions);
     }
 
     protected function getContracts()
@@ -174,8 +183,8 @@ class Dashboard extends Component
 
         return [
             'total_tickets' => $tickets->count(),
-            'open_tickets' => $tickets->whereIn('status', ['Open', 'In Progress', 'Waiting', 'On Hold'])->count(),
-            'resolved_this_month' => $tickets->whereIn('status', ['Resolved', 'Closed'])
+            'open_tickets' => $tickets->whereRaw('LOWER(status) IN (?, ?, ?, ?)', ['open', 'in progress', 'waiting', 'on hold'])->count(),
+            'resolved_this_month' => $tickets->whereRaw('LOWER(status) IN (?, ?)', ['resolved', 'closed'])
                 ->whereMonth('updated_at', now()->month)
                 ->count(),
             'avg_response_time' => '< 1h',
@@ -387,22 +396,30 @@ class Dashboard extends Component
         $startDate = now()->subMonths(5)->startOfMonth();
         $endDate = now()->endOfMonth();
 
-        // Use single aggregate query instead of 12 separate queries
-        $openTickets = $this->client->tickets()
+        // Count all tickets created in date range (opened tickets)
+        $openedTickets = $this->client->tickets()
             ->whereBetween('created_at', [$startDate, $endDate])
-            ->whereIn('status', ['Open', 'In Progress', 'Waiting', 'On Hold'])
             ->selectRaw('EXTRACT(YEAR FROM created_at) as year, EXTRACT(MONTH FROM created_at) as month, COUNT(*) as count')
             ->groupBy('year', 'month')
             ->get()
-            ->keyBy(fn($item) => $item->year . '-' . str_pad($item->month, 2, '0', STR_PAD_LEFT));
+            ->keyBy(fn ($item) => $item->year.'-'.str_pad($item->month, 2, '0', STR_PAD_LEFT));
 
+        // Count tickets that were closed in date range
+        // Use closed_at or resolved_at, falling back to updated_at for legacy tickets
         $closedTickets = $this->client->tickets()
-            ->whereBetween('updated_at', [$startDate, $endDate])
-            ->whereIn('status', ['Resolved', 'Closed'])
-            ->selectRaw('EXTRACT(YEAR FROM updated_at) as year, EXTRACT(MONTH FROM updated_at) as month, COUNT(*) as count')
+            ->where(function ($query) use ($startDate, $endDate) {
+                $query->whereBetween('closed_at', [$startDate, $endDate])
+                    ->orWhereBetween('resolved_at', [$startDate, $endDate]);
+            })
+            ->whereRaw('LOWER(status) IN (?, ?)', ['resolved', 'closed'])
+            ->selectRaw('
+                EXTRACT(YEAR FROM COALESCE(closed_at, resolved_at)) as year,
+                EXTRACT(MONTH FROM COALESCE(closed_at, resolved_at)) as month,
+                COUNT(*) as count
+            ')
             ->groupBy('year', 'month')
             ->get()
-            ->keyBy(fn($item) => $item->year . '-' . str_pad($item->month, 2, '0', STR_PAD_LEFT));
+            ->keyBy(fn ($item) => $item->year.'-'.str_pad($item->month, 2, '0', STR_PAD_LEFT));
 
         // Build arrays for chart
         $months = [];
@@ -414,7 +431,7 @@ class Dashboard extends Component
             $months[] = $month->format('M');
             $key = $month->format('Y-m');
 
-            $open[] = $openTickets->get($key)?->count ?? 0;
+            $open[] = $openedTickets->get($key)?->count ?? 0;
             $closed[] = $closedTickets->get($key)?->count ?? 0;
         }
 
@@ -440,7 +457,7 @@ class Dashboard extends Component
             ->selectRaw('EXTRACT(YEAR FROM created_at) as year, EXTRACT(MONTH FROM created_at) as month, SUM(amount) as total')
             ->groupBy('year', 'month')
             ->get()
-            ->keyBy(fn($item) => $item->year . '-' . str_pad($item->month, 2, '0', STR_PAD_LEFT));
+            ->keyBy(fn ($item) => $item->year.'-'.str_pad($item->month, 2, '0', STR_PAD_LEFT));
 
         // Build arrays for chart
         $months = [];
@@ -611,5 +628,48 @@ class Dashboard extends Component
             'critical' => $criticalCount,
             'categories' => $assets->groupBy('type')->map->count()->toArray(),
         ];
+    }
+
+    protected function getQuotes()
+    {
+        if (! $this->client) {
+            return collect();
+        }
+
+        return $this->client->quotes()
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get();
+    }
+
+    protected function getQuoteStats(): array
+    {
+        if (! $this->client) {
+            return [];
+        }
+
+        $quotes = $this->client->quotes();
+
+        return [
+            'total_quotes' => $quotes->count(),
+            'pending_quotes' => $quotes->whereIn('status', ['Sent', 'Viewed'])->count(),
+            'accepted_quotes' => $quotes->where('status', 'Accepted')->count(),
+            'pending_approval' => $this->canApproveQuotes()
+                ? $quotes->whereIn('status', ['Sent', 'Viewed'])->count()
+                : 0,
+            'total_value' => $quotes->where('status', 'Accepted')->sum('amount'),
+        ];
+    }
+
+    protected function getRecentQuotes()
+    {
+        if (! $this->client) {
+            return collect();
+        }
+
+        return $this->client->quotes()
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get();
     }
 }

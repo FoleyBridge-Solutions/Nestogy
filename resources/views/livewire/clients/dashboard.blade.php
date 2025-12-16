@@ -1,7 +1,21 @@
 <div class="space-y-8">
     <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div class="space-y-2">
-            <flux:heading size="2xl">Welcome back, {{ $contact->name }}!</flux:heading>
+            <div class="flex items-center gap-3 flex-wrap">
+                <flux:heading size="2xl">Welcome back, {{ $contact->name }}!</flux:heading>
+                @if($contact->isPrimary())
+                    <flux:badge icon="star" color="violet">Primary Contact</flux:badge>
+                @endif
+                @if($contact->isBilling())
+                    <flux:badge icon="currency-dollar" color="emerald">Billing Contact</flux:badge>
+                @endif
+                @if($contact->isTechnical())
+                    <flux:badge icon="wrench-screwdriver" color="blue">Technical Contact</flux:badge>
+                @endif
+                @if($contact->isImportant())
+                    <flux:badge icon="shield-check" color="amber">Important Contact</flux:badge>
+                @endif
+            </div>
             <flux:text size="sm" class="text-zinc-500 dark:text-zinc-300">
                 {{ $client->name }} • {{ now()->format('M j, Y g:i A') }}
             </flux:text>
@@ -21,6 +35,29 @@
             @endif
         </div>
     </div>
+
+    @php
+        $hasAnyPermissions = count($permissions ?? []) > 0;
+    @endphp
+
+    @if(!$hasAnyPermissions)
+        <flux:card class="text-center py-12">
+            <div class="mx-auto max-w-md space-y-4">
+                <div class="mx-auto w-16 h-16 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
+                    <flux:icon name="lock-closed" class="w-8 h-8 text-zinc-400" />
+                </div>
+                <flux:heading size="xl">No Portal Access Configured</flux:heading>
+                <flux:text class="text-zinc-500 dark:text-zinc-400">
+                    Your account doesn't have any portal permissions configured yet. Please contact your administrator to request access to specific features like invoices, tickets, or contracts.
+                </flux:text>
+                <div class="pt-4">
+                    <flux:button href="mailto:support@{{ parse_url(config('app.url'), PHP_URL_HOST) }}" icon="envelope" variant="primary">
+                        Contact Administrator
+                    </flux:button>
+                </div>
+            </div>
+        </flux:card>
+    @else
 
     @php
         $criticalAlerts = [];
@@ -98,6 +135,21 @@
             </flux:card>
         @endif
 
+        @if(isset($quoteStats))
+            <flux:card class="border-purple-200 dark:border-purple-800">
+                <div class="flex items-start justify-between">
+                    <div class="space-y-1">
+                        <flux:text size="sm" class="text-zinc-500 dark:text-zinc-400">Pending Quotes</flux:text>
+                        <flux:heading size="xl">{{ $quoteStats['pending_quotes'] ?? 0 }}</flux:heading>
+                        <flux:text size="xs" class="text-zinc-400 dark:text-zinc-500">
+                            {{ $quoteStats['total_quotes'] ?? 0 }} total • ${{ number_format($quoteStats['total_value'] ?? 0, 2) }} value
+                        </flux:text>
+                    </div>
+                    <flux:badge color="purple" icon="clipboard-document-check">Quotes</flux:badge>
+                </div>
+            </flux:card>
+        @endif
+
         @if(isset($ticketStats))
             <flux:card class="border-sky-200 dark:border-sky-800">
                 <div class="flex items-start justify-between">
@@ -136,9 +188,11 @@
                     <flux:heading size="lg">Recent Support Tickets</flux:heading>
                     <flux:text size="sm" class="text-zinc-500 dark:text-zinc-400 mt-1">Your latest support requests and their status</flux:text>
                 </div>
-                <flux:button variant="primary" size="sm" icon="plus" href="{{ route('client.tickets.create') ?? '#' }}">
-                    New Ticket
-                </flux:button>
+                @if(in_array('can_create_tickets', $permissions ?? []))
+                    <flux:button variant="primary" size="sm" icon="plus" href="{{ route('client.tickets.create') ?? '#' }}">
+                        New Ticket
+                    </flux:button>
+                @endif
             </div>
             <div class="mt-6 space-y-3">
                 @foreach($recentTickets as $ticket)
@@ -160,6 +214,46 @@
                         <flux:button variant="ghost" size="xs" href="{{ route('client.tickets.show', $ticket->id) ?? '#' }}" icon="arrow-right">
                             View
                         </flux:button>
+                    </div>
+                @endforeach
+            </div>
+        </flux:card>
+    @endif
+
+    @if(isset($recentQuotes) && $recentQuotes->count() > 0)
+        <flux:card>
+            <div class="flex items-center justify-between">
+                <div>
+                    <flux:heading size="lg">Recent Quotes</flux:heading>
+                    <flux:text size="sm" class="text-zinc-500 dark:text-zinc-400 mt-1">Your latest quotes and proposals</flux:text>
+                </div>
+                <flux:button variant="ghost" size="sm" href="{{ route('client.quotes') }}">View All</flux:button>
+            </div>
+            <div class="mt-6 space-y-3">
+                @foreach($recentQuotes as $quote)
+                    <div class="flex items-center justify-between p-4 rounded-lg border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3">
+                                <flux:badge size="sm" color="{{ $quote->status === 'Accepted' ? 'emerald' : ($quote->status === 'Declined' ? 'rose' : 'amber') }}">
+                                    {{ $quote->status }}
+                                </flux:badge>
+                                <flux:heading size="sm">{{ $quote->title ?? 'Quote #' . $quote->id }}</flux:heading>
+                            </div>
+                            <flux:text size="sm" class="text-zinc-500 dark:text-zinc-400 mt-1">
+                                Created {{ $quote->created_at->diffForHumans() }} • ${{ number_format($quote->amount ?? 0, 2) }}
+                                @if($quote->valid_until && $quote->valid_until->isFuture() && in_array($quote->status, ['Sent', 'Viewed']))
+                                    • Valid until {{ $quote->valid_until->format('M j, Y') }}
+                                @endif
+                            </flux:text>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            @if(in_array('can_approve_quotes', $permissions ?? []) && in_array($quote->status, ['Sent', 'Viewed']))
+                                <flux:badge size="sm" color="purple" icon="clock">Pending Approval</flux:badge>
+                            @endif
+                            <flux:button variant="ghost" size="xs" href="{{ route('client.quotes.show', $quote->id) }}" icon="arrow-right">
+                                View
+                            </flux:button>
+                        </div>
                     </div>
                 @endforeach
             </div>
@@ -408,6 +502,12 @@
                         </flux:button>
                     @endif
 
+                    @if(isset($quoteStats))
+                        <flux:button variant="ghost" icon="clipboard-document-check" href="{{ route('client.quotes') }}" class="justify-start">
+                            View quotes
+                        </flux:button>
+                    @endif
+
                     @if(isset($ticketStats))
                         <flux:button variant="ghost" icon="lifebuoy" href="{{ route('client.tickets') ?? '#' }}" class="justify-start">
                             Support tickets
@@ -622,5 +722,5 @@
                     </flux:card>
                 @endif
             </div>
-    </div>
+    @endif
 </div>

@@ -10,15 +10,7 @@
             <flux:icon.arrow-left class="size-5" />
         </a>
         <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">{{ $asset->name ?? 'Asset Details' }}</h1>
-        <span class="px-3 py-1 text-sm font-semibold rounded-full 
-            @if($asset->status === 'Deployed') bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
-            @elseif($asset->status === 'Ready To Deploy') bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200
-            @elseif(str_contains($asset->status, 'Broken')) bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200
-            @elseif($asset->status === 'Archived') bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200
-            @else bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200
-            @endif">
-            {{ $asset->status ?? 'Unknown' }}
-        </span>
+        <x-status-badge :model="$asset" :status="$asset->status ?? 'Unknown'" size="lg" />
     </div>
     <p class="text-gray-600 dark:text-gray-400 ml-8">{{ $asset->type ?? 'Asset' }} • Last updated {{ $asset->updated_at->diffForHumans() }}</p>
 </div>
@@ -206,14 +198,7 @@
                 <div>
                     <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Support Status</dt>
                     <dd class="text-base">
-                        <span class="px-3 py-1 rounded-full text-sm font-semibold
-                            @if($asset->support_status === 'supported') bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
-                            @elseif($asset->support_status === 'unsupported') bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200
-                            @elseif($asset->support_status === 'pending_assignment') bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200
-                            @else bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200
-                            @endif">
-                            {{ ucfirst(str_replace('_', ' ', $asset->support_status)) }}
-                        </span>
+                        <x-status-badge type="asset_support" :status="$asset->support_status" />
                     </dd>
                 </div>
                 @endif
@@ -304,12 +289,12 @@
                         @if($asset->warranty_expire->isPast())
                             <flux:icon.exclamation-circle class="size-4 inline-block" />
                             Expired {{ $asset->warranty_expire->diffForHumans() }}
-                        @elseif($asset->warranty_expire->diffInDays(now()) <= 60)
+                        @elseif(now()->diffInDays($asset->warranty_expire, false) <= 60)
                             <flux:icon.exclamation-triangle class="size-4 inline-block" />
-                            Expires in {{ $asset->warranty_expire->diffInDays(now()) }} days
+                            Expires in {{ (int) now()->diffInDays($asset->warranty_expire, false) }} days
                         @else
                             <flux:icon.check-circle class="size-4 inline-block" />
-                            Active ({{ $asset->warranty_expire->diffInDays(now()) }} days remaining)
+                            Active ({{ (int) now()->diffInDays($asset->warranty_expire, false) }} days remaining)
                         @endif
                     </p>
                 </div>

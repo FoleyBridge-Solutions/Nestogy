@@ -14,6 +14,7 @@ use App\Domains\Project\Models\Vendor;
 use App\Traits\BelongsToCompany;
 use App\Traits\HasAIAnalysis;
 use App\Traits\HasArchive;
+use App\Traits\HasStatusColors;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -29,7 +30,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  */
 class Ticket extends Model
 {
-    use BelongsToCompany, HasAIAnalysis, HasArchive, HasFactory;
+    use BelongsToCompany, HasAIAnalysis, HasArchive, HasFactory, HasStatusColors;
 
     /**
      * Create a new factory instance for the model.
@@ -826,35 +827,8 @@ class Ticket extends Model
         });
     }
 
-    /**
-     * Get the color class for the ticket priority
-     */
-    public function getPriorityColor(): string
-    {
-        return match (strtolower($this->priority)) {
-            'low' => 'success',
-            'medium' => 'warning',
-            'high' => 'danger',
-            'critical' => 'dark',
-            default => 'secondary',
-        };
-    }
-
-    /**
-     * Get the color class for the ticket status
-     */
-    public function getStatusColor(): string
-    {
-        return match (strtolower($this->status)) {
-            'new' => 'primary',
-            'open' => 'info',
-            'in_progress', 'in progress' => 'warning',
-            'pending' => 'secondary',
-            'resolved' => 'success',
-            'closed' => 'dark',
-            default => 'light',
-        };
-    }
+    // Color methods removed - now provided by HasStatusColors trait
+    // which returns Flux UI colors (yellow, blue, green, red, orange, zinc)
 
     /**
      * Get the icon class for the ticket priority

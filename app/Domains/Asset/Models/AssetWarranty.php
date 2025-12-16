@@ -5,13 +5,14 @@ namespace App\Domains\Asset\Models;
 use App\Domains\Asset\Models\Asset;
 use App\Domains\Project\Models\Vendor;
 use App\Traits\BelongsToCompany;
+use App\Traits\HasStatusColors;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class AssetWarranty extends Model
 {
-    use BelongsToCompany, HasFactory, SoftDeletes;
+    use BelongsToCompany, HasFactory, SoftDeletes, HasStatusColors;
 
     protected $table = 'asset_warranties';
 

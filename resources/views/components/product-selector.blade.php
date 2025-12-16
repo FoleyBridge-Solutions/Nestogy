@@ -45,7 +45,7 @@
                 <template x-for="product in paginatedProducts" :key="product.id">
                     {{-- Product Grid Card --}}
                     <div class="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow relative">
-                        <div x-show="product.discontinued" class="absolute top-2 right-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                        <div x-show="product.discontinued" class="absolute top-2 right-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-600">
                             Discontinued
                         </div>
                         
@@ -102,7 +102,7 @@
                             <div class="flex-1">
                                 <div class="flex items-center">
                                     <h6 class="font-medium text-gray-900" x-text="product.name"></h6>
-                                    <div x-show="product.discontinued" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 ml-2">
+                                    <div x-show="product.discontinued" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-600 ml-2">
                                         Discontinued
                                     </div>
                                 </div>

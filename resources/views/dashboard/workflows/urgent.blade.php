@@ -90,7 +90,7 @@
                                 <span class="font-medium text-sm text-slate-800 dark:text-white">
                                     {{ Str::limit($ticket->subject ?? 'No Subject', 50) }}
                                 </span>
-                                <span class="px-2 py-0.5 text-xs rounded-full {{ $ticket->priority === 'Critical' ? 'bg-red-100 text-red-800' : 'bg-orange-100 text-orange-800' }}">
+                                <span class="px-2 py-0.5 text-xs rounded-full {{ $ticket->priority === 'Critical' ? 'bg-red-100 text-red-600' : 'bg-orange-100 text-orange-800' }}">
                                     {{ $ticket->priority }}
                                 </span>
                             </div>
@@ -175,7 +175,7 @@
                 @forelse($data['client_impact'] ?? [] as $client)
                 <div class="flex items-center justify-between">
                     <span class="text-sm text-slate-700 dark:text-slate-300">{{ Str::limit($client->name, 20) }}</span>
-                    <span class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
+                    <span class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-600">
                         {{ $client->critical_tickets }} critical
                     </span>
                 </div>

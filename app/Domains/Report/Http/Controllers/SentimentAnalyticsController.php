@@ -563,19 +563,6 @@ class SentimentAnalyticsController extends Controller
 
     private function getSentimentColor(float $score): string
     {
-        if ($score > 0.5) {
-            return self::COLOR_SUCCESS;
-        }
-        if ($score > 0.1) {
-            return '#84cc16';
-        }
-        if ($score > -0.1) {
-            return '#64748b';
-        }
-        if ($score > -0.5) {
-            return '#f97316';
-        }
-
-        return '#ef4444';
+        return \App\Helpers\StatusColorHelper::sentimentColor($score);
     }
 }

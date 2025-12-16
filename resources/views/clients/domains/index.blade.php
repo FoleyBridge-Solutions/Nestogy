@@ -182,9 +182,9 @@
                                 </div>
                                 <div class="flex flex-flex-1 px-6 space-y-1">
                                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium 
-                                                {{ $domain->status_color === 'green' ? 'bg-green-100 text-green-800' : '' }}
+                                                {{ $domain->status_color === 'green' ? 'bg-green-100 text-green-600' : '' }}
                                                 {{ $domain->status_color === 'yellow' ? 'bg-yellow-100 text-yellow-800' : '' }}
-                                                {{ $domain->status_color === 'red' ? 'bg-red-100 text-red-800' : '' }}
+                                                {{ $domain->status_color === 'red' ? 'bg-red-100 text-red-600' : '' }}
                                                 {{ $domain->status_color === 'blue' ? 'bg-blue-100 text-blue-800' : '' }}
                                                {{ $domain->status_color === 'gray' ? 'bg-gray-100 text-gray-800' : '' }}">
                                         {{ $statuses[$domain->status] }}
@@ -195,7 +195,7 @@
                                         </span>
                                     @endif
                                     @if($expiryStatus === 'expired')
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-600">
                                             ❌ Expired
                                         </span>
                                     @elseif($expiryStatus === 'expiring_soon')
@@ -204,7 +204,7 @@
                                         </span>
                                     @endif
                                     @if($securityStatus === 'vulnerable')
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-600">
                                             🔓 Vulnerable
                                         </span>
                                     @elseif($securityStatus === 'warning')
@@ -212,7 +212,7 @@
                                             ⚠️ Security
                                         </span>
                                     @elseif($securityStatus === 'secure')
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-600">
                                             🔒 Secure
                                         </span>
                                     @endif
@@ -274,17 +274,17 @@
                             <div class="mb-6">
                                 <div class="flex flex-wrap gap-1">
                                     @if($domain->privacy_protection)
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-600">
                                             Privacy
                                         </span>
                                     @endif
                                     @if($domain->lock_status)
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-600">
                                             Locked
                                         </span>
                                     @endif
                                     @if($domain->whois_guard)
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-600">
                                             WHOIS Guard
                                         </span>
                                     @endif

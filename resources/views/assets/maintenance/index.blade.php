@@ -215,7 +215,7 @@
                                                     ];
                                                 @endphp
                                                 <span class="{{ $priorityColors[$item->priority] ?? 'text-gray-600 dark:text-gray-400' }}">
-                                                    {{ ucfirst($item->priority) }}
+                                                    {{ ucfirst(item->priority ?? "N/A") }}
                                                 </span>
                                             </td>
                                             <td>

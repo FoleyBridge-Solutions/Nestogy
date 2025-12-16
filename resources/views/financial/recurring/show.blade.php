@@ -83,7 +83,7 @@ $pageActions = [
             <div class="px-6 py-6 border-b border-gray-200">
                 <div class="flex items-center justify-between">
                     <h3 class="text-lg font-medium text-gray-900">Service Status</h3>
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @if($recurring->status) bg-green-100 text-green-800 @else bg-red-100 text-red-800 @endif">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @if($recurring->status) bg-green-100 text-green-600 @else bg-red-100 text-red-600 @endif">
                         {{ $recurring->status ? 'Active' : 'Inactive' }}
                     </span>
                 </div>
@@ -130,7 +130,7 @@ $pageActions = [
                     <div>
                         <dt class="text-sm font-medium text-gray-500">Billing Type</dt>
                         <dd class="mt-1">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @if($recurring->billing_type === 'flat') bg-gray-100 text-gray-800 @elseif($recurring->billing_type === 'usage_based') bg-blue-100 text-blue-800 @elseif($recurring->billing_type === 'tiered') bg-green-100 text-green-800 @elseif($recurring->billing_type === 'hybrid') bg-purple-100 text-purple-800 @elseif($recurring->billing_type === 'volume_discount') bg-indigo-100 text-indigo-800 @else bg-gray-100 text-gray-800 @endif">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @if($recurring->billing_type === 'flat') bg-gray-100 text-gray-800 @elseif($recurring->billing_type === 'usage_based') bg-blue-100 text-blue-800 @elseif($recurring->billing_type === 'tiered') bg-green-100 text-green-600 @elseif($recurring->billing_type === 'hybrid') bg-purple-100 text-purple-800 @elseif($recurring->billing_type === 'volume_discount') bg-indigo-100 text-indigo-800 @else bg-gray-100 text-gray-800 @endif">
                                 {{ ucfirst(str_replace('_', ' ', $recurring->billing_type)) }}
                             </span>
                         </dd>
@@ -158,25 +158,25 @@ $pageActions = [
                 <div class="px-6 py-6 space-y-4">
                     <div class="flex items-center justify-between">
                         <span class="text-sm text-gray-500">Contract Escalations</span>
-                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium @if($recurring->contract_escalation_enabled) bg-green-100 text-green-800 @else bg-gray-100 text-gray-800 @endif">
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium @if($recurring->contract_escalation_enabled) bg-green-100 text-green-600 @else bg-gray-100 text-gray-800 @endif">
                             {{ $recurring->contract_escalation_enabled ? 'Enabled' : 'Disabled' }}
                         </span>
                     </div>
                     <div class="flex items-center justify-between">
                         <span class="text-sm text-gray-500">Proration</span>
-                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium @if($recurring->proration_enabled) bg-green-100 text-green-800 @else bg-gray-100 text-gray-800 @endif">
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium @if($recurring->proration_enabled) bg-green-100 text-green-600 @else bg-gray-100 text-gray-800 @endif">
                             {{ $recurring->proration_enabled ? 'Enabled' : 'Disabled' }}
                         </span>
                     </div>
                     <div class="flex items-center justify-between">
                         <span class="text-sm text-gray-500">VoIP Tax Calculation</span>
-                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium @if($recurring->tax_calculation_enabled) bg-green-100 text-green-800 @else bg-gray-100 text-gray-800 @endif">
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium @if($recurring->tax_calculation_enabled) bg-green-100 text-green-600 @else bg-gray-100 text-gray-800 @endif">
                             {{ $recurring->tax_calculation_enabled ? 'Enabled' : 'Disabled' }}
                         </span>
                     </div>
                     <div class="flex items-center justify-between">
                         <span class="text-sm text-gray-500">Auto Send Invoices</span>
-                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium @if($recurring->auto_send) bg-green-100 text-green-800 @else bg-gray-100 text-gray-800 @endif">
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium @if($recurring->auto_send) bg-green-100 text-green-600 @else bg-gray-100 text-gray-800 @endif">
                             {{ $recurring->auto_send ? 'Enabled' : 'Disabled' }}
                         </span>
                     </div>
@@ -305,7 +305,7 @@ $pageActions = [
                                 ${{ number_format($invoice->amount, 2) }}
                             </td>
                             <td class="px-6 py-6 whitespace-nowrap">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @if($invoice->status === 'Draft') bg-gray-100 text-gray-800 @elseif($invoice->status === 'Sent') bg-blue-100 text-blue-800 @elseif($invoice->status === 'Paid') bg-green-100 text-green-800 @elseif($invoice->status === 'Overdue') bg-red-100 text-red-800 @else bg-gray-100 text-gray-800 @endif">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @if($invoice->status === 'Draft') bg-gray-100 text-gray-800 @elseif($invoice->status === 'Sent') bg-blue-100 text-blue-800 @elseif($invoice->status === 'Paid') bg-green-100 text-green-600 @elseif($invoice->status === 'Overdue') bg-red-100 text-red-600 @else bg-gray-100 text-gray-800 @endif">
                                     {{ $invoice->status }}
                                 </span>
                             </td>
@@ -350,7 +350,7 @@ $pageActions = [
                                     Pending
                                 </span>
                             @else
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-600">
                                     Applied
                                 </span>
                             @endif

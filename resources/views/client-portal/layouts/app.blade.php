@@ -73,15 +73,15 @@
                 </flux:sidebar.item>
             @endif
 
-            @if(in_array('can_view_tickets', $permissions))
-                <flux:sidebar.item href="{{ route('client.tickets') }}" icon="lifebuoy" current="{{ request()->routeIs('client.tickets*') }}">
-                    Support
+            @if(in_array('can_view_quotes', $permissions))
+                <flux:sidebar.item href="{{ Route::has('client.quotes') ? route('client.quotes') : '#' }}" icon="clipboard-document-check" current="{{ request()->routeIs('client.quotes*') }}">
+                    Quotes
                 </flux:sidebar.item>
             @endif
 
-            @if(in_array('can_approve_quotes', $permissions))
-                <flux:sidebar.item href="{{ Route::has('client.quotes') ? route('client.quotes') : '#' }}" icon="clipboard-document-check" current="{{ request()->routeIs('client.quotes*') }}">
-                    Quotes
+            @if(in_array('can_view_tickets', $permissions))
+                <flux:sidebar.item href="{{ route('client.tickets') }}" icon="lifebuoy" current="{{ request()->routeIs('client.tickets*') }}">
+                    Support
                 </flux:sidebar.item>
             @endif
 
@@ -131,6 +131,7 @@
             @endif
 
         @yield('content')
+        {{ $slot ?? '' }}
     </flux:main>
 
     @stack('scripts')

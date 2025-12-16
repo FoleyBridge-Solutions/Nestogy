@@ -108,17 +108,17 @@
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 text-center bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-200">
                                         ✓ Modern Platform
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-center">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-200">
                                         Modern Stack
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-center">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-200">
                                         Legacy Monolith
                                     </span>
                                 </td>
@@ -145,7 +145,7 @@
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 text-center bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-200">
                                         ✓ Secure & Reliable
                                     </span>
                                 </td>
@@ -183,12 +183,12 @@
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 text-center bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-200">
                                         ✓ Multi-RMM
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-center">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-200">
                                         ✓ Multi-Platform
                                     </span>
                                 </td>
@@ -225,17 +225,17 @@
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-center">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-200">
                                         ✓ Standard
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-center">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-200">
                                         ✓ Advanced
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-center">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-200">
                                         ✓ Standard
                                     </span>
                                 </td>
@@ -257,7 +257,7 @@
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 text-center bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-200">
                                         Free to start
                                     </span>
                                 </td>
@@ -267,12 +267,12 @@
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-center">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-200">
                                         $149/user/month
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-center">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-200">
                                         $149/user/month
                                     </span>
                                 </td>
@@ -294,7 +294,7 @@
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 text-center bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-200">
                                         ✓ Advanced
                                     </span>
                                 </td>
@@ -304,12 +304,12 @@
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-center">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-200">
                                         ✓ Advanced
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-center">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-200">
                                         ✓ Standard
                                     </span>
                                 </td>
@@ -336,17 +336,17 @@
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-center">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-200">
                                         ✓ Mature
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-center">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-200">
                                         ✓ Established
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-center">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-200">
                                         ✓ Legacy
                                     </span>
                                 </td>
@@ -695,7 +695,7 @@
                         <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
                             <div class="flex items-center justify-between mb-2">
                                 <span class="text-sm font-semibold text-gray-600 dark:text-gray-300">Active Contracts</span>
-                                <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-bold">3</span>
+                                <span class="bg-green-100 text-green-600 px-2 py-1 rounded text-xs font-bold">3</span>
                             </div>
                             <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
                                 <div class="bg-green-500 h-2 rounded-full" style="width: 75%"></div>

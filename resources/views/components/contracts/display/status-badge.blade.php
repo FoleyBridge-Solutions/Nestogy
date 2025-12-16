@@ -32,12 +32,12 @@ $statusConfig = [
         'label' => 'Signed'
     ],
     'active' => [
-        'classes' => 'bg-green-100 text-green-800 border-green-300',
+        'classes' => 'bg-green-100 text-green-600 border-green-300',
         'icon' => 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
         'label' => 'Active'
     ],
     'suspended' => [
-        'classes' => 'bg-red-100 text-red-800 border-red-300',
+        'classes' => 'bg-red-100 text-red-600 border-red-300',
         'icon' => 'M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z',
         'label' => 'Suspended'
     ],
@@ -47,7 +47,7 @@ $statusConfig = [
         'label' => 'Terminated'
     ],
     'expired' => [
-        'classes' => 'bg-red-100 text-red-800 border-red-300',
+        'classes' => 'bg-red-100 text-red-600 border-red-300',
         'icon' => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
         'label' => 'Expired'
     ],

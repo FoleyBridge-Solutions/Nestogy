@@ -50,7 +50,7 @@
                                         <div class="flex-1 min-w-0">
                                             <div class="flex items-center gap-2">
                                                 <span class="font-medium text-gray-900 dark:text-gray-100">#{{ $ticket['number'] }}</span>
-                                                <flux:badge class="{{ $ticket['priority'] === 'Critical' ? 'bg-red-100 text-red-800' : ($ticket['priority'] === 'High' ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-800') }}">
+                                                <flux:badge class="{{ $ticket['priority'] === 'Critical' ? 'bg-red-100 text-red-600' : ($ticket['priority'] === 'High' ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-800') }}">
                                                     {{ $ticket['priority'] }}
                                                 </flux:badge>
                                             </div>

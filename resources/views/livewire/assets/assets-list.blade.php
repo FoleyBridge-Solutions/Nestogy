@@ -130,22 +130,7 @@
                                 @endif
                             </flux:table.cell>
                             <flux:table.cell>
-                                @php
-                                    $statusColors = [
-                                        'Ready To Deploy' => 'blue',
-                                        'Deployed' => 'green',
-                                        'Archived' => 'zinc',
-                                        'Broken - Pending Repair' => 'orange',
-                                        'Broken - Not Repairable' => 'red',
-                                        'Out for Repair' => 'yellow',
-                                        'Lost/Stolen' => 'red',
-                                        'Unknown' => 'zinc'
-                                    ];
-                                    $statusColor = $statusColors[$asset->status] ?? 'zinc';
-                                @endphp
-                                <flux:badge color="{{ $statusColor }}" size="sm">
-                                    {{ $asset->status }}
-                                </flux:badge>
+                                <x-status-badge :model="$item" :status="$item->status" />
                             </flux:table.cell>
                             <flux:table.cell>
                                 <div class="flex items-center justify-end gap-1">

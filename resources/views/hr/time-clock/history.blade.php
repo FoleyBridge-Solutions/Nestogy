@@ -84,17 +84,7 @@ $pageActions = [
                                             @endif
                                         </td>
                                         <td class="px-4 py-3">
-                                            @php
-                                                $statusColors = [
-                                                    'in_progress' => 'green',
-                                                    'completed' => 'blue',
-                                                    'approved' => 'green',
-                                                    'rejected' => 'red',
-                                                    'paid' => 'purple',
-                                                ];
-                                                $statusColor = $statusColors[$entry->status] ?? 'gray';
-                                            @endphp
-                                            <flux:badge :color="$statusColor">{{ ucfirst(str_replace('_', ' ', $entry->status)) }}</flux:badge>
+                                            <x-status-badge :model="$item" :status="$item->status" />
                                         </td>
                                         <td class="px-4 py-3">
                                             <span class="text-xs text-gray-500">{{ ucfirst($entry->entry_type) }}</span>

@@ -15,21 +15,23 @@ class PermissionService
 {
     /**
      * Check if user has permission (with wildcard support)
+     *
+     * Note: This method is called by HasEnhancedPermissions trait.
+     * User model's can() method handles the wildcard logic directly,
+     * so this primarily serves as a helper for non-can() contexts.
      */
     public function userHasPermission(User $user, string $permission): bool
     {
-        // Direct permission check
-        if ($user->can($permission)) {
-            return true;
-        }
-
-        // Wildcard permission check
-        return $this->hasWildcardPermission($user, $permission);
+        // Use User model's can() which includes wildcard checking
+        // The User::can() method is overridden to avoid recursion
+        return $user->can($permission);
     }
 
     /**
      * Check wildcard permissions
      * Example: 'assets.*' matches 'assets.view', 'assets.edit', etc.
+     *
+     * @deprecated Use User::can() instead which has built-in wildcard support
      */
     private function hasWildcardPermission(User $user, string $permission): bool
     {
@@ -46,9 +48,10 @@ class PermissionService
             $wildcardChecks[] = $wildcard;
         }
 
-        // Check each wildcard pattern
+        // Check each wildcard pattern using parent::can() to avoid recursion
         foreach ($wildcardChecks as $pattern) {
-            if ($user->can($pattern)) {
+            // Use Bouncer directly to check abilities without triggering User::can()
+            if (Bouncer::can($pattern, $user)) {
                 return true;
             }
         }

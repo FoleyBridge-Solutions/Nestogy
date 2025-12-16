@@ -34,7 +34,7 @@ $pageSubtitle = '';
                     </svg>
                 </div>
                 <div class="ml-3">
-                    <h3 class="text-sm font-medium text-red-800">There were errors with your submission</h3>
+                    <h3 class="text-sm font-medium text-red-600">There were errors with your submission</h3>
                     <div class="mt-2 text-sm text-red-700">
                         <ul class="list-disc pl-5 space-y-1">
                             @foreach($errors->all() as $error)
@@ -52,7 +52,7 @@ $pageSubtitle = '';
             <div class="px-6 py-6 border-b border-gray-200">
                 <div class="flex items-center justify-between">
                     <h3 class="text-lg font-medium text-gray-900">Current Status</h3>
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @if($quote->approval_status === 'pending') bg-yellow-100 text-yellow-800 @elseif($quote->approval_status === 'manager_approved') bg-blue-100 text-blue-800 @elseif($quote->approval_status === 'executive_approved') bg-green-100 text-green-800 @elseif($quote->approval_status === 'rejected') bg-red-100 text-red-800 @endif">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @if($quote->approval_status === 'pending') bg-yellow-100 text-yellow-800 @elseif($quote->approval_status === 'manager_approved') bg-blue-100 text-blue-800 @elseif($quote->approval_status === 'executive_approved') bg-green-100 text-green-600 @elseif($quote->approval_status === 'rejected') bg-red-100 text-red-600 @endif">
                         {{ ucfirst(str_replace('_', ' ', $quote->approval_status)) }}
                     </span>
                 </div>
@@ -209,7 +209,7 @@ $pageSubtitle = '';
                     <div class="flex flex-wrap gap-2">
                         @foreach($quote->voip_config['features'] as $feature => $enabled)
                         @if($enabled)
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-600">
                             {{ ucwords(str_replace('_', ' ', $feature)) }}
                         </span>
                         @endif

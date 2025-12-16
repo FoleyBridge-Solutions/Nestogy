@@ -6,8 +6,10 @@ use App\Domains\Ticket\Models\Ticket;
 use App\Domains\Ticket\Models\TicketRating;
 use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Layout;
 use Livewire\Component;
 
+#[Layout('client-portal.layouts.app')]
 class TicketSatisfactionSurvey extends Component
 {
     public Ticket $ticket;

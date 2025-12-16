@@ -243,10 +243,10 @@
                                     <td class="px-6 py-6 whitespace-nowrap">
                                         <div>
                                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
-                                                @if($recurring->frequency === 'daily') bg-green-100 text-green-800
+                                                @if($recurring->frequency === 'daily') bg-green-100 text-green-600
                                                 @elseif($recurring->frequency === 'weekly') bg-blue-100 text-blue-800
                                                 @elseif($recurring->frequency === 'monthly') bg-purple-100 text-purple-800
-                                                @elseif($recurring->frequency === 'yearly') bg-red-100 text-red-800
+                                                @elseif($recurring->frequency === 'yearly') bg-red-100 text-red-600
                                                 @else bg-gray-100 text-gray-800
                                                 @endif">
                                                 {{ ucfirst($recurring->frequency) }}
@@ -261,7 +261,7 @@
                                     <td class="px-6 py-6 whitespace-nowrap">
                                         <div class="flex items-center">
                                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
-                                                @if($recurring->status === 'active') bg-green-100 text-green-800
+                                                @if($recurring->status === 'active') bg-green-100 text-green-600
                                                 @elseif($recurring->status === 'paused') bg-yellow-100 text-yellow-800
                                                 @elseif($recurring->status === 'completed') bg-blue-100 text-blue-800
                                                 @else bg-gray-100 text-gray-800

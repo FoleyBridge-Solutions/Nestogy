@@ -7,6 +7,7 @@ use App\Domains\Core\Models\User;
 use App\Domains\Ticket\Models\Ticket;
 use App\Traits\BelongsToCompany;
 use App\Traits\HasAIAnalysis;
+use App\Traits\HasStatusColors;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -14,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Project Model
@@ -36,7 +38,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class Project extends Model
 {
-    use BelongsToCompany, HasFactory, SoftDeletes, HasAIAnalysis;
+    use BelongsToCompany, HasFactory, SoftDeletes, HasAIAnalysis, HasStatusColors;
 
     /**
      * The table associated with the model.
@@ -55,6 +57,19 @@ class Project extends Model
         'manager_id',
         'completed_at',
         'client_id',
+        'status',
+        'progress',
+        'priority',
+        'start_date',
+        'end_date',
+        'budget',
+        'actual_cost',
+        'category',
+        'project_code',
+        'budget_currency',
+        'progress_percentage',
+        'actual_start_date',
+        'actual_end_date',
         'ai_summary',
         'ai_risk_level',
         'ai_risk_confidence',
@@ -75,6 +90,14 @@ class Project extends Model
         'updated_at' => 'datetime',
         'completed_at' => 'datetime',
         'archived_at' => 'datetime',
+        'start_date' => 'date',
+        'end_date' => 'date',
+        'actual_start_date' => 'date',
+        'actual_end_date' => 'date',
+        'budget' => 'decimal:2',
+        'actual_cost' => 'decimal:2',
+        'progress' => 'integer',
+        'progress_percentage' => 'integer',
         'ai_recommendations' => 'array',
         'ai_analyzed_at' => 'datetime',
         'ai_risk_confidence' => 'decimal:2',
@@ -88,13 +111,30 @@ class Project extends Model
     /**
      * Project status enumeration
      */
-    const STATUS_ACTIVE = 'Active';
+    const STATUS_PLANNING = 'planning';
 
-    const STATUS_COMPLETED = 'Completed';
+    const STATUS_ACTIVE = 'active';
 
-    const STATUS_ON_HOLD = 'On Hold';
+    const STATUS_COMPLETED = 'completed';
 
-    const STATUS_CANCELLED = 'Cancelled';
+    const STATUS_ON_HOLD = 'on_hold';
+
+    const STATUS_CANCELLED = 'cancelled';
+
+    const STATUS_ARCHIVED = 'archived';
+
+    /**
+     * Project priority enumeration
+     */
+    const PRIORITY_LOW = 'low';
+
+    const PRIORITY_MEDIUM = 'medium';
+
+    const PRIORITY_HIGH = 'high';
+
+    const PRIORITY_URGENT = 'urgent';
+
+    const PRIORITY_CRITICAL = 'critical';
 
     /**
      * Get the client that owns the project.
@@ -381,7 +421,7 @@ class Project extends Model
         $totalMinutes = $this->tickets()
             ->join('ticket_replies', 'tickets.id', '=', 'ticket_replies.ticket_id')
             ->whereNotNull('ticket_replies.time_worked')
-            ->sum(\DB::raw('TIME_TO_SEC(ticket_replies.time_worked) / 60'));
+            ->sum(DB::raw('TIME_TO_SEC(ticket_replies.time_worked) / 60'));
 
         $hours = floor($totalMinutes / 60);
         $minutes = $totalMinutes % 60;
@@ -392,28 +432,80 @@ class Project extends Model
     /**
      * Get project health status.
      */
-    public function getHealthStatus(): string
+    public function getHealthStatus(): array
     {
         if ($this->isCompleted()) {
-            return 'Completed';
+            return [
+                'status' => 'completed',
+                'label' => 'Completed',
+                'color' => 'green',
+                'score' => 100,
+            ];
         }
 
+        $score = 100;
+        $issues = [];
+
+        // Check schedule health
         if ($this->isOverdue()) {
-            return 'Critical';
+            $score -= 40;
+            $issues[] = 'Project is overdue';
+        } elseif ($this->isDueSoon()) {
+            $score -= 20;
+            $issues[] = 'Project is due soon';
         }
 
-        if ($this->isDueSoon()) {
-            return 'Warning';
+        // Check progress health
+        $actualProgress = $this->getCalculatedProgress();
+        $expectedProgress = $this->getExpectedProgress();
+        $progressVariance = $actualProgress - $expectedProgress;
+
+        if ($progressVariance < -20) {
+            $score -= 30;
+            $issues[] = 'Significantly behind schedule';
+        } elseif ($progressVariance < -10) {
+            $score -= 15;
+            $issues[] = 'Behind schedule';
         }
 
-        $progress = $this->getProgressPercentage();
-        if ($progress >= 75) {
-            return 'Good';
-        } elseif ($progress >= 50) {
-            return 'Fair';
+        // Check budget health (if budget is set)
+        if ($this->budget && $this->actual_cost) {
+            $budgetUtilization = ($this->actual_cost / $this->budget) * 100;
+            if ($budgetUtilization > 100) {
+                $score -= 20;
+                $issues[] = 'Over budget';
+            } elseif ($budgetUtilization > 90) {
+                $score -= 10;
+                $issues[] = 'Near budget limit';
+            }
+        }
+
+        // Determine status based on score
+        if ($score >= 80) {
+            $status = 'good';
+            $label = 'Good';
+            $color = 'green';
+        } elseif ($score >= 60) {
+            $status = 'fair';
+            $label = 'Fair';
+            $color = 'yellow';
+        } elseif ($score >= 40) {
+            $status = 'warning';
+            $label = 'Warning';
+            $color = 'orange';
         } else {
-            return 'Poor';
+            $status = 'critical';
+            $label = 'Critical';
+            $color = 'red';
         }
+
+        return [
+            'status' => $status,
+            'label' => $label,
+            'color' => $color,
+            'score' => $score,
+            'issues' => $issues,
+        ];
     }
 
     /**
@@ -512,11 +604,169 @@ class Project extends Model
     public static function getAvailableStatuses(): array
     {
         return [
+            self::STATUS_PLANNING,
             self::STATUS_ACTIVE,
             self::STATUS_COMPLETED,
             self::STATUS_ON_HOLD,
             self::STATUS_CANCELLED,
+            self::STATUS_ARCHIVED,
         ];
+    }
+
+    /**
+     * Get available priorities.
+     */
+    public static function getAvailablePriorities(): array
+    {
+        return [
+            self::PRIORITY_LOW,
+            self::PRIORITY_MEDIUM,
+            self::PRIORITY_HIGH,
+            self::PRIORITY_URGENT,
+            self::PRIORITY_CRITICAL,
+        ];
+    }
+
+    /**
+     * Get calculated progress based on tasks.
+     */
+    public function getCalculatedProgress(): float
+    {
+        // If manual progress is set, use it
+        if ($this->progress !== null && $this->progress > 0) {
+            return (float) $this->progress;
+        }
+
+        // Calculate from tasks if available
+        $tasks = $this->tasks;
+        if ($tasks->isEmpty()) {
+            return $this->isCompleted() ? 100.0 : 0.0;
+        }
+
+        $totalTasks = $tasks->count();
+        $completedTasks = $tasks->whereIn('status', ['completed', 'closed'])->count();
+
+        return round(($completedTasks / $totalTasks) * 100, 2);
+    }
+
+    /**
+     * Get expected progress based on timeline.
+     */
+    public function getExpectedProgress(): float
+    {
+        if (! $this->start_date || ! $this->due) {
+            return 0.0;
+        }
+
+        $now = Carbon::now();
+        $start = Carbon::parse($this->start_date);
+        $end = Carbon::parse($this->due);
+
+        if ($now->lte($start)) {
+            return 0.0;
+        }
+
+        if ($now->gte($end)) {
+            return 100.0;
+        }
+
+        $totalDays = $start->diffInDays($end);
+        $elapsedDays = $start->diffInDays($now);
+
+        return $totalDays > 0 ? round(($elapsedDays / $totalDays) * 100, 2) : 0.0;
+    }
+
+    /**
+     * Get human-readable status label.
+     */
+    public function getStatusLabel(): string
+    {
+        return match ($this->status) {
+            self::STATUS_PLANNING => 'Planning',
+            self::STATUS_ACTIVE => 'Active',
+            self::STATUS_COMPLETED => 'Completed',
+            self::STATUS_ON_HOLD => 'On Hold',
+            self::STATUS_CANCELLED => 'Cancelled',
+            self::STATUS_ARCHIVED => 'Archived',
+            default => ucfirst(str_replace('_', ' ', $this->status ?? 'unknown')),
+        };
+    }
+
+    /**
+     * Get human-readable priority label.
+     */
+    public function getPriorityLabel(): string
+    {
+        return match ($this->priority) {
+            self::PRIORITY_LOW => 'Low',
+            self::PRIORITY_MEDIUM => 'Medium',
+            self::PRIORITY_HIGH => 'High',
+            self::PRIORITY_URGENT => 'Urgent',
+            self::PRIORITY_CRITICAL => 'Critical',
+            default => ucfirst($this->priority ?? 'medium'),
+        };
+    }
+
+    /**
+     * Mark project as active.
+     */
+    public function markAsActive(): void
+    {
+        $this->update([
+            'status' => self::STATUS_ACTIVE,
+            'actual_start_date' => $this->actual_start_date ?? now(),
+        ]);
+    }
+
+    /**
+     * Put project on hold.
+     */
+    public function putOnHold(): void
+    {
+        $this->update(['status' => self::STATUS_ON_HOLD]);
+    }
+
+    /**
+     * Cancel project.
+     */
+    public function cancel(): void
+    {
+        $this->update(['status' => self::STATUS_CANCELLED]);
+    }
+
+    /**
+     * Archive project.
+     */
+    public function archive(): void
+    {
+        $this->update([
+            'status' => self::STATUS_ARCHIVED,
+            'archived_at' => now(),
+        ]);
+    }
+
+    /**
+     * Scope to filter by status.
+     */
+    public function scopeByStatus($query, string $status)
+    {
+        return $query->where('status', $status);
+    }
+
+    /**
+     * Scope to filter by priority.
+     */
+    public function scopeByPriority($query, string $priority)
+    {
+        return $query->where('priority', $priority);
+    }
+
+    /**
+     * Scope to filter by category.
+     */
+    public function scopeByCategory($query, string $category)
+    {
+        return $query->where('category', $category);
     }
 
     /**
@@ -535,6 +785,16 @@ class Project extends Model
                     ->first();
 
                 $project->number = $lastProject ? $lastProject->number + 1 : 1;
+            }
+
+            // Set default status if not provided
+            if (! $project->status) {
+                $project->status = self::STATUS_PLANNING;
+            }
+
+            // Set default priority if not provided
+            if (! $project->priority) {
+                $project->priority = self::PRIORITY_MEDIUM;
             }
         });
     }

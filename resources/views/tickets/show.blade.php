@@ -121,29 +121,8 @@ $pageActions = [
                     <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                         <flux:heading size="lg" class="flex-1">{{ $ticket->subject }}</flux:heading>
                         <div class="flex items-center gap-2">
-                            <flux:badge 
-                                :color="match(strtolower($ticket->priority)) {
-                                    'low' => 'green',
-                                    'medium' => 'amber',
-                                    'high' => 'orange',
-                                    'critical' => 'red',
-                                    default => 'zinc'
-                                }"
-                                size="sm">
-                                {{ $ticket->priority }}
-                            </flux:badge>
-                            <flux:badge 
-                                :color="match(strtolower($ticket->status)) {
-                                    'open' => 'blue',
-                                    'in progress' => 'indigo',
-                                    'on hold' => 'amber',
-                                    'waiting' => 'purple',
-                                    'closed' => 'zinc',
-                                    default => 'gray'
-                                }"
-                                size="sm">
-                                {{ $ticket->status }}
-                            </flux:badge>
+                            <x-priority-badge :model="$ticket" :priority="$ticket->priority" size="sm" />
+                            <x-status-badge :model="$ticket" :status="$ticket->status" size="sm" />
                         </div>
                     </div>
 

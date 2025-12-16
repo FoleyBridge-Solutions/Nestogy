@@ -501,7 +501,7 @@ function contractBuilder() {
         getCategoryColor(category) {
             const colors = {
                 'service': 'bg-blue-100 text-blue-800',
-                'billing': 'bg-green-100 text-green-800',
+                'billing': 'bg-green-100 text-green-600',
                 'sla': 'bg-yellow-100 text-yellow-800',
                 'legal': 'bg-purple-100 text-purple-800'
             };

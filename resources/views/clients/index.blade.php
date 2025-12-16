@@ -38,7 +38,7 @@ $pageActions = [
                 <div class="flex space-x-2">
                      <a href="{{ route('clients.select-screen') }}" class="text-sm text-blue-600 hover:text-blue-800">Select Different Client</a>
                     <a href="{{ route('clients.switch') }}" class="text-sm text-blue-600 hover:text-blue-800">Switch Client</a>
-                    <a href="{{ route('clients.clear-selection') }}" class="text-sm text-red-600 hover:text-red-800">Clear Selection</a>
+                    <a href="{{ route('clients.clear-selection') }}" class="text-sm text-red-600 hover:text-red-600">Clear Selection</a>
                 </div>
             </div>
         </div>
@@ -253,9 +253,9 @@ $(document).ready(function() {
                 name: 'is_active',
                 render: function(data) {
                     if (data) {
-                        return '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Active</span>';
+                        return '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-600">Active</span>';
                     } else {
-                        return '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Inactive</span>';
+                        return '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-600">Inactive</span>';
                     }
                 }
             },

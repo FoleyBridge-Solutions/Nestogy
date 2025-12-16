@@ -222,6 +222,7 @@ Route::middleware('web')->group(function () {
     Route::get('/test-chart', function() { return view('test-chart'); });
     Route::get('/test-marketing-chart', function() { return view('test-marketing-chart'); });
     Route::get('/test-bar-chart', function() { return view('test-bar-chart'); });
+    Route::get('/test-badges', function() { return view('test-badges'); });
     
     Route::get('/test-financial', function () {
         if (! auth()->check()) {

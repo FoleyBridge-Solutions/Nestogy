@@ -19,11 +19,11 @@
                                 Free Trial
                             </span>
                         @elseif($client->subscription_status === 'active')
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-600">
                                 Active
                             </span>
                         @elseif($client->subscription_status === 'past_due')
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-600">
                                 Past Due
                             </span>
                         @else
@@ -152,7 +152,7 @@
                             </svg>
                         </div>
                         <div class="ml-3">
-                            <h3 class="text-sm font-medium text-red-800">
+                            <h3 class="text-sm font-medium text-red-600">
                                 Payment Required
                             </h3>
                             <div class="mt-2 text-sm text-red-700">

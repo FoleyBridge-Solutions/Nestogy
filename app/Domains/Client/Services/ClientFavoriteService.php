@@ -3,6 +3,7 @@
 namespace App\Domains\Client\Services;
 
 use App\Domains\Client\Models\Client;
+use App\Domains\Client\Models\Contact;
 use App\Domains\Core\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -12,8 +13,12 @@ class ClientFavoriteService
     /**
      * Toggle favorite status for a client
      */
-    public function toggle(User $user, Client $client): bool
+    public function toggle(User|Contact $user, Client $client): bool
     {
+        // Contacts cannot have favorites
+        if ($user instanceof Contact) {
+            return false;
+        }
         // Ensure the client belongs to the user's company
         if ($client->company_id !== $user->company_id) {
             return false;
@@ -64,8 +69,12 @@ class ClientFavoriteService
     /**
      * Check if a client is favorited by the user
      */
-    public function isFavorite(User $user, Client $client): bool
+    public function isFavorite(User|Contact $user, Client $client): bool
     {
+        // Contacts cannot have favorites
+        if ($user instanceof Contact) {
+            return false;
+        }
         return DB::table('user_favorite_clients')
             ->where('user_id', $user->id)
             ->where('client_id', $client->id)
@@ -75,8 +84,12 @@ class ClientFavoriteService
     /**
      * Get user's favorite clients
      */
-    public function getFavoriteClients(User $user, int $limit = 5): Collection
+    public function getFavoriteClients(User|Contact $user, int $limit = 5): Collection
     {
+        // Contacts cannot have favorites
+        if ($user instanceof Contact) {
+            return collect();
+        }
         return Client::whereIn('id', function ($query) use ($user) {
             $query->select('client_id')
                 ->from('user_favorite_clients')
@@ -97,8 +110,12 @@ class ClientFavoriteService
     /**
      * Get count of user's favorite clients
      */
-    public function getFavoriteCount(User $user): int
+    public function getFavoriteCount(User|Contact $user): int
     {
+        // Contacts cannot have favorites
+        if ($user instanceof Contact) {
+            return 0;
+        }
         return DB::table('user_favorite_clients')
             ->where('user_id', $user->id)
             ->count();
@@ -107,8 +124,12 @@ class ClientFavoriteService
     /**
      * Get recent clients (excluding favorites to avoid duplication)
      */
-    public function getRecentClients(User $user, int $limit = 3): Collection
+    public function getRecentClients(User|Contact $user, int $limit = 3): Collection
     {
+        // Contacts cannot access recent clients
+        if ($user instanceof Contact) {
+            return collect();
+        }
         $favoriteClientIds = DB::table('user_favorite_clients')
             ->where('user_id', $user->id)
             ->pluck('client_id');
@@ -125,8 +146,12 @@ class ClientFavoriteService
     /**
      * Get smart client suggestions (favorites + recent up to 8 total)
      */
-    public function getSmartClientSuggestions(User $user): array
+    public function getSmartClientSuggestions(User|Contact $user): array
     {
+        // Contacts cannot have suggestions
+        if ($user instanceof Contact) {
+            return ['favorites' => collect(), 'recent' => collect(), 'total' => 0];
+        }
         $favorites = $this->getFavoriteClients($user, 5);
         $remainingSlots = 8 - $favorites->count();
 
@@ -153,8 +178,12 @@ class ClientFavoriteService
     /**
      * Remove a client from favorites
      */
-    public function removeFavorite(User $user, Client $client): bool
+    public function removeFavorite(User|Contact $user, Client $client): bool
     {
+        // Contacts cannot have favorites
+        if ($user instanceof Contact) {
+            return false;
+        }
         return DB::table('user_favorite_clients')
             ->where('user_id', $user->id)
             ->where('client_id', $client->id)
@@ -164,8 +193,12 @@ class ClientFavoriteService
     /**
      * Add a client to favorites (with limit enforcement)
      */
-    public function addFavorite(User $user, Client $client): bool
+    public function addFavorite(User|Contact $user, Client $client): bool
     {
+        // Contacts cannot have favorites
+        if ($user instanceof Contact) {
+            return false;
+        }
         // Ensure the client belongs to the user's company
         if ($client->company_id !== $user->company_id) {
             return false;

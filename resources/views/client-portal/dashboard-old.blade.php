@@ -175,7 +175,7 @@
                                         </td>
                                         <td class="px-6 py-6 whitespace-nowrap">
                                             <span class="inline-flex px-2 py-1 portal-text-xs portal-font-medium rounded-full 
-                                                @if($contract->status === 'active') bg-green-100 text-green-800
+                                                @if($contract->status === 'active') bg-green-100 text-green-600
                                                 @elseif($contract->status === 'pending') bg-yellow-100 text-yellow-800
                                                @else bg-gray-100 text-gray-800 @endif">
                                                 {{ ucfirst($contract->status) }}

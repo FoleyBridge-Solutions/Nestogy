@@ -1,12 +1,1 @@
-@php
-    $statusColor = match($item->status) {
-        'pending' => 'amber',
-        'completed' => 'green',
-        'failed' => 'red',
-        'refunded' => 'zinc',
-        default => 'zinc'
-    };
-@endphp
-<flux:badge size="sm" :color="$statusColor" inset="top bottom">
-    {{ ucfirst($item->status) }}
-</flux:badge>
+<x-status-badge type="payment" :status="$item->status" size="sm" inset="top bottom" />

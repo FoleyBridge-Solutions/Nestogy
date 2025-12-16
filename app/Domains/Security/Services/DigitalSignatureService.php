@@ -164,6 +164,58 @@ class DigitalSignatureService
     }
 
     /**
+     * Process client signature from portal
+     */
+    public function processClientSignature(ContractSignature $signature, array $signatureData): bool
+    {
+        Log::info('Processing client signature', [
+            'signature_id' => $signature->id,
+            'contract_id' => $signature->contract_id,
+            'signature_type' => $signatureData['signature_type'] ?? 'unknown',
+        ]);
+
+        try {
+            // Generate signature hash for verification
+            $signatureHash = hash('sha256', $signatureData['signature_data'].now()->toString());
+
+            // Prepare complete signature data
+            $completeSignatureData = [
+                'signature_data' => $signatureData['signature_data'],
+                'signature_hash' => $signatureHash,
+                'ip_address' => $signatureData['ip_address'] ?? null,
+                'user_agent' => $signatureData['user_agent'] ?? null,
+                'signed_at' => $signatureData['signed_at'] ?? now(),
+            ];
+
+            // Store signature metadata
+            $signature->update([
+                'signature_method' => $signatureData['signature_method'],
+            ]);
+
+            // Mark signature as signed using the model method
+            $success = $signature->sign($completeSignatureData);
+
+            if ($success) {
+                Log::info('Client signature processed successfully', [
+                    'signature_id' => $signature->id,
+                    'contract_id' => $signature->contract_id,
+                ]);
+            }
+
+            return $success;
+
+        } catch (\Exception $e) {
+            Log::error('Failed to process client signature', [
+                'signature_id' => $signature->id,
+                'contract_id' => $signature->contract_id,
+                'error' => $e->getMessage(),
+            ]);
+
+            throw $e;
+        }
+    }
+
+    /**
      * DocuSign Integration
      */
     protected function sendViaDocuSign(Contract $contract): array

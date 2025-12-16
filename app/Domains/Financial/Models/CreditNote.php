@@ -1,6 +1,8 @@
 <?php
 
 namespace App\Domains\Financial\Models;
+
+use App\Traits\HasStatusColors;
 use App\Domains\Company\Models\Company;
 
 use App\Domains\Client\Models\Client;
@@ -26,7 +28,7 @@ use Illuminate\Support\Facades\DB;
  */
 class CreditNote extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, HasStatusColors;
 
     protected $table = 'credit_notes';
 

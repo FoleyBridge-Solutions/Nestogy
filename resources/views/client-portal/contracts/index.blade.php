@@ -58,18 +58,8 @@
                                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
                                     {{ $contract->name ?? 'Contract #' . $contract->contract_number }}
                                 </h3>
-                                @php
-                                    $statusVariant = match($contract->status) {
-                                        'active' => 'success',
-                                        'pending' => 'warning',
-                                        'expired', 'terminated' => 'danger',
-                                        'draft' => 'secondary',
-                                        default => 'secondary'
-                                    };
-                                @endphp
-                                <flux:badge variant="{{ $statusVariant }}">
-                                    {{ ucfirst($contract->status ?? 'pending') }}
-                                </flux:badge>
+                                
+                                <x-status-badge type="contract" :status="$contract->status ?? 'pending'" />
                                 
                                 @if($contract->contract_type)
                                     <flux:badge variant="secondary">
@@ -122,8 +112,8 @@
                                 </flux:button>
                             @endif
                             
-                            @if($contract->status === 'pending' && $contract->signatures && Route::has('client.contracts.sign'))
-                                <flux:button href="{{ route('client.contracts.sign', $contract->id) }}" variant="primary" size="sm" icon="pencil">
+                            @if($contract->status === 'pending' && $contract->signatures && Route::has('client.contracts.show'))
+                                <flux:button href="{{ route('client.contracts.show', $contract->id) }}" variant="primary" size="sm" icon="pencil">
                                     Sign
                                 </flux:button>
                             @endif

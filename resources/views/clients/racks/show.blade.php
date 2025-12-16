@@ -20,15 +20,15 @@
                     </div>
                     <div class="flex items-center space-x-3">
                         <span class="inline-flex items-center px-6 py-1 rounded-full text-sm font-medium 
-                                    {{ $rack->status_color === 'green' ? 'bg-green-100 text-green-800' : '' }}
+                                    {{ $rack->status_color === 'green' ? 'bg-green-100 text-green-600' : '' }}
                                     {{ $rack->status_color === 'yellow' ? 'bg-yellow-100 text-yellow-800' : '' }}
-                                    {{ $rack->status_color === 'red' ? 'bg-red-100 text-red-800' : '' }}
+                                    {{ $rack->status_color === 'red' ? 'bg-red-100 text-red-600' : '' }}
                                     {{ $rack->status_color === 'gray' ? 'bg-gray-100 text-gray-800' : '' }}">
                             {{ ucfirst($rack->status) }}
                         </span>
                         @if($rack->environmental_status !== 'normal')
                             <span class="inline-flex items-center px-6 py-1 rounded-full text-sm font-medium
-                                        {{ $rack->environmental_status === 'critical' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800' }}">
+                                        {{ $rack->environmental_status === 'critical' ? 'bg-red-100 text-red-600' : 'bg-yellow-100 text-yellow-800' }}">
                                 🌡️ {{ ucfirst($rack->environmental_status) }}
                             </span>
                         @endif
@@ -86,9 +86,9 @@
                                 <dt class="text-sm font-medium text-gray-500">Status</dt>
                                 <dd class="mt-1">
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
-                                                {{ $rack->status_color === 'green' ? 'bg-green-100 text-green-800' : '' }}
+                                                {{ $rack->status_color === 'green' ? 'bg-green-100 text-green-600' : '' }}
                                                 {{ $rack->status_color === 'yellow' ? 'bg-yellow-100 text-yellow-800' : '' }}
-                                                {{ $rack->status_color === 'red' ? 'bg-red-100 text-red-800' : '' }}
+                                                {{ $rack->status_color === 'red' ? 'bg-red-100 text-red-600' : '' }}
                                                 {{ $rack->status_color === 'gray' ? 'bg-gray-100 text-gray-800' : '' }}">
                                         {{ ucfirst($rack->status) }}
                                     </span>
@@ -355,9 +355,9 @@
                                 <dt class="text-sm font-medium text-gray-500">Status</dt>
                                 <dd class="text-sm">
                                     <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium 
-                                                {{ $rack->status_color === 'green' ? 'bg-green-100 text-green-800' : '' }}
+                                                {{ $rack->status_color === 'green' ? 'bg-green-100 text-green-600' : '' }}
                                                 {{ $rack->status_color === 'yellow' ? 'bg-yellow-100 text-yellow-800' : '' }}
-                                                {{ $rack->status_color === 'red' ? 'bg-red-100 text-red-800' : '' }}
+                                                {{ $rack->status_color === 'red' ? 'bg-red-100 text-red-600' : '' }}
                                                 {{ $rack->status_color === 'gray' ? 'bg-gray-100 text-gray-800' : '' }}">
                                         {{ ucfirst($rack->status) }}
                                     </span>
@@ -368,7 +368,7 @@
                                     <dt class="text-sm font-medium text-gray-500">Environment</dt>
                                     <dd class="text-sm">
                                         <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
-                                                    {{ $rack->environmental_status === 'critical' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800' }}">
+                                                    {{ $rack->environmental_status === 'critical' ? 'bg-red-100 text-red-600' : 'bg-yellow-100 text-yellow-800' }}">
                                             {{ ucfirst($rack->environmental_status) }}
                                         </span>
                                     </dd>

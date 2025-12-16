@@ -267,13 +267,15 @@
                         <div>
                             <flux:text size="sm" class="text-gray-500">Current Health Score</flux:text>
                             <div class="flex items-center gap-3 mt-1">
-                                <flux:heading size="xl" class="
-                                    @if($selectedClientDetails['total_score'] >= 80) text-green-600
-                                    @elseif($selectedClientDetails['total_score'] >= 60) text-blue-600
-                                    @elseif($selectedClientDetails['total_score'] >= 40) text-orange-600
-                                    @else text-red-600
-                                    @endif
-                                ">
+                                @php
+                                    $healthScoreClass = match(true) {
+                                        $selectedClientDetails['total_score'] >= 80 => 'text-green-600',
+                                        $selectedClientDetails['total_score'] >= 60 => 'text-blue-600',
+                                        $selectedClientDetails['total_score'] >= 40 => 'text-orange-600',
+                                        default => 'text-red-600',
+                                    };
+                                @endphp
+                                <flux:heading size="xl" :class="$healthScoreClass">
                                     {{ $selectedClientDetails['total_score'] }}/100
                                 </flux:heading>
                                 <flux:badge size="sm" color="{{ match($selectedClientDetails['health_status']) {
@@ -352,13 +354,15 @@
                     <!-- Total -->
                     <div class="flex items-center justify-between pt-3">
                         <flux:text class="font-semibold text-lg">Final Score</flux:text>
-                        <flux:heading size="lg" class="
-                            @if($selectedClientDetails['total_score'] >= 80) text-green-600
-                            @elseif($selectedClientDetails['total_score'] >= 60) text-blue-600
-                            @elseif($selectedClientDetails['total_score'] >= 40) text-orange-600
-                            @else text-red-600
-                            @endif
-                        ">
+                        @php
+                            $finalScoreClass = match(true) {
+                                $selectedClientDetails['total_score'] >= 80 => 'text-green-600',
+                                $selectedClientDetails['total_score'] >= 60 => 'text-blue-600',
+                                $selectedClientDetails['total_score'] >= 40 => 'text-orange-600',
+                                default => 'text-red-600',
+                            };
+                        @endphp
+                        <flux:heading size="lg" :class="$finalScoreClass">
                             {{ $selectedClientDetails['total_score'] }}/100
                         </flux:heading>
                     </div>

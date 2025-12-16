@@ -2,6 +2,8 @@
 
 namespace App\Domains\Company\Models;
 
+use App\Traits\HasStatusColors;
+
 use App\Domains\Core\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -35,7 +37,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class CompanySubscription extends Model
 {
-    use HasFactory;
+    use HasFactory, HasStatusColors;
 
     /**
      * The table associated with the model.

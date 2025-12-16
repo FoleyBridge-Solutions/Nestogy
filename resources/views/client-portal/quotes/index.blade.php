@@ -130,21 +130,9 @@
                             ${{ number_format($quote->amount, 2) }}
                         </td>
                         <td class="px-6 py-6 whitespace-nowrap">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                @if($quote->status === 'Draft') bg-gray-100 text-gray-800
-                                @elseif($quote->status === 'Sent') bg-blue-100 text-blue-800
-                                @elseif($quote->status === 'Viewed') bg-purple-100 text-purple-800
-                                @elseif($quote->status === 'Accepted') bg-green-100 text-green-800
-                                @elseif($quote->status === 'Declined') bg-red-100 text-red-800
-                                @elseif($quote->status === 'Expired') bg-yellow-100 text-yellow-800
-                                @else bg-gray-100 text-gray-800
-                                @endif">
-                                {{ $quote->status }}
-                            </span>
+                            <x-status-badge type="quote" :status="$quote->status" />
                             @if($quote->isExpired())
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 ml-1">
-                                    Expired
-                                </span>
+                                <flux:badge color="red" size="sm" class="ml-1">Expired</flux:badge>
                             @endif
                         </td>
                         <td class="px-6 py-6 whitespace-nowrap text-sm font-medium">

@@ -24,7 +24,7 @@ class RevenueMetricTest extends TestCase
         $model = RevenueMetric::factory()->create(['company_id' => $this->company->id]);
         
         $this->assertInstanceOf(RevenueMetric::class, $model);
-        $this->assertDatabaseHas('revenue_metric_s', ['id' => $model->id]);
+        $this->assertDatabaseHas('revenue_metrics', ['id' => $model->id]);
     }
 
     public function test_belongs_to_company(): void

@@ -2,6 +2,8 @@
 
 namespace App\Livewire\Dashboard\Widgets;
 
+use App\Helpers\StatusColorHelper;
+
 use App\Domains\Core\Services\QuickActionService;
 use App\Domains\Core\Models\CustomQuickAction;
 use Illuminate\Support\Facades\Auth;

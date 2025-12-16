@@ -152,10 +152,10 @@ $pageTitle = 'Collection Dashboard';
                     </div>
                     <div class="ml-4">
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                            @if($data['status'] === 'excellent') bg-green-100 text-green-800
+                            @if($data['status'] === 'excellent') bg-green-100 text-green-600
                             @elseif($data['status'] === 'good') bg-blue-100 text-blue-800
                             @elseif($data['status'] === 'warning') bg-yellow-100 text-yellow-800
-                            @else bg-red-100 text-red-800 @endif">
+                            @else bg-red-100 text-red-600 @endif">
                             {{ ucfirst($data['status']) }}
                         </span>
                     </div>

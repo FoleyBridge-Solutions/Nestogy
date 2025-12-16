@@ -73,7 +73,7 @@
                                             Edit
                                         </button>
                                         <button onclick="revokePermission({{ $permission->id }})" 
-                                                class="text-red-600 hover:text-red-800 text-sm font-medium">
+                                                class="text-red-600 hover:text-red-600 text-sm font-medium">
                                             Revoke
                                         </button>
                                     </div>
@@ -110,7 +110,7 @@
                             <div class="flex items-center justify-between p-6 border border-gray-200 rounded-lg">
                                 <div class="flex-1">
                                     <div class="flex items-center">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 mr-3">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-600 mr-3">
                                             {{ $permission->granterCompany->name }}
                                         </span>
                                         <div class="text-sm">
@@ -133,7 +133,7 @@
                                 </div>
                                 
                                 <div class="flex items-center">
-                                    <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium {{ $permission->is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                    <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium {{ $permission->is_active ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600' }}">
                                         {{ $permission->is_active ? 'Active' : 'Inactive' }}
                                     </span>
                                 </div>

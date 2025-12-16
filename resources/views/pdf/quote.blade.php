@@ -72,12 +72,12 @@
             margin-top: 10px;
         }
         
-        .status-draft { background: #e5e7eb; color: #6b7280; }
+        .status-draft { background: #e4e4e7; color: #52525b; }
         .status-sent { background: #dbeafe; color: #1e40af; }
-        .status-viewed { background: #fef3c7; color: #92400e; }
-        .status-accepted { background: #d1fae5; color: #065f46; }
-        .status-declined { background: #fee2e2; color: #991b1b; }
-        .status-expired { background: #f3f4f6; color: #4b5563; }
+        .status-viewed { background: #f3e8ff; color: #7c3aed; }
+        .status-accepted { background: #d1fae5; color: #059669; }
+        .status-declined { background: #fee2e2; color: #dc2626; }
+        .status-expired { background: #fef3c7; color: #d97706; }
         
         .clearfix::after {
             content: "";

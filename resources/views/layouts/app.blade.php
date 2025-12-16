@@ -416,6 +416,12 @@
     <!-- Flux Toast Component -->
     <flux:toast />
     
+    <!-- Timer Completion Modals (Global) -->
+    @auth
+        @livewire('timer-completion-modal')
+        @livewire('timer-batch-completion-modal')
+    @endauth
+    
     <!-- Global Toast Handler -->
     <script>
         document.addEventListener('livewire:init', () => {

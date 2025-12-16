@@ -257,7 +257,7 @@
                                     <td class="px-6 py-6 whitespace-nowrap">
                                         <div class="text-sm text-gray-900">{{ number_format($entry->hours_worked, 2) }}h</div>
                                         @if($entry->billable)
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-600">
                                                 Billable
                                             </span>
                                         @else

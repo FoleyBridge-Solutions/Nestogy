@@ -2,17 +2,17 @@
 
 namespace App\Domains\Contract\Models;
 
-use App\Domains\Contract\Traits\HasCompanyConfiguration;
-use App\Domains\Contract\Traits\HasStatusWorkflow;
 use App\Domains\Asset\Models\Asset;
 use App\Domains\Client\Models\Client;
-use App\Domains\Tax\Models\ComplianceCheck;
+use App\Domains\Contract\Traits\HasCompanyConfiguration;
+use App\Domains\Contract\Traits\HasStatusWorkflow;
+use App\Domains\Core\Models\User;
 use App\Domains\Financial\Models\Invoice;
 use App\Domains\Financial\Models\Quote;
 use App\Domains\Financial\Models\RecurringInvoice;
-use App\Domains\Core\Models\User;
 use App\Traits\BelongsToCompany;
 use App\Traits\HasAIAnalysis;
+use App\Traits\HasStatusColors;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -79,7 +79,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class Contract extends Model
 {
-    use BelongsToCompany, HasCompanyConfiguration, HasFactory, HasStatusWorkflow, SoftDeletes, HasAIAnalysis;
+    use BelongsToCompany, HasAIAnalysis, HasCompanyConfiguration, HasFactory, HasStatusWorkflow, SoftDeletes, HasStatusColors;
 
     /**
      * The table associated with the model.
@@ -607,7 +607,7 @@ class Contract extends Model
         }
 
         $pricing = $this->pricing_structure;
-        
+
         return $this->calculateBaseRecurringRevenue($pricing)
             + $this->calculatePerUserRevenue($pricing)
             + $this->calculateAssetBasedRevenue($pricing)
@@ -629,7 +629,7 @@ class Contract extends Model
     protected function calculatePerUserRevenue(array $pricing): float
     {
         $perUser = (float) ($pricing['per_user'] ?? 0);
-        
+
         return $perUser > 0 ? $perUser : 0;
     }
 
@@ -658,8 +658,8 @@ class Contract extends Model
      */
     protected function isAssetPricingEnabled(array $config): bool
     {
-        return ! empty($config['enabled']) 
-            && ! empty($config['price']) 
+        return ! empty($config['enabled'])
+            && ! empty($config['price'])
             && $config['price'] !== '';
     }
 
@@ -673,7 +673,7 @@ class Contract extends Model
         }
 
         $telecomPricing = $pricing['telecom_pricing'];
-        
+
         return $this->parsePricingValue($telecomPricing['perChannel'] ?? '')
             + $this->parsePricingValue($telecomPricing['callingPlan'] ?? '')
             + $this->parsePricingValue($telecomPricing['e911'] ?? '');
@@ -1089,13 +1089,51 @@ class Contract extends Model
     }
 
     /**
-     * Boot the model.
+     * Update contract signature status based on signatures
+     */
+    public function updateSignatureStatus(): void
+    {
+        $totalSignatures = $this->signatures()->count();
+
+        if ($totalSignatures === 0) {
+            $this->update(['signature_status' => 'pending']);
+
+            return;
+        }
+
+        $signedCount = $this->signatures()->where('status', 'signed')->count();
+        $declinedCount = $this->signatures()->where('status', 'declined')->count();
+
+        // If any signature is declined, mark as declined
+        if ($declinedCount > 0) {
+            $this->update(['signature_status' => 'declined']);
+
+            return;
+        }
+
+        // If all signatures are signed, mark as complete and activate contract
+        if ($signedCount === $totalSignatures) {
+            $this->update([
+                'signature_status' => 'signed',
+                'status' => 'active',
+                'signed_date' => now(),
+            ]);
+
+            return;
+        }
+
+        // Otherwise, keep as pending
+        $this->update(['signature_status' => 'pending']);
+    }
+
+    /**
+     * Boot the model
      */
     protected static function boot()
     {
         parent::boot();
 
-        // Contract number generation is handled by ContractService to avoid race conditions
+        // Set defaults when creating
         static::creating(function ($contract) {
             // Contract number should already be set by the service layer
 

@@ -3,7 +3,7 @@
 namespace App\Livewire\Projects;
 
 use App\Domains\Project\Models\Project;
-use App\Domains\Project\Models\ProjectNote;
+use App\Domains\Project\Models\ProjectComment;
 use App\Domains\Project\Models\ProjectTask;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
@@ -152,7 +152,7 @@ class ProjectShow extends Component
 
     public function deleteNote($noteId)
     {
-        ProjectNote::where('id', $noteId)
+        ProjectComment::where('id', $noteId)
             ->where('project_id', $this->project->id)
             ->where('user_id', Auth::id())
             ->delete();

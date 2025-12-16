@@ -220,7 +220,7 @@
                                                         #{{ $item->ticket->ticket_number }}
                                                     </span>
                                                     @if($item->is_escalated)
-                                                        <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                                                        <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-600">
                                                             Escalated
                                                         </span>
                                                     @endif
@@ -231,10 +231,10 @@
                                         </td>
                                         <td class="px-6 py-6 whitespace-nowrap">
                                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
-                                                @if($item->priority_level === 'Critical') bg-red-100 text-red-800
+                                                @if($item->priority_level === 'Critical') bg-red-100 text-red-600
                                                 @elseif($item->priority_level === 'High') bg-orange-100 text-orange-800
                                                 @elseif($item->priority_level === 'Medium') bg-yellow-100 text-yellow-800
-                                                @elseif($item->priority_level === 'Low') bg-green-100 text-green-800
+                                                @elseif($item->priority_level === 'Low') bg-green-100 text-green-600
                                                 @else bg-gray-100 text-gray-800
                                                 @endif">
                                                 {{ $item->priority_level }}

@@ -204,8 +204,8 @@ $pageActions = [
                                             'Draft' => 'bg-gray-500 text-white',
                                             'Sent' => 'bg-blue-100 text-blue-800',
                                             'Viewed' => 'bg-blue-600 text-white',
-                                            'Accepted' => 'bg-green-100 text-green-800',
-                                            'Declined' => 'bg-red-100 text-red-800',
+                                            'Accepted' => 'bg-green-100 text-green-600',
+                                            'Declined' => 'bg-red-100 text-red-600',
                                             'Expired' => 'bg-yellow-100 text-yellow-800',
                                             'Converted' => 'bg-gray-900 text-white'
                                         ];
