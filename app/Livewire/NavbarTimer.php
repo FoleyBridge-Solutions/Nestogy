@@ -118,11 +118,11 @@ class NavbarTimer extends Component
 
         // Account for paused duration
         $pausedMinutes = $timer->paused_duration ?? 0;
-        $totalSeconds = $start->diffInSeconds($now) - ($pausedMinutes * 60);
+        $totalSeconds = (int) ($start->diffInSeconds($now) - ($pausedMinutes * 60));
         $totalSeconds = max(0, $totalSeconds); // Ensure non-negative
 
-        $hours = floor($totalSeconds / 3600);
-        $minutes = floor(($totalSeconds % 3600) / 60);
+        $hours = (int) floor($totalSeconds / 3600);
+        $minutes = (int) floor(($totalSeconds % 3600) / 60);
         $seconds = $totalSeconds % 60;
 
         return [
@@ -133,12 +133,12 @@ class NavbarTimer extends Component
 
     protected function calculateTotalElapsedTime()
     {
-        $totalSeconds = collect($this->activeTimers)
+        $totalSeconds = (int) collect($this->activeTimers)
             ->where('is_paused', false)
             ->sum('elapsed_seconds');
 
-        $hours = floor($totalSeconds / 3600);
-        $minutes = floor(($totalSeconds % 3600) / 60);
+        $hours = (int) floor($totalSeconds / 3600);
+        $minutes = (int) floor(($totalSeconds % 3600) / 60);
         $seconds = $totalSeconds % 60;
 
         $this->totalElapsedTime = sprintf('%02d:%02d:%02d', $hours, $minutes, $seconds);
