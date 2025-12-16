@@ -305,6 +305,9 @@
                     
                     {{-- Badges Row --}}
                     <div class="flex flex-wrap gap-2 mb-3">
+                        @if($ticket->is_internal)
+                            <flux:badge color="amber" size="sm">Internal</flux:badge>
+                        @endif
                         <x-status-badge :model="$ticket" :status="$ticket->status" />
                         <x-priority-badge :model="$ticket" :priority="$ticket->priority" />
                     </div>
@@ -314,7 +317,11 @@
                         {{-- Client --}}
                         <div class="flex items-center gap-2">
                             <flux:icon.building-office class="size-4" />
-                            <span>{{ $ticket->client?->name ?? 'No client' }}</span>
+                            @if($ticket->is_internal)
+                                <span class="text-amber-600 dark:text-amber-400 font-medium">Internal</span>
+                            @else
+                                <span>{{ $ticket->client?->name ?? 'No client' }}</span>
+                            @endif
                         </div>
                         
                         {{-- Assignee --}}
@@ -467,10 +474,19 @@
                                 </div>
                             </flux:table.cell>
                             <flux:table.cell>
-                                {{ $ticket->client?->name ?? '-' }}
+                                @if($ticket->is_internal)
+                                    <span class="text-amber-600 dark:text-amber-400 font-medium">Internal</span>
+                                @else
+                                    {{ $ticket->client?->name ?? '-' }}
+                                @endif
                             </flux:table.cell>
                             <flux:table.cell>
-                                <x-status-badge :model="$ticket" :status="$ticket->status" />
+                                <div class="flex items-center gap-1">
+                                    @if($ticket->is_internal)
+                                        <flux:badge color="amber" size="sm">INT</flux:badge>
+                                    @endif
+                                    <x-status-badge :model="$ticket" :status="$ticket->status" />
+                                </div>
                             </flux:table.cell>
                             <flux:table.cell>
                                 <x-priority-badge :model="$ticket" :priority="$ticket->priority" />

@@ -35,6 +35,8 @@ class TicketIndex extends BaseIndexComponent
 
     public $selectedTickets = [];
 
+    public $showInternalOnly = false;
+
     public function mount()
     {
         parent::mount();
@@ -223,12 +225,22 @@ class TicketIndex extends BaseIndexComponent
                 $query->whereNotNull('archived_at');
                 break;
 
+            case 'internal':
+                $query->where('is_internal', true)
+                    ->whereNull('archived_at');
+                break;
+
             default:
                 // For non-archived tickets by default
                 if ($this->filter !== 'archived') {
                     $query->whereNull('archived_at');
                 }
                 break;
+        }
+
+        // Apply internal-only filter if enabled
+        if ($this->showInternalOnly && $this->filter !== 'internal') {
+            $query->where('is_internal', true);
         }
 
         if (! empty($this->selectedStatuses)) {
@@ -328,6 +340,7 @@ class TicketIndex extends BaseIndexComponent
         $this->selectedClients = [];
         $this->dateFrom = '';
         $this->dateTo = '';
+        $this->showInternalOnly = false;
         $this->resetPage();
     }
 

@@ -16,6 +16,12 @@
 
                         {{-- Badges Row --}}
                         <div class="flex flex-wrap items-center gap-2">
+                            @if($ticket->is_internal)
+                                <flux:badge variant="solid" size="sm" color="amber" icon="building-office">
+                                    Internal
+                                </flux:badge>
+                            @endif
+
                             <flux:badge variant="solid" size="sm" color="{{
                                 match(strtolower($ticket->status)) {
                                     'closed' => 'zinc',
@@ -46,7 +52,9 @@
 
                             <flux:text size="sm">
                                 <strong>Client:</strong>
-                                @if($ticket->client)
+                                @if($ticket->is_internal)
+                                    <span class="text-amber-600 dark:text-amber-400 font-medium">Internal</span>
+                                @elseif($ticket->client)
                                     <flux:link href="{{ route('clients.show', $ticket->client) }}">
                                         {{ $ticket->client->name }}
                                     </flux:link>

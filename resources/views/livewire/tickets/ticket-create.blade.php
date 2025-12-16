@@ -4,7 +4,7 @@
         <div class="flex items-center justify-between">
             <div>
                 <flux:heading>Create New Ticket</flux:heading>
-                <flux:text>Submit a support request for your client</flux:text>
+                <flux:text>{{ $is_internal ? 'Create an internal ticket for non-client work' : 'Submit a support request for your client' }}</flux:text>
             </div>
             <flux:button href="{{ route('tickets.index') }}" 
                         variant="ghost"
@@ -23,23 +23,51 @@
                     <flux:subheading>Basic details about the support ticket</flux:subheading>
                     
                     <div class="space-y-6 mt-6">
+                        <!-- Internal Ticket Toggle -->
+                        <div class="flex items-center gap-4 p-4 rounded-lg bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700">
+                            <flux:switch 
+                                wire:model.live="is_internal" 
+                                id="is_internal"
+                                label="Internal Ticket" />
+                            <div class="flex-1">
+                                <flux:text class="font-medium">Internal Ticket</flux:text>
+                                <flux:text size="sm" class="text-zinc-500 dark:text-zinc-400">
+                                    Enable for internal work, admin tasks, or non-client activities. Internal tickets are non-billable.
+                                </flux:text>
+                            </div>
+                            @if($is_internal)
+                                <flux:badge color="amber" size="sm">Non-Billable</flux:badge>
+                            @endif
+                        </div>
+
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <!-- Client Selection -->
-                            <flux:field>
-                                <flux:label for="client_id" required>Client</flux:label>
-                                <flux:select wire:model.live="client_id" id="client_id" name="client_id" required>
-                                    <option value="">Select a client</option>
-                                    @foreach($clients as $client)
-                                        <option value="{{ $client->id }}">{{ $client->name }}</option>
-                                    @endforeach
-                                </flux:select>
-                                @error('client_id')
-                                    <flux:error>{{ $message }}</flux:error>
-                                @enderror
-                            </flux:field>
+                            <!-- Client Selection (hidden for internal tickets) -->
+                            @if(!$is_internal)
+                                <flux:field>
+                                    <flux:label for="client_id" required>Client</flux:label>
+                                    <flux:select wire:model.live="client_id" id="client_id" name="client_id" required>
+                                        <option value="">Select a client</option>
+                                        @foreach($clients as $client)
+                                            <option value="{{ $client->id }}">{{ $client->name }}</option>
+                                        @endforeach
+                                    </flux:select>
+                                    @error('client_id')
+                                        <flux:error>{{ $message }}</flux:error>
+                                    @enderror
+                                </flux:field>
+                            @else
+                                <flux:field>
+                                    <flux:label>Client</flux:label>
+                                    <div class="flex items-center gap-2 px-3 py-2 rounded-md bg-zinc-100 dark:bg-zinc-700 border border-zinc-200 dark:border-zinc-600">
+                                        <flux:icon name="building-office" variant="mini" class="text-amber-500" />
+                                        <flux:text class="font-medium text-amber-600 dark:text-amber-400">Internal (No Client)</flux:text>
+                                    </div>
+                                    <flux:description>Internal tickets are not associated with any client</flux:description>
+                                </flux:field>
+                            @endif
                             
-                            <!-- Contact Selection with Pillbox -->
-                            @if($this->client_id && $contacts->count() > 0)
+                            <!-- Contact Selection with Pillbox (only for client tickets) -->
+                            @if(!$is_internal && $this->client_id && $contacts->count() > 0)
                                 <flux:field>
                                     <flux:label for="contact_ids">Client Contacts</flux:label>
                                     <flux:pillbox 
@@ -118,7 +146,7 @@
                                 @enderror
                             </flux:field>
                             
-                            @if($this->client_id && $assets->count() > 0)
+                            @if(!$is_internal && $this->client_id && $assets->count() > 0)
                                 <flux:field>
                                     <flux:label for="asset_id">Related Asset</flux:label>
                                     <flux:pillbox 
@@ -190,7 +218,7 @@
                     <flux:button type="submit" 
                                 variant="primary"
                                 icon="plus">
-                        Create Ticket
+                        {{ $is_internal ? 'Create Internal Ticket' : 'Create Ticket' }}
                     </flux:button>
                 </div>
             </div>

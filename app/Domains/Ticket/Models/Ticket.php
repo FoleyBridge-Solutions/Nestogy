@@ -50,6 +50,7 @@ class Ticket extends Model
         'priority',
         'status',
         'billable',
+        'is_internal',
         'billing_status',
         'scheduled_at',
         'onsite',
@@ -97,6 +98,7 @@ class Ticket extends Model
     protected $casts = [
         'number' => 'integer',
         'billable' => 'boolean',
+        'is_internal' => 'boolean',
         'onsite' => 'boolean',
         'scheduled_at' => 'datetime',
         'resolved_at' => 'datetime',
@@ -767,6 +769,26 @@ class Ticket extends Model
     }
 
     /**
+     * Check if ticket is an internal ticket (no client association)
+     */
+    public function isInternal(): bool
+    {
+        return (bool) $this->is_internal;
+    }
+
+    /**
+     * Get the display name for the client or "Internal" for internal tickets
+     */
+    public function getClientDisplayName(): string
+    {
+        if ($this->is_internal) {
+            return 'Internal';
+        }
+
+        return $this->client?->name ?? 'Unknown Client';
+    }
+
+    /**
      * Get ticket age in hours
      */
     public function getAgeInHours(): int
@@ -1077,6 +1099,22 @@ class Ticket extends Model
         return $query->whereBetween('sentiment_score', [$min, $max]);
     }
 
+    // Internal ticket scopes
+    public function scopeInternal($query)
+    {
+        return $query->where('is_internal', true);
+    }
+
+    public function scopeClientTickets($query)
+    {
+        return $query->where('is_internal', false);
+    }
+
+    public function scopeForClient($query)
+    {
+        return $query->where('is_internal', false)->whereNotNull('client_id');
+    }
+
     // ===========================================
     // STATIC METHODS
     // ===========================================
@@ -1170,6 +1208,12 @@ class Ticket extends Model
 
             if (empty($ticket->status)) {
                 $ticket->status = self::STATUS_OPEN;
+            }
+
+            // Internal tickets are always non-billable
+            if ($ticket->is_internal) {
+                $ticket->billable = false;
+                $ticket->client_id = null;
             }
         });
 
