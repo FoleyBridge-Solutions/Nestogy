@@ -1,6 +1,6 @@
 <div>
     @if($showModal)
-        <flux:modal wire:model="showModal" title="Complete Timer Entry" class="max-w-2xl">
+        <flux:modal name="timer-completion" wire:model.self="showModal" title="Complete Timer Entry" class="max-w-2xl">
             <form wire:submit.prevent="confirmStopTimer">
                 <div class="space-y-4">
                     {{-- Timer Summary --}}
@@ -203,7 +203,7 @@
 
     {{-- Discard Confirmation Modal --}}
     @if($showDiscardConfirmation)
-        <flux:modal wire:model="showDiscardConfirmation" title="Discard Timer?" class="max-w-md">
+        <flux:modal name="timer-discard" wire:model.self="showDiscardConfirmation" title="Discard Timer?" class="max-w-md">
             <div class="space-y-4">
                 <div class="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg">
                     <div class="flex items-start gap-3">

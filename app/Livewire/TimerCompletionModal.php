@@ -273,8 +273,9 @@ class TimerCompletionModal extends Component
             $this->dispatch('refreshNavbarTimer');
             $this->dispatch('time-entry-updated');
 
-            // Close modal
+            // Close modal - use Flux modal close method for proper sync
             $this->closeModal();
+            $this->modal('timer-completion')->close();
 
         } catch (\Exception $e) {
             Flux::toast(
@@ -289,6 +290,7 @@ class TimerCompletionModal extends Component
         // Keep timer running, just close modal
         $this->dispatch('timer:cancelled', timerId: $this->timerId);
         $this->closeModal();
+        $this->modal('timer-completion')->close();
     }
 
     public function discardTimer()
@@ -315,7 +317,9 @@ class TimerCompletionModal extends Component
 
             // Close both modals
             $this->showDiscardConfirmation = false;
+            $this->modal('timer-discard')->close();
             $this->closeModal();
+            $this->modal('timer-completion')->close();
 
         } catch (\Exception $e) {
             Flux::toast(
@@ -329,6 +333,7 @@ class TimerCompletionModal extends Component
     public function cancelDiscard()
     {
         $this->showDiscardConfirmation = false;
+        $this->modal('timer-discard')->close();
     }
 
     protected function closeModal()
