@@ -102,9 +102,9 @@ class TicketBillingSettings extends Component
                 })
                 ->count();
 
-            // Count billing queue jobs
+            // Count billing queue jobs (on default queue)
             $this->billingQueueCount = \DB::table('jobs')
-                ->where('queue', 'billing')
+                ->where('queue', 'default')
                 ->count();
         } catch (\Exception $e) {
             Log::error('Failed to load ticket billing statistics', [
