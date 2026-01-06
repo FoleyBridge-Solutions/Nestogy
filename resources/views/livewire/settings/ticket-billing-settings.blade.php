@@ -45,17 +45,17 @@
             <flux:heading size="lg" class="mb-4">Quick Actions</flux:heading>
             
             <div class="flex gap-3">
-                @can('processPendingTickets', App\Policies\TicketBillingPolicy::class)
+                @can('ticket-billing.process-pending')
                     <flux:button 
                         wire:click="processPendingTickets" 
-                        :disabled="processing || !enabled"
+                        :disabled="$processing || !$enabled"
                         variant="primary"
                         icon="play">
-                        {{ processing ? 'Processing...' : 'Process Pending Tickets' }}
+                        {{ $processing ? 'Processing...' : 'Process Pending Tickets' }}
                     </flux:button>
                 @endcan
 
-                @can('runDryRun', App\Policies\TicketBillingPolicy::class)
+                @can('ticket-billing.dry-run')
                     <flux:button 
                         wire:click="testDryRun" 
                         variant="ghost"
@@ -223,7 +223,7 @@
             </flux:card>
 
             {{-- Save Button --}}
-            @can('manageSettings', App\Policies\TicketBillingPolicy::class)
+            @can('ticket-billing.manage-settings')
                 <div class="flex justify-end gap-3">
                     <flux:button type="submit" variant="primary">
                         Save Configuration
