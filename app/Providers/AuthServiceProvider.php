@@ -39,11 +39,12 @@ class AuthServiceProvider extends ServiceProvider
         \App\Domains\Product\Models\PricingRule::class => \App\Policies\PricingRulePolicy::class,
         \App\Domains\Contract\Models\ContractTemplate::class => \App\Policies\ContractTemplatePolicy::class,
         \App\Domains\Email\Models\EmailAccount::class => \App\Policies\EmailAccountPolicy::class,
-         \App\Domains\HR\Models\EmployeeTimeEntry::class => \App\Policies\EmployeeTimeEntryPolicy::class,
-         \App\Domains\Integration\Models\RmmIntegration::class => \App\Policies\RmmIntegrationPolicy::class,
-         \App\Domains\Financial\Models\PlaidItem::class => \App\Policies\PlaidItemPolicy::class,
-         \App\Domains\Financial\Models\BankTransaction::class => \App\Policies\BankTransactionPolicy::class,
-     ];
+        \App\Domains\HR\Models\EmployeeTimeEntry::class => \App\Policies\EmployeeTimeEntryPolicy::class,
+        \App\Domains\Integration\Models\RmmIntegration::class => \App\Policies\RmmIntegrationPolicy::class,
+        \App\Domains\Financial\Models\PlaidItem::class => \App\Policies\PlaidItemPolicy::class,
+        \App\Domains\Financial\Models\BankTransaction::class => \App\Policies\BankTransactionPolicy::class,
+        \App\Domains\Client\Models\ClientDomain::class => \App\Policies\ClientDomainPolicy::class,
+    ];
 
     /**
      * Register any authentication / authorization services.
@@ -84,6 +85,9 @@ class AuthServiceProvider extends ServiceProvider
 
         // Define product management gates
         $this->defineProductGates();
+
+        // Define ticket billing gates
+        $this->defineTicketBillingGates();
     }
 
     /**
@@ -762,6 +766,80 @@ class AuthServiceProvider extends ServiceProvider
         // Pricing rule management gates
         Gate::define('manage-pricing-rules', function (User $user) {
             return $user->getRole() >= User::ROLE_TECH;
+        });
+    }
+
+    /**
+     * Define ticket billing authorization gates.
+     */
+    protected function defineTicketBillingGates(): void
+    {
+        // View ticket billing settings
+        Gate::define('ticket-billing.view-settings', function (User $user) {
+            return $user->hasPermission('billing.settings.view')
+                || $user->hasPermission('billing.settings.manage')
+                || $user->isAdmin();
+        });
+
+        // Manage ticket billing settings
+        Gate::define('ticket-billing.manage-settings', function (User $user) {
+            return $user->hasPermission('billing.settings.manage')
+                || $user->isAdmin();
+        });
+
+        // Process pending tickets for billing
+        Gate::define('ticket-billing.process-pending', function (User $user) {
+            return $user->hasPermission('billing.tickets.process')
+                || $user->hasPermission('billing.settings.manage')
+                || $user->isAdmin();
+        });
+
+        // Run dry-run billing previews
+        Gate::define('ticket-billing.dry-run', function (User $user) {
+            return $user->hasPermission('billing.tickets.process')
+                || $user->hasPermission('billing.settings.view')
+                || $user->hasRole('manager')
+                || $user->isAdmin();
+        });
+
+        // Generate invoice from ticket
+        Gate::define('ticket-billing.generate-invoice', function (User $user) {
+            return $user->hasPermission('billing.tickets.generate')
+                || $user->isAdmin();
+        });
+
+        // Approve billing invoices
+        Gate::define('ticket-billing.approve-invoice', function (User $user) {
+            return $user->hasPermission('billing.tickets.approve')
+                || $user->hasRole('manager')
+                || $user->isAdmin();
+        });
+
+        // Void/cancel billing invoices
+        Gate::define('ticket-billing.void-invoice', function (User $user) {
+            return $user->hasPermission('billing.tickets.void')
+                || $user->hasRole('manager')
+                || $user->isAdmin();
+        });
+
+        // View billing reports
+        Gate::define('ticket-billing.view-reports', function (User $user) {
+            return $user->hasPermission('billing.reports.view')
+                || $user->hasRole('manager')
+                || $user->isAdmin();
+        });
+
+        // Modify billing amounts
+        Gate::define('ticket-billing.modify-amount', function (User $user) {
+            return $user->hasPermission('billing.tickets.modify')
+                || $user->isAdmin();
+        });
+
+        // View billing audit logs
+        Gate::define('ticket-billing.view-audit-logs', function (User $user) {
+            return $user->hasPermission('billing.audit.view')
+                || $user->hasRole('manager')
+                || $user->isAdmin();
         });
     }
 

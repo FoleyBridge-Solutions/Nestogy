@@ -2,33 +2,45 @@
 
 namespace App\Livewire\Settings;
 
+use Flux\Flux;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Livewire\Component;
-use Flux\Flux;
 
 class TicketBillingSettings extends Component
 {
     // Configuration properties
     public bool $enabled;
+
     public bool $autoBillOnClose;
+
     public bool $autoBillOnResolve;
+
     public string $defaultStrategy;
+
     public float $minBillableHours;
+
     public float $roundHoursTo;
+
     public int $invoiceDueDays;
+
     public bool $requireApproval;
+
     public bool $skipZeroInvoices;
+
     public bool $autoSend;
+
     public int $batchSize;
 
     // Statistics
     public int $pendingTicketsCount = 0;
+
     public int $billingQueueCount = 0;
-    
+
     // Processing
     public bool $processing = false;
+
     public ?string $processingResult = null;
 
     protected $rules = [
@@ -48,8 +60,8 @@ class TicketBillingSettings extends Component
     public function mount()
     {
         // Authorization check
-        $this->authorize('viewSettings', \App\Policies\TicketBillingPolicy::class);
-        
+        $this->authorize('ticket-billing.view-settings');
+
         $this->loadConfiguration();
         $this->loadStatistics();
     }
@@ -86,7 +98,7 @@ class TicketBillingSettings extends Component
                 ->count();
         } catch (\Exception $e) {
             Log::error('Failed to load ticket billing statistics', [
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
         }
     }
@@ -94,8 +106,8 @@ class TicketBillingSettings extends Component
     public function save()
     {
         // Authorization check
-        $this->authorize('manageSettings', \App\Policies\TicketBillingPolicy::class);
-        
+        $this->authorize('ticket-billing.manage-settings');
+
         $this->validate();
 
         try {
@@ -132,7 +144,7 @@ class TicketBillingSettings extends Component
         } catch (\Exception $e) {
             Flux::toast(
                 variant: 'danger',
-                text: 'Failed to save settings: ' . $e->getMessage(),
+                text: 'Failed to save settings: '.$e->getMessage(),
                 duration: 5000
             );
 
@@ -146,8 +158,8 @@ class TicketBillingSettings extends Component
     public function processPendingTickets($limit = null)
     {
         // Authorization check
-        $this->authorize('processPendingTickets', \App\Policies\TicketBillingPolicy::class);
-        
+        $this->authorize('ticket-billing.process-pending');
+
         $this->processing = true;
         $this->processingResult = null;
 
@@ -182,7 +194,7 @@ class TicketBillingSettings extends Component
             $this->processingResult = 'error';
             Flux::toast(
                 variant: 'danger',
-                text: 'Error processing tickets: ' . $e->getMessage(),
+                text: 'Error processing tickets: '.$e->getMessage(),
                 duration: 5000
             );
         } finally {
@@ -193,8 +205,8 @@ class TicketBillingSettings extends Component
     public function testDryRun()
     {
         // Authorization check
-        $this->authorize('runDryRun', \App\Policies\TicketBillingPolicy::class);
-        
+        $this->authorize('ticket-billing.dry-run');
+
         try {
             Artisan::call('billing:process-pending-tickets', [
                 '--dry-run' => true,
@@ -212,7 +224,7 @@ class TicketBillingSettings extends Component
         } catch (\Exception $e) {
             Flux::toast(
                 variant: 'danger',
-                text: 'Dry run failed: ' . $e->getMessage(),
+                text: 'Dry run failed: '.$e->getMessage(),
                 duration: 5000
             );
         }
@@ -222,7 +234,7 @@ class TicketBillingSettings extends Component
     {
         $envFile = base_path('.env');
 
-        if (!file_exists($envFile)) {
+        if (! file_exists($envFile)) {
             throw new \Exception('.env file not found');
         }
 
