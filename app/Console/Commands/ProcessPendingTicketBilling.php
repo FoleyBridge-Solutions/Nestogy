@@ -156,21 +156,18 @@ class ProcessPendingTicketBilling extends Command
             ->when(config('billing.ticket.include_unbilled_only', true), function ($query) {
                 // Additional check for time entries or contract rates
                 $query->where(function ($q) {
-                    // Has billable time entries
+                    // Has billable time entries that haven't been billed
                     $q->whereHas('timeEntries', function ($teQuery) {
                         $teQuery->where('billable', true)
-                            ->whereNull('invoice_id');
+                            ->where('is_billed', false);
                     })
-                    // OR has contact with active contract and per-ticket rate
-                    ->orWhereHas('contact.contractAssignments', function ($caQuery) {
-                        $caQuery->where('per_ticket_rate', '>', 0)
-                            ->whereHas('schedule', function ($schedQuery) {
-                                $schedQuery->where('is_active', true)
-                                    ->whereDate('start_date', '<=', now())
-                                    ->where(function ($dateQuery) {
-                                        $dateQuery->whereNull('end_date')
-                                            ->orWhereDate('end_date', '>=', now());
-                                    });
+                    // OR has client with active contract
+                    ->orWhereHas('client.contracts', function ($contractQuery) {
+                        $contractQuery->whereIn('status', ['active', 'signed'])
+                            ->whereDate('start_date', '<=', now())
+                            ->where(function ($dateQuery) {
+                                $dateQuery->whereNull('end_date')
+                                    ->orWhereDate('end_date', '>=', now());
                             });
                     });
                 });
@@ -189,12 +186,12 @@ class ProcessPendingTicketBilling extends Command
         foreach ($tickets as $ticket) {
             $timeEntries = $ticket->timeEntries()
                 ->where('billable', true)
-                ->whereNull('invoice_id')
+                ->where('is_billed', false)
                 ->count();
 
             $totalHours = $ticket->timeEntries()
                 ->where('billable', true)
-                ->whereNull('invoice_id')
+                ->where('is_billed', false)
                 ->sum('hours_worked');
 
             $rows[] = [

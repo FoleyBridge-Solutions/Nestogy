@@ -52,8 +52,6 @@ class TicketTimeEntry extends Model
         'rejected_at',
         'rejected_by',
         'rejection_reason',
-        'invoice_id',
-        'invoiced_at',
         'metadata',
     ];
 
@@ -76,8 +74,6 @@ class TicketTimeEntry extends Model
         'approved_by' => 'integer',
         'rejected_at' => 'datetime',
         'rejected_by' => 'integer',
-        'invoice_id' => 'integer',
-        'invoiced_at' => 'datetime',
         'metadata' => 'array',
     ];
 
@@ -336,12 +332,12 @@ class TicketTimeEntry extends Model
 
     public function scopeInvoiced($query)
     {
-        return $query->whereNotNull('invoice_id');
+        return $query->where('is_billed', true);
     }
 
     public function scopeUninvoiced($query)
     {
-        return $query->whereNull('invoice_id');
+        return $query->where('is_billed', false);
     }
 
     public function scopeApproved($query)

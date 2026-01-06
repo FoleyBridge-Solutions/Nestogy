@@ -4,6 +4,7 @@ namespace App\Domains\Financial\Services;
 
 use App\Domains\Client\Models\Client;
 use App\Domains\Contract\Models\ContractContactAssignment;
+use App\Domains\Financial\Models\Category;
 use App\Domains\Financial\Models\Invoice;
 use App\Domains\Financial\Models\InvoiceItem;
 use App\Domains\Financial\Models\BillingAuditLog;
@@ -112,18 +113,24 @@ class TicketBillingService
                 $ticket->update(['invoice_id' => $invoice->id]);
 
                 // Log audit trail
-                BillingAuditLog::logBillingAction(
-                    action: BillingAuditLog::ACTION_INVOICE_GENERATED,
-                    ticketId: $ticket->id,
-                    invoiceId: $invoice->id,
-                    description: "Invoice #{$invoice->number} generated from ticket #{$ticket->number}",
-                    metadata: [
+                BillingAuditLog::create([
+                    'company_id' => $ticket->company_id,
+                    'user_id' => auth()->id(),
+                    'action' => BillingAuditLog::ACTION_INVOICE_GENERATED,
+                    'entity_type' => 'Ticket',
+                    'entity_id' => $ticket->id,
+                    'ticket_id' => $ticket->id,
+                    'invoice_id' => $invoice->id,
+                    'description' => "Invoice #{$invoice->number} generated from ticket #{$ticket->number}",
+                    'metadata' => [
                         'strategy' => $strategy,
-                        'amount' => $invoice->amount,
+                        'amount' => $invoice->total ?? 0,
                         'client_id' => $ticket->client_id,
                         'billable_hours' => $invoice->items->sum('quantity'),
-                    ]
-                );
+                    ],
+                    'ip_address' => request()->ip() ?? '127.0.0.1',
+                    'user_agent' => request()->userAgent() ?? 'CLI',
+                ]);
 
                 $this->log('Ticket billing completed', [
                     'ticket_id' => $ticket->id,
@@ -177,7 +184,7 @@ class TicketBillingService
     {
         $timeEntries = $ticket->timeEntries()
             ->where('billable', true)
-            ->whereNull('invoice_id')
+            ->where('is_billed', false)
             ->get();
 
         if ($timeEntries->isEmpty()) {
@@ -213,19 +220,25 @@ class TicketBillingService
         // Create invoice item
         $description = $this->buildTimeEntryDescription($ticket, $timeEntries, $billableHours);
         
+        $taxRate = $options['tax_rate'] ?? 0;
+        $tax = $amount * ($taxRate / 100);
+        
         InvoiceItem::create([
             'invoice_id' => $invoice->id,
             'company_id' => $invoice->company_id,
+            'name' => "Support - Ticket #{$ticket->number}",
             'description' => $description,
             'quantity' => $billableHours,
             'price' => $hourlyRate,
-            'amount' => $amount,
-            'tax_rate' => $options['tax_rate'] ?? 0,
+            'subtotal' => $amount,
+            'tax_rate' => $taxRate,
+            'tax' => $tax,
+            'total' => $amount + $tax,
         ]);
 
-        // Link time entries to invoice
+        // Mark time entries as billed
         $timeEntries->each(function ($entry) use ($invoice) {
-            $entry->update(['invoice_id' => $invoice->id]);
+            $entry->update(['is_billed' => true]);
         });
 
         $this->updateInvoiceTotals($invoice);
@@ -264,14 +277,20 @@ class TicketBillingService
         $description .= "Priority: {$ticket->priority}\n";
         $description .= "Per-ticket flat rate";
 
+        $taxRate = $options['tax_rate'] ?? 0;
+        $tax = $perTicketRate * ($taxRate / 100);
+        
         InvoiceItem::create([
             'invoice_id' => $invoice->id,
             'company_id' => $invoice->company_id,
+            'name' => "Support - Ticket #{$ticket->number}",
             'description' => $description,
             'quantity' => 1,
             'price' => $perTicketRate,
-            'amount' => $perTicketRate,
-            'tax_rate' => $options['tax_rate'] ?? 0,
+            'subtotal' => $perTicketRate,
+            'tax_rate' => $taxRate,
+            'tax' => $tax,
+            'total' => $perTicketRate + $tax,
         ]);
 
         $this->updateInvoiceTotals($invoice);
@@ -286,7 +305,7 @@ class TicketBillingService
     {
         $timeEntries = $ticket->timeEntries()
             ->where('billable', true)
-            ->whereNull('invoice_id')
+            ->where('is_billed', false)
             ->get();
 
         $contractAssignment = $this->getContractAssignment($ticket);
@@ -316,36 +335,47 @@ class TicketBillingService
             'note' => $options['note'] ?? "Support ticket #{$ticket->number}: {$ticket->subject}",
         ]);
 
+        $taxRate = $options['tax_rate'] ?? 0;
+        
         // Add time entry item
         if ($timeAmount > 0) {
             $timeDescription = $this->buildTimeEntryDescription($ticket, $timeEntries, $billableHours);
+            $timeTax = $timeAmount * ($taxRate / 100);
             
             InvoiceItem::create([
                 'invoice_id' => $invoice->id,
                 'company_id' => $invoice->company_id,
+                'name' => "Support Time - Ticket #{$ticket->number}",
                 'description' => $timeDescription,
                 'quantity' => $billableHours,
                 'price' => $hourlyRate,
-                'amount' => $timeAmount,
-                'tax_rate' => $options['tax_rate'] ?? 0,
+                'subtotal' => $timeAmount,
+                'tax_rate' => $taxRate,
+                'tax' => $timeTax,
+                'total' => $timeAmount + $timeTax,
             ]);
 
-            // Link time entries
+            // Mark time entries as billed
             $timeEntries->each(function ($entry) use ($invoice) {
-                $entry->update(['invoice_id' => $invoice->id]);
+                $entry->update(['is_billed' => true]);
             });
         }
 
         // Add per-ticket rate item
         if ($perTicketRate > 0) {
+            $perTicketTax = $perTicketRate * ($taxRate / 100);
+            
             InvoiceItem::create([
                 'invoice_id' => $invoice->id,
                 'company_id' => $invoice->company_id,
+                'name' => "Support Fee - Ticket #{$ticket->number}",
                 'description' => "Support Ticket #{$ticket->number} - Flat Rate Fee",
                 'quantity' => 1,
                 'price' => $perTicketRate,
-                'amount' => $perTicketRate,
-                'tax_rate' => $options['tax_rate'] ?? 0,
+                'subtotal' => $perTicketRate,
+                'tax_rate' => $taxRate,
+                'tax' => $perTicketTax,
+                'total' => $perTicketRate + $perTicketTax,
             ]);
         }
 
@@ -355,32 +385,67 @@ class TicketBillingService
     }
 
     /**
-     * Create invoice for ticket billing
+     * Get or create invoice for billing
+     * 
+     * This consolidates tickets for the same client into a single draft invoice
      */
     protected function createInvoice(Client $client, array $data = []): Invoice
     {
-        $lastInvoice = Invoice::where('company_id', $client->company_id)
+        // Check if we should consolidate into existing draft invoice
+        $consolidate = $data['consolidate'] ?? config('billing.ticket.consolidate_invoices', true);
+        
+        if ($consolidate) {
+            // Look for an existing draft invoice for this client created today (with lock to prevent race conditions)
+            $existingInvoice = Invoice::where('company_id', $client->company_id)
+                ->where('client_id', $client->id)
+                ->where('status', Invoice::STATUS_DRAFT)
+                ->whereDate('date', now()->toDateString())
+                ->lockForUpdate()
+                ->first();
+            
+            if ($existingInvoice) {
+                return $existingInvoice;
+            }
+        }
+
+        // Use a lock to prevent duplicate invoice numbers (include soft-deleted)
+        $lastInvoice = Invoice::withTrashed()
+            ->where('company_id', $client->company_id)
+            ->lockForUpdate()
             ->orderBy('number', 'desc')
             ->first();
 
         $dueDate = now()->addDays(
-            $data['due_days'] ?? config('billing.ticket.invoice_due_days', 30)
+            (int) ($data['due_days'] ?? config('billing.ticket.invoice_due_days', 30))
         );
 
         $status = config('billing.ticket.require_approval', true) 
             ? Invoice::STATUS_DRAFT 
             : Invoice::STATUS_SENT;
 
+        // Get or create a default category for ticket billing
+        $categoryId = $data['category_id'] ?? Category::where('company_id', $client->company_id)
+            ->where('name', 'like', '%Support%')
+            ->orWhere('name', 'like', '%Service%')
+            ->value('id');
+        
+        // Fallback to first category if none found
+        if (!$categoryId) {
+            $categoryId = Category::where('company_id', $client->company_id)->value('id')
+                ?? Category::first()?->id;
+        }
+
         $invoice = Invoice::create([
             'company_id' => $client->company_id,
             'client_id' => $client->id,
+            'category_id' => $categoryId,
             'prefix' => $data['prefix'] ?? 'INV',
             'number' => $lastInvoice ? $lastInvoice->number + 1 : 1001,
             'date' => $data['date'] ?? now(),
             'due_date' => $dueDate,
             'status' => $status,
             'currency_code' => $client->currency_code ?? 'USD',
-            'note' => $data['note'] ?? null,
+            'note' => $data['note'] ?? 'Support Services',
             'url_key' => \Illuminate\Support\Str::random(32),
         ]);
 
@@ -443,8 +508,9 @@ class TicketBillingService
         }
 
         return ContractContactAssignment::where('contact_id', $ticket->contact_id)
-            ->whereHas('schedule', function ($query) {
-                $query->where('is_active', true)
+            ->where('status', 'active')
+            ->whereHas('contract', function ($query) {
+                $query->whereIn('status', ['active', 'signed'])
                     ->whereDate('start_date', '<=', now())
                     ->where(function ($q) {
                         $q->whereNull('end_date')
@@ -459,14 +525,14 @@ class TicketBillingService
      */
     protected function updateInvoiceTotals(Invoice $invoice): void
     {
-        $subtotal = $invoice->items()->sum('amount');
-        $tax = $invoice->items()->sum(DB::raw('amount * (tax_rate / 100)'));
-        $total = $subtotal + $tax;
+        $subtotal = $invoice->items()->sum('subtotal');
+        $tax = $invoice->items()->sum('tax');
+        $total = $invoice->items()->sum('total');
 
         $invoice->update([
             'subtotal' => $subtotal,
             'tax' => $tax,
-            'amount' => $total,
+            'total' => $total,
         ]);
     }
 
@@ -476,7 +542,7 @@ class TicketBillingService
     public function previewBilling(Ticket $ticket): array
     {
         $strategy = $this->determineBillingStrategy($ticket, []);
-        $timeEntries = $ticket->timeEntries()->where('billable', true)->whereNull('invoice_id')->get();
+        $timeEntries = $ticket->timeEntries()->where('billable', true)->where('is_billed', false)->get();
         $contractAssignment = $this->getContractAssignment($ticket);
         
         $preview = [
@@ -629,7 +695,7 @@ class TicketBillingService
         }
 
         // Check if there's something to bill
-        $hasTimeEntries = $ticket->timeEntries()->where('billable', true)->whereNull('invoice_id')->exists();
+        $hasTimeEntries = $ticket->timeEntries()->where('billable', true)->where('is_billed', false)->exists();
         $contractAssignment = $this->getContractAssignment($ticket);
         $hasPerTicketRate = $contractAssignment && $contractAssignment->per_ticket_rate > 0;
 
@@ -703,7 +769,7 @@ class TicketBillingService
 
         // Check prepaid hours (time-based billing)
         if ($contractAssignment->max_support_hours_per_month > 0) {
-            $timeEntries = $ticket->timeEntries()->where('billable', true)->whereNull('invoice_id')->get();
+            $timeEntries = $ticket->timeEntries()->where('billable', true)->where('is_billed', false)->get();
             $ticketHours = $timeEntries->sum('hours_worked');
             
             $hoursUsed = $contractAssignment->current_month_support_hours ?? 0;
