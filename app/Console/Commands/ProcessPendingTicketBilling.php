@@ -96,10 +96,8 @@ class ProcessPendingTicketBilling extends Command
                     continue;
                 }
 
-                // Queue the billing job
-                $queue = config('billing.ticket.queue', 'billing');
-                ProcessTicketBilling::dispatch($ticket->id, ['force' => $force])
-                    ->onQueue($queue);
+                // Queue the billing job on the default queue
+                ProcessTicketBilling::dispatch($ticket->id, ['force' => $force]);
 
                 $queued++;
             } catch (\Exception $e) {
