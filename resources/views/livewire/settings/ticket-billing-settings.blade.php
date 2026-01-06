@@ -111,7 +111,7 @@
                         <flux:checkbox 
                             wire:model="autoBillOnClose" 
                             label="Auto-Bill When Ticket is Closed"
-                            :disabled="!enabled" />
+                            :disabled="!$enabled" />
                         <flux:description>
                             Automatically queue billing when a ticket's status changes to "Closed".
                         </flux:description>
@@ -121,7 +121,7 @@
                         <flux:checkbox 
                             wire:model="autoBillOnResolve" 
                             label="Auto-Bill When Ticket is Resolved"
-                            :disabled="!enabled" />
+                            :disabled="!$enabled" />
                         <flux:description>
                             Automatically queue billing when a ticket is marked as resolved (earlier than "Closed").
                         </flux:description>
@@ -201,7 +201,7 @@
                     </flux:field>
 
                     <flux:field>
-                        <flux:checkbox wire:model="autoSend" label="Auto-Send Invoices" :disabled="requireApproval" />
+                        <flux:checkbox wire:model="autoSend" label="Auto-Send Invoices" :disabled="$requireApproval" />
                         <flux:description>
                             Automatically send invoices to clients after generation (only works if approval is not required).
                         </flux:description>
