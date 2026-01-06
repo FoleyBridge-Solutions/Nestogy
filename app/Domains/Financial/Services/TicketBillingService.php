@@ -525,15 +525,10 @@ class TicketBillingService
      */
     protected function updateInvoiceTotals(Invoice $invoice): void
     {
-        $subtotal = $invoice->items()->sum('subtotal');
-        $tax = $invoice->items()->sum('tax');
-        $total = $invoice->items()->sum('total');
-
-        $invoice->update([
-            'subtotal' => $subtotal,
-            'tax' => $tax,
-            'total' => $total,
-        ]);
+        // Use the Invoice model's built-in method to recalculate totals
+        // This properly calculates subtotal from items, adds tax, subtracts discount,
+        // and updates the 'amount' column
+        $invoice->recalculateTotals();
     }
 
     /**
