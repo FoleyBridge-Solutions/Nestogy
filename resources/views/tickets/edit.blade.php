@@ -1,33 +1,23 @@
 @extends('layouts.app')
 
-@section('title', 'Edit Ticket #' . $ticket->ticket_number)
+@section('title', 'Edit Ticket #' . $ticket->number)
 
 @php
-$pageTitle = 'Edit Ticket #' . $ticket->ticket_number;
+$pageTitle = 'Edit Ticket #' . $ticket->number;
 $pageSubtitle = 'Update ticket information and status';
-$pageActions = [
-    [
-        'label' => 'View Ticket',
-        'href' => route('tickets.show', $ticket),
-        'icon' => 'eye',
-    ],
-    [
-        'label' => 'Back to Tickets',
-        'href' => route('tickets.index'),
-        'icon' => 'arrow-left',
-    ],
-    [
-        'label' => 'Cancel',
-        'href' => route('tickets.show', $ticket),
-    ],
-];
+$currentClientId = old('client_id', $ticket->client_id);
+$currentContactId = old('contact_id', $ticket->contact_id);
+$currentStatus = old('status', $ticket->status);
+$currentPriority = old('priority', $ticket->priority);
+$currentAssignedTo = old('assigned_to', $ticket->assigned_to);
+$currentBillable = old('billable', $ticket->billable ? '1' : '0');
+$currentAssetId = old('asset_id', $ticket->asset_id);
+$currentVendorId = old('vendor_id', $ticket->vendor_id);
+$currentInvoiceId = old('invoice_id', $ticket->invoice_id);
 @endphp
 
 @section('content')
 <div class="container-fluid">
-    <!-- Header -->
-    
-
     <!-- Edit Form -->
     <form action="{{ route('tickets.update', $ticket) }}" method="POST">
         @csrf
@@ -43,10 +33,10 @@ $pageActions = [
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <flux:field>
                             <flux:label for="client_id" required>Client</flux:label>
-                            <flux:select name="client_id" id="client_id" required value="{{ old('client_id', $ticket->client_id) }}">
+                            <flux:select name="client_id" id="client_id" required>
                                 <flux:select.option value="">Select Client</flux:select.option>
                                 @foreach(\App\Domains\Client\Models\Client::where('company_id', auth()->user()->company_id)->orderBy('name')->get() as $client)
-                                    <flux:select.option value="{{ $client->id }}">
+                                    <flux:select.option value="{{ $client->id }}" :selected="$currentClientId == $client->id">
                                         {{ $client->name }}
                                     </flux:select.option>
                                 @endforeach
@@ -56,11 +46,11 @@ $pageActions = [
 
                         <flux:field>
                             <flux:label for="contact_id">Contact</flux:label>
-                            <flux:select name="contact_id" id="contact_id" value="{{ old('contact_id', $ticket->contact_id) }}">
+                            <flux:select name="contact_id" id="contact_id">
                                 <flux:select.option value="">Select Contact</flux:select.option>
                                 @if($ticket->client)
                                     @foreach($ticket->client->contacts as $contact)
-                                        <flux:select.option value="{{ $contact->id }}">
+                                        <flux:select.option value="{{ $contact->id }}" :selected="$currentContactId == $contact->id">
                                             {{ $contact->name }}
                                         </flux:select.option>
                                     @endforeach
@@ -92,11 +82,11 @@ $pageActions = [
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <flux:field>
                             <flux:label for="asset_id">Asset</flux:label>
-                            <flux:select name="asset_id" id="asset_id" value="{{ old('asset_id', $ticket->asset_id) }}">
+                            <flux:select name="asset_id" id="asset_id">
                                 <flux:select.option value="">Select Asset</flux:select.option>
                                 @if($ticket->client)
                                     @foreach($ticket->client->assets as $asset)
-                                        <flux:select.option value="{{ $asset->id }}">
+                                        <flux:select.option value="{{ $asset->id }}" :selected="$currentAssetId == $asset->id">
                                             {{ $asset->name }} ({{ $asset->type }})
                                         </flux:select.option>
                                     @endforeach
@@ -107,10 +97,10 @@ $pageActions = [
 
                         <flux:field>
                             <flux:label for="vendor_id">Vendor</flux:label>
-                            <flux:select name="vendor_id" id="vendor_id" value="{{ old('vendor_id', $ticket->vendor_id) }}">
+                            <flux:select name="vendor_id" id="vendor_id">
                                 <flux:select.option value="">Select Vendor</flux:select.option>
                                 @foreach(\App\Domains\Project\Models\Vendor::where('company_id', auth()->user()->company_id)->orderBy('name')->get() as $vendor)
-                                    <flux:select.option value="{{ $vendor->id }}">
+                                    <flux:select.option value="{{ $vendor->id }}" :selected="$currentVendorId == $vendor->id">
                                         {{ $vendor->name }}
                                     </flux:select.option>
                                 @endforeach
@@ -152,34 +142,34 @@ $pageActions = [
                     
                     <flux:field>
                         <flux:label for="status" required>Status</flux:label>
-                        <flux:select name="status" id="status" required value="{{ old('status', $ticket->status) }}">
-                            <flux:select.option value="new">New</flux:select.option>
-                            <flux:select.option value="open">Open</flux:select.option>
-                            <flux:select.option value="in_progress">In Progress</flux:select.option>
-                            <flux:select.option value="pending">Pending</flux:select.option>
-                            <flux:select.option value="resolved">Resolved</flux:select.option>
-                            <flux:select.option value="closed">Closed</flux:select.option>
+                        <flux:select name="status" id="status" required>
+                            <flux:select.option value="new" :selected="$currentStatus === 'new'">New</flux:select.option>
+                            <flux:select.option value="open" :selected="$currentStatus === 'open'">Open</flux:select.option>
+                            <flux:select.option value="in_progress" :selected="$currentStatus === 'in_progress'">In Progress</flux:select.option>
+                            <flux:select.option value="pending" :selected="$currentStatus === 'pending'">Pending</flux:select.option>
+                            <flux:select.option value="resolved" :selected="$currentStatus === 'resolved'">Resolved</flux:select.option>
+                            <flux:select.option value="closed" :selected="$currentStatus === 'closed'">Closed</flux:select.option>
                         </flux:select>
                         <flux:error name="status" />
                     </flux:field>
 
                     <flux:field class="mt-4">
                         <flux:label for="priority" required>Priority</flux:label>
-                        <flux:select name="priority" id="priority" required value="{{ old('priority', $ticket->priority) }}">
-                            <flux:select.option value="Low">Low</flux:select.option>
-                            <flux:select.option value="Medium">Medium</flux:select.option>
-                            <flux:select.option value="High">High</flux:select.option>
-                            <flux:select.option value="Critical">Critical</flux:select.option>
+                        <flux:select name="priority" id="priority" required>
+                            <flux:select.option value="low" :selected="$currentPriority === 'low'">Low</flux:select.option>
+                            <flux:select.option value="medium" :selected="$currentPriority === 'medium'">Medium</flux:select.option>
+                            <flux:select.option value="high" :selected="$currentPriority === 'high'">High</flux:select.option>
+                            <flux:select.option value="critical" :selected="$currentPriority === 'critical'">Critical</flux:select.option>
                         </flux:select>
                         <flux:error name="priority" />
                     </flux:field>
 
                     <flux:field class="mt-4">
                         <flux:label for="assigned_to">Assign To</flux:label>
-                        <flux:select name="assigned_to" id="assigned_to" value="{{ old('assigned_to', $ticket->assigned_to) }}">
-                            <flux:select.option value="">Unassigned</flux:select.option>
+                        <flux:select name="assigned_to" id="assigned_to">
+                            <flux:select.option value="" :selected="!$currentAssignedTo">Unassigned</flux:select.option>
                             @foreach(\App\Domains\Core\Models\User::where('company_id', auth()->user()->company_id)->where('status', 1)->orderBy('name')->get() as $user)
-                                <flux:select.option value="{{ $user->id }}">
+                                <flux:select.option value="{{ $user->id }}" :selected="$currentAssignedTo == $user->id">
                                     {{ $user->name }}
                                 </flux:select.option>
                             @endforeach
@@ -194,32 +184,36 @@ $pageActions = [
                     
                     <flux:field>
                         <flux:label for="billable">Billable</flux:label>
-                        <flux:select name="billable" id="billable" value="{{ old('billable', $ticket->billable) }}">
-                            <flux:select.option value="0">No</flux:select.option>
-                            <flux:select.option value="1">Yes</flux:select.option>
+                        <flux:select name="billable" id="billable">
+                            <flux:select.option value="0" :selected="$currentBillable === '0'">No</flux:select.option>
+                            <flux:select.option value="1" :selected="$currentBillable === '1'">Yes</flux:select.option>
                         </flux:select>
+                        <flux:description>Set to Yes to include this ticket in billing calculations</flux:description>
                         <flux:error name="billable" />
                     </flux:field>
 
                     <flux:field class="mt-4">
                         <flux:label for="invoice_id">Invoice</flux:label>
-                        <flux:select name="invoice_id" id="invoice_id" value="{{ old('invoice_id', $ticket->invoice_id) }}">
-                            <flux:select.option value="">Select Invoice</flux:select.option>
+                        <flux:select name="invoice_id" id="invoice_id">
+                            <flux:select.option value="" :selected="!$currentInvoiceId">Not Invoiced</flux:select.option>
                             @if($ticket->client)
-                                @foreach($ticket->client->invoices as $invoice)
-                                    <flux:select.option value="{{ $invoice->id }}">
-                                        #{{ $invoice->invoice_number }} - {{ $invoice->date->format('M d, Y') }}
+                                @foreach($ticket->client->invoices()->orderBy('date', 'desc')->limit(20)->get() as $invoice)
+                                    <flux:select.option value="{{ $invoice->id }}" :selected="$currentInvoiceId == $invoice->id">
+                                        #{{ $invoice->prefix }}{{ $invoice->number }} - {{ $invoice->date->format('M d, Y') }} ({{ $invoice->status }})
                                     </flux:select.option>
                                 @endforeach
                             @endif
                         </flux:select>
+                        <flux:description>Link this ticket to an existing invoice</flux:description>
                         <flux:error name="invoice_id" />
                     </flux:field>
 
                     <flux:field class="mt-4">
-                        <flux:label for="rate">Rate</flux:label>
+                        <flux:label for="rate">Hourly Rate Override</flux:label>
                         <flux:input type="number" name="rate" id="rate" step="0.01" 
-                                   value="{{ old('rate', $ticket->rate ?? 0) }}" />
+                                   value="{{ old('rate', $ticket->rate) }}" 
+                                   placeholder="Use default rate" />
+                        <flux:description>Leave blank to use the default billing rate</flux:description>
                         <flux:error name="rate" />
                     </flux:field>
 
