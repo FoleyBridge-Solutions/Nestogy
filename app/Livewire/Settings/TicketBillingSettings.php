@@ -84,12 +84,22 @@ class TicketBillingSettings extends Component
     protected function loadStatistics()
     {
         try {
-            // Count pending tickets
+            // Count pending tickets (closed/resolved, billable, not yet invoiced, with unbilled time entries)
             $this->pendingTicketsCount = \App\Domains\Ticket\Models\Ticket::query()
-                ->whereIn('status', ['Closed', 'Resolved'])
+                ->where('company_id', auth()->user()->company_id)
+                ->whereIn('status', ['closed', 'resolved'])
                 ->where('billable', true)
-                ->whereNull('invoice_id')
                 ->whereNotNull('client_id')
+                ->where(function ($query) {
+                    // Has unbilled time entries
+                    $query->whereHas('timeEntries', function ($q) {
+                        $q->where('billable', true)->where('is_billed', false);
+                    })
+                    // OR has active contract (for per-ticket billing)
+                    ->orWhereHas('client.contracts', function ($q) {
+                        $q->whereIn('status', ['active', 'signed']);
+                    });
+                })
                 ->count();
 
             // Count billing queue jobs
