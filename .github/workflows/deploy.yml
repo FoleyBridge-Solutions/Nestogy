@@ -1,0 +1,35 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      skip_tests:
+        description: 'Skip tests and deploy directly (for emergency fixes)'
+        required: false
+        default: 'false'
+        type: boolean
+
+jobs:
+  deploy:
+    name: Deploy to Laravel Cloud
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to Laravel Cloud
+        run: |
+          echo "🚀 Deploying to Laravel Cloud..."
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "https://cloud.laravel.com/deploy/9fbf5ee1-0a95-4c7a-80cd-33ef5cce3957/Wi1QZa0TPiaou4YJ")
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | head -n-1)
+          
+          if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "201" ] || [ "$HTTP_CODE" = "302" ]; then
+            echo "✅ Deployment triggered successfully!"
+            echo "Response: $BODY"
+          else
+            echo "⚠️  Deployment returned status $HTTP_CODE"
+            echo "Response: $BODY"
+            exit 1
+          fi
