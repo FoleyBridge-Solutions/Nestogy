@@ -2,14 +2,14 @@
 
 namespace App\Domains\Client\Controllers;
 
-use App\Domains\Core\Services\StripeSubscriptionService;
-use App\Domains\Product\Services\SubscriptionService;
-use App\Http\Controllers\Controller;
 use App\Domains\Client\Models\Client;
 use App\Domains\Company\Models\Company;
-use App\Domains\Product\Models\SubscriptionPlan;
 use App\Domains\Core\Models\User;
 use App\Domains\Core\Models\UserSetting;
+use App\Domains\Core\Services\StripeSubscriptionService;
+use App\Domains\Product\Models\SubscriptionPlan;
+use App\Domains\Product\Services\SubscriptionService;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -130,7 +130,13 @@ class CompanyRegistrationController extends Controller
             // Create company subscription
             Log::info('STEP 7: Creating company subscription');
             $stepStartTime = microtime(true);
-            $companySubscription = $this->subscriptionService->createSubscription($company, $plan);
+            $companySubscription = $this->subscriptionService->createSubscription($client, [
+                'name' => $plan->name,
+                'amount' => $plan->price_monthly,
+                'billing_cycle' => 'monthly',
+                'status' => 'trialing',
+                'start_date' => now(),
+            ]);
             $subscriptionDuration = microtime(true) - $stepStartTime;
             Log::info('Company subscription created', [
                 'subscription_id' => $companySubscription->id,
