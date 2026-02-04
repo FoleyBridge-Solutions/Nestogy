@@ -88,6 +88,14 @@ jobs:
           echo "REDIS_HOST=127.0.0.1" >> .env
           echo "REDIS_PORT=6379" >> .env
 
+      - name: Create storage directories
+        run: |
+          mkdir -p storage/framework/cache/data
+          mkdir -p storage/framework/sessions
+          mkdir -p storage/framework/views
+          mkdir -p storage/logs
+          chmod -R 775 storage
+
       - name: Run tests with coverage
         run: php artisan test --parallel --recreate-databases --processes=2 --coverage-clover=coverage.xml
 
