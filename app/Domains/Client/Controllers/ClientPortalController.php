@@ -838,8 +838,36 @@ class ClientPortalController extends Controller
             abort(403, 'You do not have permission to view invoices.');
         }
 
-        $invoices = $this->getInvoicesForContact($contact);
-        $stats = $this->getInvoiceStatsForContact($contact);
+        $errorRef = 'INV-LIST-'.uniqid();
+
+        try {
+            $invoices = $this->getInvoicesForContact($contact);
+        } catch (\Illuminate\Database\QueryException $e) {
+            Log::error("[{$errorRef}] QueryException fetching invoices for contact", [
+                'contact_id' => $contact->id,
+                'client_id' => $contact->client_id,
+                'sql' => $e->getSql(),
+                'bindings' => $e->getBindings(),
+                'error_code' => $e->getCode(),
+                'message' => $e->getMessage(),
+            ]);
+            $invoices = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 10);
+        }
+
+        try {
+            $stats = $this->getInvoiceStatsForContact($contact);
+        } catch (\Illuminate\Database\QueryException $e) {
+            Log::error("[{$errorRef}] QueryException fetching invoice stats for contact", [
+                'contact_id' => $contact->id,
+                'client_id' => $contact->client_id,
+                'sql' => $e->getSql(),
+                'bindings' => $e->getBindings(),
+                'error_code' => $e->getCode(),
+                'message' => $e->getMessage(),
+            ]);
+            $stats = [];
+        }
+
         $notifications = $this->getNotificationsForContact($contact);
 
         if ($request->wantsJson()) {
@@ -870,17 +898,70 @@ class ClientPortalController extends Controller
             abort(404);
         }
 
-        $invoice->load(['items', 'payments']);
+        $errorRef = 'INV-SHOW-'.uniqid();
+
+        try {
+            $invoice->load(['items', 'payments', 'client']);
+        } catch (\Illuminate\Database\QueryException $e) {
+            Log::error("[{$errorRef}] QueryException loading invoice relations", [
+                'invoice_id' => $invoice->id,
+                'contact_id' => $contact->id,
+                'client_id' => $contact->client_id,
+                'sql' => $e->getSql(),
+                'bindings' => $e->getBindings(),
+                'error_code' => $e->getCode(),
+                'message' => $e->getMessage(),
+            ]);
+
+            return redirect()->route('client.invoices')
+                ->with('error', "Unable to load invoice details. Reference: {$errorRef}");
+        }
 
         // Log activity to database
-        activity()
-            ->performedOn($invoice)
-            ->causedBy($contact)
-            ->log('viewed');
+        try {
+            activity()
+                ->performedOn($invoice)
+                ->causedBy($contact)
+                ->log('viewed');
+        } catch (\Exception $e) {
+            Log::warning("[{$errorRef}] Failed to log invoice view activity", [
+                'invoice_id' => $invoice->id,
+                'contact_id' => $contact->id,
+                'message' => $e->getMessage(),
+            ]);
+        }
+
+        // Pre-compute payment data so query failures don't crash the view
+        $balance = null;
+        $totalPaid = null;
+        $canBePaid = false;
+        $isFullyPaid = false;
+
+        try {
+            $totalPaid = $invoice->getTotalPaid();
+            $balance = $invoice->getBalance();
+            $canBePaid = $invoice->canBePaid();
+            $isFullyPaid = $invoice->isFullyPaid();
+        } catch (\Illuminate\Database\QueryException $e) {
+            Log::error("[{$errorRef}] QueryException computing invoice payment data", [
+                'invoice_id' => $invoice->id,
+                'contact_id' => $contact->id,
+                'client_id' => $contact->client_id,
+                'sql' => $e->getSql(),
+                'bindings' => $e->getBindings(),
+                'error_code' => $e->getCode(),
+                'message' => $e->getMessage(),
+            ]);
+            // Fallback: use raw amount field
+            $balance = $invoice->amount ?? 0;
+            $totalPaid = 0;
+            $canBePaid = ! in_array($invoice->status, ['paid', 'cancelled', 'canceled']);
+            $isFullyPaid = $invoice->status === 'paid';
+        }
 
         if ($request->wantsJson()) {
             $invoiceData = $invoice->toArray();
-            $invoiceData['can_be_paid'] = $invoice->canBePaid();
+            $invoiceData['can_be_paid'] = $canBePaid;
 
             return response()->json([
                 'invoice' => $invoiceData,
@@ -888,14 +969,16 @@ class ClientPortalController extends Controller
                 'payments' => $invoice->payments,
                 'payment_info' => [
                     'total' => $invoice->amount,
-                    'paid' => $invoice->getTotalPaid(),
-                    'balance' => $invoice->getBalance(),
-                    'is_paid' => $invoice->isFullyPaid(),
+                    'paid' => $totalPaid,
+                    'balance' => $balance,
+                    'is_paid' => $isFullyPaid,
                 ],
             ]);
         }
 
-        return view('client-portal.invoices.show', compact('invoice', 'contact'));
+        return view('client-portal.invoices.show', compact(
+            'invoice', 'contact', 'balance', 'totalPaid', 'canBePaid', 'isFullyPaid'
+        ));
     }
 
     public function downloadClientInvoice(Request $request, Invoice $invoice)
@@ -917,6 +1000,8 @@ class ClientPortalController extends Controller
             ]);
         }
 
+        $errorRef = 'INV-DL-'.uniqid();
+
         try {
             $pdf = $invoice->generatePdf();
 
@@ -924,7 +1009,26 @@ class ClientPortalController extends Controller
                 'Content-Type' => 'application/pdf',
                 'Content-Disposition' => 'attachment; filename="invoice-'.$invoice->invoice_number.'.pdf"',
             ]);
+        } catch (\Illuminate\Database\QueryException $e) {
+            Log::error("[{$errorRef}] QueryException generating invoice PDF for download", [
+                'invoice_id' => $invoice->id,
+                'contact_id' => $contact->id,
+                'client_id' => $contact->client_id,
+                'sql' => $e->getSql(),
+                'bindings' => $e->getBindings(),
+                'error_code' => $e->getCode(),
+                'message' => $e->getMessage(),
+            ]);
+
+            return redirect()->back()->with('error', "Unable to download invoice PDF. Reference: {$errorRef}");
         } catch (\Exception $e) {
+            Log::error("[{$errorRef}] Exception generating invoice PDF for download", [
+                'invoice_id' => $invoice->id,
+                'contact_id' => $contact->id,
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
             return redirect()->back()->with('error', 'Unable to download invoice PDF.');
         }
     }
@@ -941,6 +1045,8 @@ class ClientPortalController extends Controller
             abort(404);
         }
 
+        $errorRef = 'INV-PDF-'.uniqid();
+
         try {
             $pdf = $invoice->generatePdf();
 
@@ -948,7 +1054,26 @@ class ClientPortalController extends Controller
                 'Content-Type' => 'application/pdf',
                 'Content-Disposition' => 'inline; filename="invoice-'.$invoice->invoice_number.'.pdf"',
             ]);
+        } catch (\Illuminate\Database\QueryException $e) {
+            Log::error("[{$errorRef}] QueryException generating invoice PDF for view", [
+                'invoice_id' => $invoice->id,
+                'contact_id' => $contact->id,
+                'client_id' => $contact->client_id,
+                'sql' => $e->getSql(),
+                'bindings' => $e->getBindings(),
+                'error_code' => $e->getCode(),
+                'message' => $e->getMessage(),
+            ]);
+
+            return redirect()->back()->with('error', "Unable to view invoice PDF. Reference: {$errorRef}");
         } catch (\Exception $e) {
+            Log::error("[{$errorRef}] Exception generating invoice PDF for view", [
+                'invoice_id' => $invoice->id,
+                'contact_id' => $contact->id,
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
             return redirect()->back()->with('error', 'Unable to view invoice PDF.');
         }
     }

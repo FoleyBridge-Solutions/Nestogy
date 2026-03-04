@@ -23,7 +23,7 @@
                 Print
             </flux:button>
             
-            @if($invoice->status !== 'paid' && !in_array($invoice->status, ['cancelled', 'canceled']) && $invoice->getBalance() > 0)
+            @if($invoice->status !== 'paid' && !in_array($invoice->status, ['cancelled', 'canceled']) && $balance > 0)
                 <flux:button href="{{ route('client.invoices.pay', $invoice->id) }}" variant="primary" icon="credit-card">
                     Pay Now
                 </flux:button>
@@ -135,22 +135,22 @@
                     </div>
                 </div>
                 
-                @if(isset($invoice->paid_amount) && $invoice->paid_amount > 0)
+                @if($totalPaid > 0)
                     <div class="flex justify-between text-sm">
                         <flux:text class="text-gray-600 dark:text-gray-400">Amount Paid</flux:text>
-                        <flux:text class="font-semibold text-green-600">${{ number_format($invoice->paid_amount, 2) }}</flux:text>
+                        <flux:text class="font-semibold text-green-600">${{ number_format($totalPaid, 2) }}</flux:text>
                     </div>
                     
                     <div class="border-t dark:border-gray-700 pt-3 mt-3">
                         <div class="flex justify-between">
                             <flux:text class="font-bold">Balance Due</flux:text>
-                            <flux:text class="font-bold text-red-600 dark:text-red-400">${{ number_format($total - $invoice->paid_amount, 2) }}</flux:text>
+                            <flux:text class="font-bold text-red-600 dark:text-red-400">${{ number_format($balance, 2) }}</flux:text>
                         </div>
                     </div>
                 @endif
             </div>
             
-            @if($invoice->status !== 'paid' && !in_array($invoice->status, ['cancelled', 'canceled']) && Route::has('client.invoices.payment-options'))
+            @if($canBePaid && Route::has('client.invoices.payment-options'))
                 <div class="mt-6">
                     <flux:button href="{{ route('client.invoices.payment-options', $invoice->id) }}" variant="primary" class="w-full" icon="credit-card">
                         Pay Invoice
